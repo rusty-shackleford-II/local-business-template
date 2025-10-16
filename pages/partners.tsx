@@ -12,7 +12,10 @@ type BacklinkItem = {
 };
 
 export default function PartnersPage() {
-  const backlinkData = backlinks as BacklinkItem[];
+  // Handle both array format and object format { backlinks: [...] }
+  const backlinkData = Array.isArray(backlinks) 
+    ? backlinks as BacklinkItem[]
+    : ((backlinks as any)?.backlinks || []) as BacklinkItem[];
 
   return (
     <>
