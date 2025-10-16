@@ -96,7 +96,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: b
 
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.items.map((service) => (
+          {(Array.isArray(services.items) ? services.items : []).map((service) => (
             <div
               key={service.id}
               className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group"
@@ -180,7 +180,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: b
             textSizeMax={2.75}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {businessBenefits.items
+            {(Array.isArray(businessBenefits.items) ? businessBenefits.items : [])
               .filter(benefit => benefit.title?.trim() || benefit.description?.trim())
               .map((benefit, index: number) => (
               <div key={index} className="flex items-start space-x-3">

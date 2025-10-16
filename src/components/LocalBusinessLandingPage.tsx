@@ -37,7 +37,13 @@ export default function LocalBusinessLandingPage(site: SiteData) {
   }, [site.colorPalette]);
   // Build sections list from layout or fallback to default order
   const defaultOrder: SectionKey[] = ['hero', 'about', 'services', 'menu', 'testimonials', 'payment', 'videos', 'upcomingEvents', 'contact'];
-  const normalizedSections: { id: SectionKey; enabled: boolean }[] = (Array.isArray(site.layout?.sections) ? site.layout.sections : defaultOrder)
+  
+  // Safely get sections array, ensuring it's always an array
+  const sectionsSource = (site.layout?.sections && Array.isArray(site.layout.sections)) 
+    ? site.layout.sections 
+    : defaultOrder;
+  
+  const normalizedSections: { id: SectionKey; enabled: boolean }[] = sectionsSource
     .map((entry) => {
       if (typeof entry === 'string') return { id: entry as SectionKey, enabled: true };
       return { id: entry.id as SectionKey, enabled: entry.enabled !== false };

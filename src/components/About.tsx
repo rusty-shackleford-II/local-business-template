@@ -281,7 +281,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
           {features && features.length > 0 && (
             <div className="max-w-4xl mx-auto mb-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {features
+                {(Array.isArray(features) ? features : [])
                   .map((feature, index) => ({ feature, index }))
                   .filter(({ feature }) => feature && feature.trim() !== '')
                   .map(({ feature, index }) => (
