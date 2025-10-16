@@ -1,0 +1,488 @@
+{
+  "seo": {
+    "metaTitle": "This is the Meta Title in the SEO section",
+    "metaDescription": "And this is the Meta Description. ",
+    "canonicalUrl": "https://www.cacciashomeservices.com/",
+    "ogImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/og-image_2025-09-21T22-15-49.jpg",
+    "searchResultsIcon": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/search-icon_2025-09-23T17-57-31.jpg",
+    "primaryService": "Professional Services",
+    "primaryCity": "Your City",
+    "googleAnalyticsId": ""
+  },
+  "businessInfo": {
+    "businessName": "Wash Cafe",
+    "businessCategory": "LaundryService",
+    "address": {
+      "streetAddress": "127 Robert E Lee",
+      "addressLocality": "Hunt",
+      "addressRegion": "TX",
+      "postalCode": "78024",
+      "addressCountry": "US"
+    },
+    "phone": "+16503425363",
+    "email": "info@washcafe.com",
+    "paymentAccepted": [
+      "Cash",
+      "Credit Card",
+      "Check"
+    ],
+    "areaServed": "San Mateo & Burlingame",
+    "availableLanguages": [
+      "English"
+    ],
+    "priceRange": "$$",
+    "businessHours": {
+      "Monday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Tuesday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Wednesday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Thursday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Friday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Saturday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Sunday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      }
+    }
+  },
+  "logoUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/logo_2025-09-23T20-11-14.jpg",
+  "header": {
+    "showLogo": true,
+    "colors": {
+      "brandText": "#111827",
+      "navText": "#374151"
+    }
+  },
+  "hero": {
+    "heroLargeImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero_2025-09-23T20-11-16.jpg",
+    "headline": "The Best Laundry Cafe in the Bay Area!",
+    "subheadline": "Where fresh laundry meets fresh coffee — relax while we handle the wash. Come try the Bay Area's safest laundry cafe. We're open 24/7 so our door is always open for you!",
+    "cta": {
+      "label": "Learn More",
+      "actionType": "contact",
+      "href": "",
+      "phoneNumber": ""
+    },
+    "phone": "+16503425363",
+    "colors": {
+      "headline": "#111827",
+      "subheadline": "#4b5563",
+      "ctaText": "#ffffff",
+      "ctaBackground": "#10B981"
+    },
+    "mediaType": "photo",
+    "video": {
+      "provider": "vimeo",
+      "url": "<iframe title=\"vimeo-player\" src=\"https://player.vimeo.com/video/394353671?h=d1cebace6d\" width=\"640\" height=\"360\" frameborder=\"0\" referrerpolicy=\"strict-origin-when-cross-origin\" allow=\"autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share\"   allowfullscreen></iframe>",
+      "autoplay": true,
+      "controls": false,
+      "loop": true,
+      "muted": true
+    },
+    "subheadlineTextSize": "1.25",
+    "headlineTextSize": "3.75"
+  },
+  "about": {
+    "title": "About Wash Cafe",
+    "description": "At Wash Café in San Mateo, we combine the comfort of a neighborhood café with the convenience of modern laundry services. Whether you’re here to sip on a latte, catch up on work, or simply unwind, you’ll enjoy a welcoming space where your laundry gets done quickly, cleanly, and stress-free. Our mission is to make laundry day something you look forward to.",
+    "statistics": [
+      {
+        "name": " Years of Service",
+        "value": "15+",
+        "icon": "ClockIcon"
+      },
+      {
+        "name": " Star Rating",
+        "value": "5",
+        "icon": "StarIcon"
+      },
+      {
+        "name": " Certified Machines",
+        "value": "50+",
+        "icon": "CheckBadgeIcon"
+      }
+    ],
+    "features": [
+      "Upfront, Transparent Pricing: No hidden fees or surprises.",
+      "24/7 Services: We're here when you need us.",
+      "Licensed and Insured: Your clothes are safe with us.",
+      "Commitment to Sustainable Practices: Environmentally conscious solutions.",
+      "Gourmet coffee and bagels.",
+      "Breakfast, lunch and dinner menus. "
+    ],
+    "images": [
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-1_2025-09-23T17-22-56.jpg",
+        "alt": "About image 1",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-1-thumb_2025-09-23T17-22-56.jpg"
+      },
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-2_2025-09-23T17-22-57.jpg",
+        "alt": "About image 2",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-2-thumb_2025-09-23T17-22-58.jpg"
+      },
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-3_2025-09-23T17-22-58.jpg",
+        "alt": "About image 3",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-3-thumb_2025-09-23T17-22-59.jpg"
+      },
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-4_2025-09-23T17-23-01.jpg",
+        "alt": "About image 4",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-4-thumb_2025-09-23T17-23-03.jpg"
+      }
+    ],
+    "descriptionTextSize": "1.125",
+    "featuresTextSize": "1",
+    "titleTextSize": "2.25",
+    "thumbnailSize": 1.5
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Professional solutions tailored to your needs",
+    "items": [
+      {
+        "id": "umcpa3wsu9t",
+        "title": "Cafe",
+        "description": "Enjoy a nice brew in our 5 star coffee lounge.",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/service-umcpa3wsu9t_2025-09-23T17-22-52.jpg",
+        "alt": "cafe service"
+      },
+      {
+        "id": "yzjx6itxk3",
+        "title": "Laundry",
+        "description": "Top of the line washing machines. Coin operated but also accept card.",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/service-yzjx6itxk3_2025-09-23T17-22-53.jpg",
+        "alt": "laundrymachines service"
+      },
+      {
+        "id": "hic3v9kpnkj",
+        "title": "Drying",
+        "description": "Top of the line drying machines. Coin operated but also accept card.",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/service-hic3v9kpnkj_2025-09-23T17-22-55.jpg",
+        "alt": "dryingmachine service"
+      }
+    ]
+  },
+  "businessBenefits": {
+    "title": "Why Choose Wash Cafe",
+    "items": [
+      {
+        "title": "One Stop Convenience",
+        "description": "Take care of your laundry and enjoy a great cup of coffee in a single visit, saving you valuable time."
+      },
+      {
+        "title": "Modern Comfort",
+        "description": "Relax in a clean, stylish, and welcoming environment designed to make laundry day enjoyable."
+      },
+      {
+        "title": "Expert Laundry Care",
+        "description": "Your clothes are treated with professional-level cleaning and handling for the best results."
+      },
+      {
+        "title": "Connected Lounge",
+        "description": "Stay productive while you wait with complimentary Wi-Fi and ample workspace-friendly areas."
+      },
+      {
+        "title": "Eco-Smart Machines",
+        "description": "We use high-efficiency washers and dryers that are gentle on your clothes and the environment."
+      },
+      {
+        "title": "Community Hub",
+        "description": "More than just laundry — it’s a place to multitask, socialize, or simply take a break while chores get done."
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "What Our Clients Say",
+    "subtitle": "Don't just take our word for it. Here's what our satisfied clients have to say about our professional services.",
+    "items": [
+      {
+        "authorImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/testimonial-1_2025-09-23T20-11-21.png",
+        "authorName": "Wendy G",
+        "rating": 5,
+        "reviewDate": "5 months",
+        "reviewText": "\"Such a smart idea! I grabbed a latte, got some work done with the free Wi-Fi, and my laundry was finished before I knew it. Super clean and welcoming spot.\""
+      },
+      {
+        "authorImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/testimonial-2_2025-09-23T20-11-27.png",
+        "authorName": "Vivian Yeh",
+        "rating": 5,
+        "reviewDate": "6 months",
+        "reviewText": "“Best laundry experience I’ve ever had. The machines are fast and eco-friendly, and the staff folded everything perfectly. Plus, the coffee is actually amazing!”"
+      },
+      {
+        "authorImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/testimonial-3_2025-09-23T17-57-45.png",
+        "authorName": "Nikki Pavis",
+        "rating": 5,
+        "reviewDate": "2 months",
+        "reviewText": "“I love coming here on weekends. It feels more like a cozy café than a laundromat, and I always run into friendly people. Makes laundry day fun instead of a chore.”"
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with us today. We're here to help with all your needs.",
+    "address": "127 Robert E Lee, Hunt, TX 78024",
+    "phone": "+16503425363",
+    "email": "info@cacciaplumbing.com",
+    "contactRecipients": [
+      "support@washcafe.com"
+    ],
+    "mapEmbedUrl": "https://maps.google.com/maps?width=100%25&height=600&hl=en&q=127%20Robert%20E%20Lee%2C%20Hunt%2C%20TX%2078024&t=&z=14&ie=UTF8&iwloc=B&output=embed&_t=1758658270229",
+    "social": {
+      "facebook": "",
+      "twitter": "",
+      "instagram": "",
+      "linkedin": "",
+      "youtube": "",
+      "tiktok": "",
+      "yelp": "",
+      "googleBusinessProfile": ""
+    }
+  },
+  "footer": {
+    "socialLinks": [
+      {
+        "platform": "instagram",
+        "url": "https://instagram.com/yourbusiness"
+      },
+      {
+        "platform": "facebook",
+        "url": "https://facebook.com/yourbusiness"
+      },
+      {
+        "platform": "linkedin",
+        "url": "https://linkedin.com/company/yourbusiness"
+      }
+    ]
+  },
+  "layout": {
+    "sections": [
+      {
+        "id": "hero",
+        "enabled": true
+      },
+      {
+        "id": "about",
+        "enabled": true
+      },
+      {
+        "id": "services",
+        "enabled": true
+      },
+      {
+        "id": "menu",
+        "enabled": true
+      },
+      {
+        "id": "testimonials",
+        "enabled": true
+      },
+      {
+        "id": "upcomingEvents",
+        "enabled": true
+      },
+      {
+        "id": "contact",
+        "enabled": true
+      },
+      {
+        "id": "payment",
+        "enabled": true
+      },
+      {
+        "id": "videos",
+        "enabled": true
+      }
+    ]
+  },
+  "payment": {
+    "title": "Try Our Organic Detergents!",
+    "titleTextSize": 2.25,
+    "description": "Buy 1 or more of our organic detergents! Healthy for the family and pets. ",
+    "descriptionTextSize": 1.125,
+    "buttonLabel": "Buy Now",
+    "buttonLabelTextSize": 1,
+    "provider": "link",
+    "paymentLinkUrl": "",
+    "shopifyEmbedCode": "",
+    "galleryImages": [
+      {
+        "id": "wjrh11r5p",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/payment-gallery-0_2025-09-23T17-23-13.jpg",
+        "alt": "detergent1",
+        "caption": "",
+        "thumbnailUrl": "idb://vm-images/img-1758610207378-48rtpit5"
+      },
+      {
+        "id": "52g3nif3aga",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/payment-gallery-1_2025-09-23T17-23-13.jpg",
+        "alt": "detergent2",
+        "caption": "",
+        "thumbnailUrl": "idb://vm-images/img-1758610207382-vppuamha"
+      }
+    ],
+    "galleryTitle": "Product Gallery",
+    "thumbnailSize": 1,
+    "addHeroCta": false,
+    "heroCtaLabel": "",
+    "heroCtaLabelTextSize": 1,
+    "addHeaderCta": false,
+    "headerCtaLabel": "",
+    "headerCtaLabelTextSize": 1
+  },
+  "videos": {
+    "title": "Videos",
+    "subtitle": "See our work in action",
+    "items": [
+      {
+        "title": "",
+        "subtitle": "",
+        "provider": "youtube",
+        "url": "",
+        "autoplay": false,
+        "controls": true,
+        "loop": false,
+        "muted": false,
+        "volume": 100
+      }
+    ]
+  },
+  "upcomingEvents": {
+    "title": "Upcoming Events",
+    "subtitle": "Join us for these exciting upcoming events",
+    "items": [
+      {
+        "id": "o8uf6ehh0t9",
+        "title": "Detergent2",
+        "description": "Join us for this special detergent2 event.",
+        "eventType": "Special Event",
+        "date": "2025-10-23",
+        "time": "18:00",
+        "capacity": "20-50 guests",
+        "pricePerPerson": "$80",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/event-1_2025-09-23T17-23-12.jpg",
+        "alt": "detergent2 event",
+        "externalLinks": [],
+        "imageGallery": [
+          {
+            "url": "idb://vm-images/img-1758607585873-t2386ys4",
+            "alt": "Fiori Drink",
+            "caption": ""
+          },
+          {
+            "url": "idb://vm-images/img-1758607585893-ogzw4zbf",
+            "alt": "Fiori Lunch menu",
+            "caption": ""
+          }
+        ]
+      }
+    ]
+  },
+  "businessName": "Caccia's Home Services",
+  "menu": {
+    "title": "Our Menu",
+    "subtitle": "Delicious offerings made fresh daily",
+    "tabs": [
+      {
+        "id": "lunch",
+        "name": "Lunch",
+        "description": "Fresh lunch options available daily",
+        "canvaEmbedUrl": "",
+        "menuImages": [
+          {
+            "id": "kxz0yczr75r",
+            "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-0-menu-image-0_2025-09-23T20-11-40.png",
+            "alt": "food",
+            "caption": ""
+          }
+        ],
+        "categories": [
+          {
+            "id": "burgers",
+            "name": "Burgers",
+            "description": "Handcrafted burgers made with premium ingredients",
+            "items": [
+              {
+                "id": "od2mt9xwpw",
+                "title": "Burger",
+                "description": "burger description here",
+                "price": "$10.00",
+                "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-0-cat-0-item-0-image_2025-09-23T20-11-45.jpg",
+                "alt": "burger",
+                "thumbnailUrl": "idb://vm-images/img-1758603442069-apzfzvoz",
+                "dietary": []
+              },
+              {
+                "id": "e1spgiiz5nn",
+                "title": "Fries",
+                "description": "fries description here",
+                "price": "$5.00",
+                "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-0-cat-0-item-1-image_2025-09-23T20-11-54.jpg",
+                "alt": "fries",
+                "thumbnailUrl": "idb://vm-images/img-1758604672747-la7lqaef",
+                "dietary": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "dinner",
+        "name": "Dinner",
+        "description": "Delicious dinner selections for a perfect evening",
+        "canvaEmbedUrl": "",
+        "menuImages": [],
+        "categories": [
+          {
+            "id": "seafood",
+            "name": "Seafood",
+            "description": "Fresh catches prepared to perfection",
+            "items": [
+              {
+                "id": "grilled-salmon",
+                "title": "Grilled Salmon",
+                "description": "Fresh Atlantic salmon grilled to perfection, served with seasonal vegetables and lemon herb butter.",
+                "price": "$22.99",
+                "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-1-cat-0-item-0-image_2025-09-23T20-11-57.jpg",
+                "alt": "Grilled salmon with vegetables",
+                "dietary": [
+                  "Gluten-Free"
+                ],
+                "thumbnailUrl": "idb://vm-images/img-1758604786414-oyoyddk2"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "video": {
+    "title": "See Our Work in Action",
+    "subtitle": "Watch how we deliver exceptional service to our customers",
+    "provider": "vimeo",
+    "url": "<iframe title=\"vimeo-player\" src=\"https://player.vimeo.com/video/1115564084?h=2680f90689\" width=\"640\" height=\"360\" frameborder=\"0\" referrerpolicy=\"strict-origin-when-cross-origin\" allow=\"autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share\" allowfullscreen></iframe>",
+    "autoplay": false,
+    "controls": true,
+    "loop": false,
+    "muted": false
+  }
+}

@@ -1,0 +1,501 @@
+{
+  "seo": {
+    "metaTitle": "This is the Meta Title in the SEO section",
+    "metaDescription": "And this is the Meta Description. ",
+    "canonicalUrl": "https://www.solarpanelslebanon.com",
+    "ogImageUrl": "ERROR: Existing image not accessible for ogImageUrl (400)",
+    "searchResultsIcon": "ERROR: Existing image not accessible for searchResultsIcon (400)",
+    "primaryService": "Laundry",
+    "primaryCity": "San Mateo",
+    "googleAnalyticsId": ""
+  },
+  "businessInfo": {
+    "businessName": "Wash Cafe",
+    "businessCategory": "LaundryService",
+    "address": {
+      "streetAddress": "127 Robert E Lee",
+      "addressLocality": "Hunt",
+      "addressRegion": "TX",
+      "postalCode": "78024",
+      "addressCountry": "US"
+    },
+    "phone": "+16503425363",
+    "email": "info@washcafe.com",
+    "paymentAccepted": [
+      "Cash",
+      "Credit Card",
+      "Check"
+    ],
+    "areaServed": "San Mateo & Burlingame",
+    "availableLanguages": [
+      "English"
+    ],
+    "priceRange": "$$",
+    "businessHours": {
+      "Monday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Tuesday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Wednesday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Thursday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Friday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Saturday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      },
+      "Sunday": {
+        "open": "7:00 AM",
+        "close": "5:00 PM"
+      }
+    }
+  },
+  "logoUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/logo_2025-09-27T15-10-27.jpg",
+  "header": {
+    "showLogo": true,
+    "colors": {
+      "brandText": "#111827",
+      "navText": "#374151"
+    },
+    "logoSize": 2.5
+  },
+  "hero": {
+    "heroLargeImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero_2025-10-03T02-35-52.jpg",
+    "headline": "The Best Laundry Cafe in the Bay Area!",
+    "subheadline": "Where fresh laundry meets fresh coffee — relax while we handle the wash. Come try the Bay Area's safest laundry cafe. We're open 24/7 so our door is always open for you!",
+    "cta": {
+      "label": "Learn More",
+      "actionType": "contact",
+      "href": "",
+      "phoneNumber": ""
+    },
+    "phone": "+16503425363",
+    "colors": {
+      "headline": "#ffffff",
+      "subheadline": "#ffffff",
+      "ctaText": "#ffffff",
+      "ctaBackground": "#10B981"
+    },
+    "mediaType": "photo",
+    "video": {
+      "provider": "vimeo",
+      "url": "<iframe title=\"vimeo-player\" src=\"https://player.vimeo.com/video/394353671?h=d1cebace6d\" width=\"640\" height=\"360\" frameborder=\"0\" referrerpolicy=\"strict-origin-when-cross-origin\" allow=\"autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share\"   allowfullscreen></iframe>",
+      "autoplay": true,
+      "controls": false,
+      "loop": true,
+      "muted": true
+    },
+    "subheadlineTextSize": "1.675",
+    "headlineTextSize": "4.75",
+    "heroImages": [
+      "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero-image-0_2025-10-03T02-35-52.jpg",
+      "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero-image-1_2025-10-03T02-35-53.jpg"
+    ],
+    "layoutStyle": "fullwidth-overlay",
+    "overlayTextColor": "white",
+    "overlayBlur": true,
+    "subheadlineBold": "true",
+    "subheadlineAlign": "left",
+    "headlineAlign": "left",
+    "ctaAlign": "left"
+  },
+  "about": {
+    "title": "About Wash Cafe",
+    "description": "At Wash Café in San Mateo, we combine the comfort of a neighborhood café with the convenience of modern laundry services. Whether you’re here to sip on a latte, catch up on work, or simply unwind, you’ll enjoy a welcoming space where your laundry gets done quickly, cleanly, and stress-free. Our mission is to make laundry day something you look forward to.",
+    "statistics": [],
+    "features": [
+      "Upfront, Transparent Pricing: No hidden fees or surprises.",
+      "24/7 Services: We're here when you need us.",
+      "Licensed and Insured: Your clothes are safe with us.",
+      "Commitment to Sustainable Practices: Environmentally conscious solutions.",
+      "Gourmet coffee and bagels.",
+      "Breakfast, lunch and dinner menus. "
+    ],
+    "images": [
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-1_2025-09-23T17-22-56.jpg",
+        "alt": "About image 1",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-1-thumb_2025-09-23T17-22-56.jpg"
+      },
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-2_2025-09-23T17-22-57.jpg",
+        "alt": "About image 2",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-2-thumb_2025-09-23T17-22-58.jpg"
+      },
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-3_2025-09-23T17-22-58.jpg",
+        "alt": "About image 3",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-3-thumb_2025-09-23T17-22-59.jpg"
+      },
+      {
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-4_2025-09-23T17-23-01.jpg",
+        "alt": "About image 4",
+        "thumbnailUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/about-4-thumb_2025-09-23T17-23-03.jpg"
+      }
+    ],
+    "descriptionTextSize": "1.125",
+    "featuresTextSize": "1",
+    "titleTextSize": "2.25",
+    "thumbnailSize": 1.5,
+    "layoutStyle": "standard"
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "Professional solutions tailored to your needs",
+    "items": [
+      {
+        "id": "umcpa3wsu9t",
+        "title": "Cafe",
+        "description": "Enjoy a nice brew in our 5 star coffee lounge.",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/service-umcpa3wsu9t_2025-09-23T17-22-52.jpg",
+        "alt": "cafe service"
+      },
+      {
+        "id": "yzjx6itxk3",
+        "title": "Laundry",
+        "description": "Top of the line washing machines. Coin operated but also accept card.",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/service-yzjx6itxk3_2025-09-23T17-22-53.jpg",
+        "alt": "laundrymachines service"
+      },
+      {
+        "id": "hic3v9kpnkj",
+        "title": "Drying",
+        "description": "Top of the line drying machines. Coin operated but also accept card.",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/service-hic3v9kpnkj_2025-09-23T17-22-55.jpg",
+        "alt": "dryingmachine service"
+      }
+    ]
+  },
+  "businessBenefits": {
+    "title": "Why Choose Wash Cafe",
+    "items": [
+      {
+        "title": "One Stop Convenience",
+        "description": "Take care of your laundry and enjoy a great cup of coffee in a single visit, saving you valuable time."
+      },
+      {
+        "title": "Modern Comfort",
+        "description": "Relax in a clean, stylish, and welcoming environment designed to make laundry day enjoyable."
+      },
+      {
+        "title": "Expert Laundry Care",
+        "description": "Your clothes are treated with professional-level cleaning and handling for the best results."
+      },
+      {
+        "title": "Connected Lounge",
+        "description": "Stay productive while you wait with complimentary Wi-Fi and ample workspace-friendly areas."
+      },
+      {
+        "title": "Eco-Smart Machines",
+        "description": "We use high-efficiency washers and dryers that are gentle on your clothes and the environment."
+      },
+      {
+        "title": "Community Hub",
+        "description": "More than just laundry — it’s a place to multitask, socialize, or simply take a break while chores get done."
+      }
+    ]
+  },
+  "testimonials": {
+    "title": "What Our Clients Say",
+    "subtitle": "Don't just take our word for it. Here's what our satisfied clients have to say about our professional services.",
+    "items": [
+      {
+        "authorImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/testimonial-1_2025-09-27T15-10-31.png",
+        "authorName": "Wendy G",
+        "rating": 5,
+        "reviewDate": "5 months",
+        "reviewText": "\"Such a smart idea! I grabbed a latte, got some work done with the free Wi-Fi, and my laundry was finished before I knew it. Super clean and welcoming spot.\""
+      },
+      {
+        "authorImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/testimonial-2_2025-09-27T15-10-33.png",
+        "authorName": "Vivian Yeh",
+        "rating": 5,
+        "reviewDate": "6 months",
+        "reviewText": "“Best laundry experience I’ve ever had. The machines are fast and eco-friendly, and the staff folded everything perfectly. Plus, the coffee is actually amazing!”"
+      },
+      {
+        "authorImageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/testimonial-3_2025-09-27T15-10-34.png",
+        "authorName": "Nikki Pavis",
+        "rating": 5,
+        "reviewDate": "2 months",
+        "reviewText": "“I love coming here on weekends. It feels more like a cozy café than a laundromat, and I always run into friendly people. Makes laundry day fun instead of a chore.”"
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Get in touch with us today. We're here to help with all your needs.",
+    "address": "127 Robert E Lee, Hunt, TX 78024",
+    "phone": "+16503425363",
+    "email": "info@cacciaplumbing.com",
+    "contactRecipients": [
+      "support@washcafe.com"
+    ],
+    "mapEmbedUrl": "https://maps.google.com/maps?width=100%25&height=600&hl=en&q=127%20Robert%20E%20Lee%2C%20Hunt%2C%20TX%2078024&t=&z=14&ie=UTF8&iwloc=B&output=embed&_t=1758658270229",
+    "social": {
+      "facebook": "",
+      "twitter": "",
+      "instagram": "",
+      "linkedin": "",
+      "youtube": "",
+      "tiktok": "h",
+      "yelp": "h",
+      "googleBusinessProfile": "",
+      "doordash": "a",
+      "ubereats": "b",
+      "grubhub": "v",
+      "postmates": "h",
+      "instacart": "j",
+      "toast": ""
+    },
+    "consentText": "By checking this box, you agree to receive communications from us.",
+    "showConsent": false,
+    "consentRequiresCheckbox": true
+  },
+  "footer": {
+    "socialLinks": [
+      {
+        "platform": "instagram",
+        "url": "https://instagram.com/yourbusiness"
+      },
+      {
+        "platform": "facebook",
+        "url": "https://facebook.com/yourbusiness"
+      },
+      {
+        "platform": "linkedin",
+        "url": "https://linkedin.com/company/yourbusiness"
+      }
+    ],
+    "showPrivacyPolicy": true,
+    "showTermsAndConditions": true,
+    "privacyPolicyText": "<!doctype html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"utf-8\" />\n  <title>Privacy Policy</title>\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n  <meta name=\"robots\" content=\"noindex,follow\" />\n  <style>\n    :root { color-scheme: light dark; }\n    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.6; }\n    header, main, footer { max-width: 820px; margin: 0 auto; padding: 1.25rem; }\n    h1, h2, h3 { line-height: 1.25; }\n    h1 { font-size: 1.9rem; margin: 1rem 0; }\n    h2 { font-size: 1.35rem; margin-top: 2rem; }\n    h3 { font-size: 1.1rem; margin-top: 1.25rem; }\n    p, li { font-size: 1rem; }\n    ul { padding-left: 1.2rem; }\n    code { background: rgba(127,127,127,.15); padding: .1rem .25rem; border-radius: 4px; }\n    .meta { color: #666; font-size: .95rem; }\n    .notice { background: rgba(255, 230, 0, 0.12); border-left: 4px solid #e0c200; padding: .75rem; margin: 1rem 0; }\n    a { color: #0b6; text-decoration: none; }\n    a:hover { text-decoration: underline; }\n    footer { color: #666; font-size: .95rem; }\n  </style>\n</head>\n<body>\n  <header>\n    <h1>Privacy Policy</h1>\n    <p class=\"meta\">Effective date: <time datetime=\"2025-10-08\">October 8, 2025</time></p>\n    <p class=\"meta\">Controller: Example Company LLC, 123 Example Ave, Sample City, CA 90000, US · Email: privacy@example.com</p>\n    <div class=\"notice\">\n      This policy explains what data is collected, how it is used and shared, and the rights available under applicable laws such as GDPR and CCPA/CPRA. \n    </div>\n  </header>\n\n  <main>\n    <section id=\"scope\">\n      <h2>Scope</h2>\n      <p>This policy applies to the website and mobile applications operated by Example Company LLC and related services provided globally.</p>\n    </section>\n\n    <section id=\"data-we-collect\">\n      <h2>Data We Collect</h2>\n      <ul>\n        <li>Account data: name, email, username, password (hashed).</li>\n        <li>Usage data: IP address, device and browser, pages viewed, timestamps.</li>\n        <li>Transaction data: orders, billing details, limited payment metadata via processor.</li>\n        <li>Marketing preferences: subscriptions and communication settings.</li>\n        <li>Cookies/trackers: identifiers for analytics, functionality, and ads where applicable.</li>\n      </ul>\n      <p>Data is collected directly, automatically through the service, and from service providers as described below.</p>\n    </section>\n\n    <section id=\"purposes-legal-bases\">\n      <h2>Purposes and Legal Bases</h2>\n      <ul>\n        <li>Provide and maintain services (Contract).</li>\n        <li>Security, fraud prevention, and debugging (Legitimate interests).</li>\n        <li>Compliance with legal obligations (Legal obligation).</li>\n        <li>Analytics and improvement (Legitimate interests or Consent, depending on jurisdiction).</li>\n        <li>Marketing communications (Consent, with opt-out options).</li>\n      </ul>\n    </section>\n\n    <section id=\"how-we-process\">\n      <h2>How We Process</h2>\n      <p>Data is processed via forms, account features, automatic logs, cookies, and third-party processors (e.g., payments, analytics, hosting, email delivery).</p>\n      <p>No automated decision-making or profiling with legal effects is performed unless stated otherwise.</p>\n    </section>\n\n    <section id=\"sharing\">\n      <h2>Sharing and Disclosures</h2>\n      <ul>\n        <li>Payment processors to process transactions.</li>\n        <li>Analytics providers to measure and improve performance.</li>\n        <li>Cloud hosting and storage vendors to deliver the service.</li>\n        <li>Email service providers for transactional and marketing emails.</li>\n      </ul>\n      <p>Disclosures may occur for legal compliance, to protect rights and safety, or during business transfers.</p>\n    </section>\n\n    <section id=\"rights\">\n      <h2>Your Rights</h2>\n      <p>Depending on location, rights may include access, rectification, erasure, restriction, portability, objection, and the right to withdraw consent.</p>\n      <p>To exercise rights, send a request to privacy@example.com. Reasonable identity verification may be required. Responses are provided within the timeframes set by law.</p>\n    </section>\n\n    <section id=\"retention\">\n      <h2>Data Retention</h2>\n      <ul>\n        <li>Account data is retained for the life of the account and a reasonable period thereafter.</li>\n        <li>Transaction records are retained for statutory periods (for example, up to 7 years).</li>\n        <li>Usage and cookie data is retained per cookie lifetimes or aggregated/anonymized.</li>\n      </ul>\n    </section>\n\n    <section id=\"security\">\n      <h2>Security</h2>\n      <p>Measures include TLS encryption in transit, access controls, monitoring and logging, and vendor due diligence including DPAs where required.</p>\n      <p>No method of transmission or storage is completely secure, and residual risk cannot be eliminated.</p>\n    </section>\n\n    <section id=\"cookies\">\n      <h2>Cookies and Tracking</h2>\n      <p>Types include strictly necessary, functional, analytics, and advertising cookies. Non-essential cookies may require consent depending on jurisdiction.</p>\n      <p>Preferences can be managed via the cookie banner or browser settings, and can be changed at any time.</p>\n    </section>\n\n    <section id=\"transfers\">\n      <h2>International Transfers</h2>\n      <p>Where data is transferred internationally, appropriate safeguards such as Standard Contractual Clauses or adequacy decisions are used.</p>\n    </section>\n\n    <section id=\"children\">\n      <h2>Children’s Privacy</h2>\n      <p>The service is not directed to children below applicable age thresholds, and data is not knowingly collected from them.</p>\n    </section>\n\n    <section id=\"changes\">\n      <h2>Changes to This Policy</h2>\n      <p>Material changes will be posted with an updated effective date, and additional notice may be provided where required.</p>\n    </section>\n\n    <section id=\"contact\">\n      <h2>Contact</h2>\n      <p>Questions or requests: privacy@example.com. Individuals may have the right to lodge a complaint with a supervisory authority in their jurisdiction.</p>\n    </section>\n\n    <hr />\n\n    <section id=\"jurisdictional-notices\">\n      <h2>Jurisdictional Notices</h2>\n\n      <h3>GDPR (EEA/UK)</h3>\n      <ul>\n        <li>Lawful bases are listed above; data subjects have the rights listed in the Rights section.</li>\n        <li>Transfers outside the EEA/UK rely on appropriate safeguards such as SCCs or adequacy decisions.</li>\n      </ul>\n\n      <h3>California (CCPA/CPRA)</h3>\n      <ul>\n        <li>California residents have rights to know, delete, correct, and opt out of sale or sharing of personal information.</li>\n        <li>Two or more methods will be provided to submit requests; an opt-out mechanism is available for targeted advertising where applicable.</li>\n      </ul>\n    </section>\n  </main>\n\n  <footer>\n    © <span id=\"year\"></span> Example Company LLC\n  </footer>\n\n  <script>\n    document.getElementById('year').textContent = new Date().getFullYear();\n  </script>\n</body>\n</html>\n"
+  },
+  "layout": {
+    "sections": [
+      {
+        "id": "hero",
+        "enabled": true
+      },
+      {
+        "id": "about",
+        "enabled": true
+      },
+      {
+        "id": "services",
+        "enabled": true
+      },
+      {
+        "id": "menu",
+        "enabled": true
+      },
+      {
+        "id": "testimonials",
+        "enabled": true
+      },
+      {
+        "id": "upcomingEvents",
+        "enabled": true
+      },
+      {
+        "id": "contact",
+        "enabled": true
+      },
+      {
+        "id": "payment",
+        "enabled": true
+      },
+      {
+        "id": "videos",
+        "enabled": true
+      }
+    ]
+  },
+  "payment": {
+    "title": "Try Our Organic Detergents!",
+    "titleTextSize": 2.25,
+    "description": "Buy 1 or more of our organic detergents! Healthy for the family and pets. ",
+    "descriptionTextSize": 1.125,
+    "buttonLabel": "Buy Now",
+    "buttonLabelTextSize": 1,
+    "provider": "link",
+    "paymentLinkUrl": "",
+    "shopifyEmbedCode": "",
+    "galleryImages": [
+      {
+        "id": "wjrh11r5p",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/payment-gallery-0_2025-09-23T17-23-13.jpg",
+        "alt": "detergent1",
+        "caption": "",
+        "thumbnailUrl": "idb://vm-images/img-1758610207378-48rtpit5"
+      },
+      {
+        "id": "52g3nif3aga",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/payment-gallery-1_2025-09-23T17-23-13.jpg",
+        "alt": "detergent2",
+        "caption": "",
+        "thumbnailUrl": "idb://vm-images/img-1758610207382-vppuamha"
+      }
+    ],
+    "galleryTitle": "Product Gallery",
+    "thumbnailSize": 1,
+    "addHeroCta": false,
+    "heroCtaLabel": "",
+    "heroCtaLabelTextSize": 1,
+    "addHeaderCta": false,
+    "headerCtaLabel": "",
+    "headerCtaLabelTextSize": 1
+  },
+  "videos": {
+    "title": "Videos",
+    "subtitle": "See our work in action",
+    "items": [
+      {
+        "title": "",
+        "subtitle": "",
+        "provider": "youtube",
+        "url": "",
+        "autoplay": false,
+        "controls": true,
+        "loop": false,
+        "muted": false,
+        "volume": 100
+      }
+    ]
+  },
+  "upcomingEvents": {
+    "title": "Upcoming Events",
+    "subtitle": "Join us for these exciting upcoming events",
+    "items": [
+      {
+        "id": "o8uf6ehh0t9",
+        "title": "Detergent2",
+        "description": "Join us for this special detergent2 event.",
+        "eventType": "Special Event",
+        "date": "2025-10-23",
+        "time": "18:00",
+        "capacity": "20-50 guests",
+        "pricePerPerson": "$80",
+        "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/event-1_2025-09-23T17-23-12.jpg",
+        "alt": "detergent2 event",
+        "externalLinks": [],
+        "imageGallery": [
+          {
+            "url": "idb://vm-images/img-1758607585873-t2386ys4",
+            "alt": "Fiori Drink",
+            "caption": ""
+          },
+          {
+            "url": "idb://vm-images/img-1758607585893-ogzw4zbf",
+            "alt": "Fiori Lunch menu",
+            "caption": ""
+          }
+        ]
+      }
+    ]
+  },
+  "colorPalette": {
+    "primary": "#4a10b7",
+    "secondary": "#6B7280"
+  },
+  "businessName": "Caccia's Home Services",
+  "menu": {
+    "title": "Our Menu",
+    "subtitle": "Delicious offerings made fresh daily",
+    "tabs": [
+      {
+        "id": "lunch",
+        "name": "Lunch",
+        "description": "Fresh lunch options available daily",
+        "menuImages": [
+          {
+            "id": "kxz0yczr75r",
+            "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-0-menu-image-0_2025-09-27T15-10-35.png",
+            "alt": "food",
+            "caption": ""
+          }
+        ],
+        "categories": [
+          {
+            "id": "burgers",
+            "name": "Burgers",
+            "description": "Handcrafted burgers made with premium ingredients",
+            "items": [
+              {
+                "id": "od2mt9xwpw",
+                "title": "Burger",
+                "description": "burger description here",
+                "price": "$10.00",
+                "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-0-cat-0-item-0-image_2025-09-27T15-10-39.jpg",
+                "alt": "burger",
+                "thumbnailUrl": "idb://vm-images/img-1758603442069-apzfzvoz",
+                "dietary": []
+              },
+              {
+                "id": "e1spgiiz5nn",
+                "title": "Fries",
+                "description": "fries description here",
+                "price": "$5.00",
+                "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-0-cat-0-item-1-image_2025-09-27T15-10-43.jpg",
+                "alt": "fries",
+                "thumbnailUrl": "idb://vm-images/img-1758604672747-la7lqaef",
+                "dietary": []
+              }
+            ]
+          }
+        ],
+        "htmlContent": "<div style=\"margin-bottom: 2rem;\">\n  <h1 style=\"font-size: clamp(1.5rem, 5vw, 2rem); font-weight: 800;\">Lunetta</h1>\n  <p style=\"color: #666;\">Lunch • 11:30–3:00 | Downtown | Seasonal</p>\n</div>\n\n<h2>Lunch Menu</h2>\n<p style=\"color: #666; font-size: 1.1em;\">Fresh, seasonal plates crafted with local produce and housemade breads.</p>\n\n<hr>\n\n<h2>Starters</h2>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Citrus Ceviche</strong> — $14<br>\n  <span style=\"color: #666; font-size: 0.9em;\">White fish, lime, ají limo, red onion, sweet potato, cancha.</span><br>\n  <span style=\"background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.75em;\">Gluten-free</span>\n</div>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Roasted Tomato Soup</strong> — $9<br>\n  <span style=\"color: #666; font-size: 0.9em;\">San Marzano tomatoes, basil oil, garlic croutons, cream swirl.</span><br>\n  <span style=\"background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.75em;\">Vegetarian</span>\n</div>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Crispy Calamari</strong> — $13<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Lemon zest batter, parsley, smoked paprika aioli.</span>\n</div>\n\n<hr>\n\n<h2>Mains</h2>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Grilled Chicken Panino</strong> — $16<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Herb-marinated chicken, provolone, arugula, confit tomato, basil mayo on ciabatta.</span>\n</div>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Quinoa Power Bowl</strong> — $15<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Tri-color quinoa, avocado, roasted squash, chickpeas, pepitas, citrus vinaigrette.</span><br>\n  <span style=\"background: #f3f4f6; padding: 0.25rem 0.5rem; border-radius: 999px; font-size: 0.75em;\">Vegan</span>\n</div>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Seared Salmon</strong> — $22<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Brown butter glaze, fennel-orange salad, herbed farro.</span>\n</div>\n\n<hr>\n\n<h2>Sides</h2>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Hand-cut Fries</strong> — $6<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Sea salt, rosemary, garlic aioli.</span>\n</div>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Market Greens</strong> — $7<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Mixed lettuces, radish, cucumber, lemon-herb dressing.</span>\n</div>\n\n<hr>\n\n<h2>Desserts</h2>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Lemon Posset</strong> — $8<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Silky lemon cream, macerated berries, shortbread crumb.</span>\n</div>\n\n<div style=\"padding: 1rem; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; margin-bottom: 1rem;\">\n  <strong>Chocolate Torte</strong> — $9<br>\n  <span style=\"color: #666; font-size: 0.9em;\">Flourless dark chocolate, espresso whip, cocoa nibs.</span>\n</div>\n\n<hr>\n\n<h2>Beverages</h2>\n\n<p><strong>House Lemonade</strong> — $5<br>\n<em>Fresh lemon, raw sugar, mint.</em></p>\n\n<p><strong>Cold Brew</strong> — $5<br>\n<em>12-hour steep, chocolate notes.</em></p>\n\n<p><strong>Iced Tea</strong> — $4<br>\n<em>Black or peach herbal, lightly sweetened.</em></p>\n\n<p><strong>Sparkling Water</strong> — $3<br>\n<em>Lime twist.</em></p>\n\n<hr>\n\n<p style=\"color: #666; font-size: 0.9em;\"><em>Allergies? Please inform the team. Cross-contact may occur in a shared kitchen.</em></p>"
+      },
+      {
+        "id": "dinner",
+        "name": "Dinner",
+        "description": "Delicious dinner selections for a perfect evening",
+        "canvaEmbedUrl": "",
+        "menuImages": [],
+        "categories": [
+          {
+            "id": "seafood",
+            "name": "Seafood",
+            "description": "Fresh catches prepared to perfection",
+            "items": [
+              {
+                "id": "grilled-salmon",
+                "title": "Grilled Salmon",
+                "description": "Fresh Atlantic salmon grilled to perfection, served with seasonal vegetables and lemon herb butter.",
+                "price": "$22.99",
+                "imageUrl": "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/menu-tab-1-cat-0-item-0-image_2025-09-27T15-10-46.jpg",
+                "alt": "Grilled salmon with vegetables",
+                "dietary": [
+                  "Gluten-Free"
+                ],
+                "thumbnailUrl": "idb://vm-images/img-1758604786414-oyoyddk2"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "video": {
+    "title": "See Our Work in Action",
+    "subtitle": "Watch how we deliver exceptional service to our customers",
+    "provider": "vimeo",
+    "url": "<iframe title=\"vimeo-player\" src=\"https://player.vimeo.com/video/1115564084?h=2680f90689\" width=\"640\" height=\"360\" frameborder=\"0\" referrerpolicy=\"strict-origin-when-cross-origin\" allow=\"autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share\" allowfullscreen></iframe>",
+    "autoplay": false,
+    "controls": true,
+    "loop": false,
+    "muted": false
+  }
+}

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: /api/sitemap.xml
+
+# Allow indexing of partners page specifically
+Allow: /partners

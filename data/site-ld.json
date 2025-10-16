@@ -1,0 +1,282 @@
+{
+  "// CANONICAL JSON-LD STRUCTURE FOR LOCAL BUSINESS TEMPLATE": "This file shows the complete JSON-LD structure that should be generated from the editor data",
+  "// INTEGRATION NOTES": "This should be dynamically generated and injected into the <head> of each page as <script type='application/ld+json'>",
+  
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "// WebSite Entity": "Represents the overall website",
+      "@type": "WebSite",
+      "@id": "https://example.com/#website",
+      "url": "https://example.com/",
+      "name": "// FROM: businessInfo.businessName",
+      "publisher": { "@id": "https://example.com/#organization" },
+      "inLanguage": "// FROM: businessInfo.availableLanguages[0] || 'en-US'",
+      "potentialAction": {
+        "// CONDITIONAL": "Include if contact section is enabled in layout",
+        "@type": "ContactAction", 
+        "target": [
+          "// FROM: 'tel:' + businessInfo.phone",
+          "// FROM: 'mailto:' + businessInfo.email"
+        ]
+      }
+    },
+    
+    {
+      "// Organization/Brand Entity": "The business as an organization",
+      "@type": ["Organization", "Brand"],
+      "@id": "https://example.com/#organization", 
+      "name": "// FROM: businessInfo.businessName",
+      "url": "https://example.com/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "// FROM: logoUrl (if provided)",
+        "width": "// INFERRED: 512 (default)",
+        "height": "// INFERRED: 512 (default)"
+      },
+      "sameAs": [
+        "// FROM: contact.social.facebook (if provided)",
+        "// FROM: contact.social.instagram (if provided)", 
+        "// FROM: contact.social.linkedin (if provided)",
+        "// FROM: contact.social.twitter (if provided)",
+        "// FROM: contact.social.youtube (if provided)",
+        "// FROM: contact.social.tiktok (if provided)",
+        "// FROM: contact.social.yelp (if provided)",
+        "// FROM: contact.social.googleBusinessProfile (if provided)",
+        "// FROM: footer.socialLinks[] (additional sources)"
+      ]
+    },
+    
+    {
+      "// LocalBusiness Entity": "The core business information",
+      "@type": [
+        "LocalBusiness",
+        "// FROM: businessInfo.businessCategory (e.g., 'HVACBusiness', 'Restaurant', 'PlumbingService')"
+      ],
+      "@id": "https://example.com/#localbusiness",
+      "name": "// FROM: businessInfo.businessName",
+      "url": "https://example.com/",
+      "description": "// FROM: about.description",
+      "telephone": "// FROM: businessInfo.phone",
+      "email": "// FROM: businessInfo.email", 
+      "priceRange": "// FROM: businessInfo.priceRange (e.g., '$', '$$', '$$$', '$$$$')",
+      "image": [
+        "// FROM: hero.heroLargeImageUrl (primary image)",
+        "// FROM: about.images[].imageUrl (additional images)"
+      ],
+      "logo": { "@id": "https://example.com/#organization" },
+      "sameAs": [
+        "// SAME AS Organization.sameAs above"
+      ],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "// FROM: businessInfo.address.streetAddress",
+        "addressLocality": "// FROM: businessInfo.address.addressLocality", 
+        "addressRegion": "// FROM: businessInfo.address.addressRegion",
+        "postalCode": "// FROM: businessInfo.address.postalCode",
+        "addressCountry": "// FROM: businessInfo.address.addressCountry"
+      },
+      "areaServed": {
+        "@type": "City",
+        "name": "// FROM: businessInfo.areaServed || businessInfo.address.addressLocality"
+      },
+      "openingHoursSpecification": [
+        {
+          "// CONDITIONAL": "Only include if businessInfo.businessHours is provided (fallback to contact.businessHours)",
+          "@type": "OpeningHoursSpecification", 
+          "dayOfWeek": [
+            "// FROM: businessInfo.businessHours - group consecutive days with same hours"
+          ],
+          "opens": "// FROM: businessInfo.businessHours[day].open (convert 12h to 24h format)",
+          "closes": "// FROM: businessInfo.businessHours[day].close (convert 12h to 24h format)"
+        }
+      ],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "// FROM: businessInfo.phone",
+        "contactType": "// INFERRED: 'customer service'",
+        "areaServed": "// FROM: businessInfo.address.addressCountry",
+        "availableLanguage": [
+          "// FROM: businessInfo.availableLanguages[] (e.g., ['en', 'es'])"
+        ]
+      },
+      "paymentAccepted": [
+        "// FROM: businessInfo.paymentAccepted[] (e.g., ['Cash', 'Credit Card', 'PayPal'])"
+      ],
+      "currenciesAccepted": "// INFERRED: 'USD' (based on addressCountry)",
+      "aggregateRating": {
+        "// CONDITIONAL": "Only include if testimonials.items has ratings or overallRating is set",
+        "@type": "AggregateRating",
+        "ratingValue": "// FROM: testimonials.overallRating || CALCULATED: Average of testimonials.items[].rating",
+        "reviewCount": "// FROM: testimonials.totalReviews || CALCULATED: testimonials.items.length"
+      },
+      "review": [
+        {
+          "// FROM": "testimonials.items[] - map each testimonial",
+          "@type": "Review",
+          "author": {
+            "@type": "Person", 
+            "name": "// FROM: testimonials.items[i].authorName"
+          },
+          "datePublished": "// FROM: testimonials.items[i].reviewDate || current date",
+          "reviewBody": "// FROM: testimonials.items[i].reviewText",
+          "reviewRating": {
+            "@type": "Rating",
+            "ratingValue": "// FROM: testimonials.items[i].rating",
+            "bestRating": "5"
+          }
+        }
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "// FROM: services.title",
+        "itemListElement": [
+          {
+            "// FROM": "services.items[] - map each service",
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "// FROM: services.items[i].title",
+              "description": "// FROM: services.items[i].description",
+              "areaServed": "// FROM: businessInfo.areaServed"
+            }
+          }
+        ]
+      },
+      "knowsAbout": [
+        "// FROM: businessBenefits.items[].title (what the business specializes in)",
+        "// FROM: about.features[] (additional capabilities)"
+      ]
+    },
+    
+    {
+      "// WebPage Entity": "The specific page being viewed",
+      "@type": "WebPage",
+      "@id": "https://example.com/#webpage",
+      "url": "https://example.com/",
+      "name": "// FROM: seo.metaTitle || hero.headline + ' | ' + businessInfo.businessName",
+      "description": "// FROM: seo.metaDescription || about.description",
+      "isPartOf": { "@id": "https://example.com/#website" },
+      "about": { "@id": "https://example.com/#localbusiness" },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "// FROM: seo.ogImageUrl || hero.heroLargeImageUrl",
+        "width": "// INFERRED: 1200 (typical OG image)",
+        "height": "// INFERRED: 630 (typical OG image)"
+      },
+      "inLanguage": "// FROM: businessInfo.availableLanguages[0] || 'en-US'"
+    },
+    
+    {
+      "// CONDITIONAL - Menu/Food Service": "Only include if menu section exists and businessCategory suggests food service",
+      "// BUSINESS TYPES": "Include for: Restaurant, Bakery, CafeOrCoffeeShop, BarOrPub, IceCreamShop, etc.",
+      "@type": "FoodEstablishment",
+      "@id": "https://example.com/#foodestablishment",
+      "hasMenu": {
+        "@type": "Menu",
+        "name": "// FROM: menu.title",
+        "hasMenuSection": [
+          {
+            "// FROM": "menu.tabs[] - map each tab/category",
+            "@type": "MenuSection", 
+            "name": "// FROM: menu.tabs[i].name",
+            "description": "// FROM: menu.tabs[i].description",
+            "hasMenuItem": [
+              {
+                "// FROM": "menu.tabs[i].items[] or menu.tabs[i].categories[].items[]",
+                "@type": "MenuItem",
+                "name": "// FROM: item.title",
+                "description": "// FROM: item.description", 
+                "offers": {
+                  "@type": "Offer",
+                  "price": "// FROM: item.price (extract numeric value)",
+                  "priceCurrency": "// INFERRED: 'USD'"
+                },
+                "suitableForDiet": [
+                  "// FROM: item.dietary[] - map to schema.org diet types"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "servesCuisine": "// INFERRED: Based on menu items or business description"
+    },
+    
+    {
+      "// CONDITIONAL - Events": "Only include if upcomingEvents section exists and has items",
+      "@type": "Event",
+      "@id": "https://example.com/events/#event-{id}",
+      "name": "// FROM: upcomingEvents.items[i].title",
+      "description": "// FROM: upcomingEvents.items[i].description",
+      "startDate": "// FROM: upcomingEvents.items[i].date + 'T' + upcomingEvents.items[i].time",
+      "eventAttendanceMode": "// INFERRED: 'OfflineEventAttendanceMode'",
+      "eventStatus": "// INFERRED: 'EventScheduled'",
+      "location": { "@id": "https://example.com/#localbusiness" },
+      "organizer": { "@id": "https://example.com/#localbusiness" },
+      "offers": {
+        "@type": "Offer",
+        "price": "// FROM: upcomingEvents.items[i].pricePerPerson (extract numeric)",
+        "priceCurrency": "// INFERRED: 'USD'",
+        "availability": "// INFERRED: 'InStock'"
+      },
+      "maximumAttendeeCapacity": "// FROM: upcomingEvents.items[i].capacity (extract numeric)"
+    },
+    
+    {
+      "// CONDITIONAL - Video": "Only include if video section exists and has URL",
+      "@type": "VideoObject",
+      "@id": "https://example.com/#video",
+      "name": "// FROM: video.title",
+      "description": "// FROM: video.subtitle",
+      "embedUrl": "// FROM: video.url (processed/cleaned)",
+      "uploadDate": "// INFERRED: current date or site creation date",
+      "duration": "// OPTIONAL: Could be fetched from video API",
+      "thumbnailUrl": "// OPTIONAL: Could be generated from video",
+      "isPartOf": { "@id": "https://example.com/#webpage" }
+    }
+  ],
+  
+  "// IMPLEMENTATION NOTES": {
+    "generation": "This JSON-LD should be generated server-side or at build time from the site data",
+    "injection": "Inject into <head> as: <script type='application/ld+json'>{JSON.stringify(jsonLd)}</script>",
+    "escaping": "Ensure proper JSON escaping, especially for user-generated content like testimonials",
+    "validation": "Test with Google's Rich Results Test tool: https://search.google.com/test/rich-results",
+    "conditionals": "Only include entities/properties that have actual data - empty arrays/objects hurt SEO",
+    "urls": "Replace 'https://example.com' with actual site domain from deployment",
+    "ids": "Ensure @id values are unique and stable across deployments"
+  },
+  
+  "// DATA MAPPING SUMMARY": {
+    "businessInfo": "Core business details - name, category, address, contact, payments, languages, service area, business hours",
+    "seo": "Meta information - title, description, canonical URL, OG image",
+    "hero": "Primary image and headline content",
+    "about": "Business description, features, statistics, additional images", 
+    "services": "Service offerings mapped to Schema.org Service entities",
+    "businessBenefits": "Mapped to 'knowsAbout' - what the business specializes in",
+    "testimonials": "Customer reviews with ratings for aggregateRating calculation",
+    "contact": "Contact information and social media links (businessHours moved to businessInfo)",
+    "menu": "Food/product catalog (conditional based on business type)",
+    "upcomingEvents": "Event listings (conditional)",
+    "video": "Video content (conditional)",
+    "footer": "Additional social media sources"
+  },
+  
+  "// BUSINESS TYPE MAPPING": {
+    "note": "The businessInfo.businessCategory determines the specific LocalBusiness subtype",
+    "examples": {
+      "HVACBusiness": "Heating, ventilation, air conditioning services",
+      "PlumbingService": "Plumbing and pipe services", 
+      "Restaurant": "Food service establishment",
+      "AutoRepair": "Vehicle repair services",
+      "BeautySalon": "Beauty and personal care services",
+      "MedicalClinic": "Healthcare services",
+      "LegalService": "Legal and attorney services"
+    },
+    "conditional_features": {
+      "FoodEstablishment": "Include hasMenu if business serves food",
+      "MedicalBusiness": "Include medical-specific properties",
+      "ProfessionalService": "Emphasize credentials and expertise"
+    }
+  }
+}

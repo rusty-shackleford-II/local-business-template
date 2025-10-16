@@ -1,0 +1,855 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vending-machine/templates/local-business/site.schema.json",
+  "title": "Local Business Site JSON Schema",
+  "description": "Complete schema for local business website template data structure",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "businessInfo": {
+      "type": "object",
+      "description": "Core business information used for SEO and structured data",
+      "additionalProperties": false,
+      "properties": {
+        "businessName": { "type": "string", "minLength": 1 },
+        "businessCategory": { 
+          "type": "string",
+          "description": "Schema.org LocalBusiness type",
+          "enum": [
+            "LocalBusiness", "AccountingService", "AnimalShelter", "ArchitecturalService",
+            "AutoBodyShop", "AutoDealer", "AutoPartsStore", "AutoRental", "AutoRepair", "AutoWash",
+            "AutomotiveBusiness", "Bakery", "BankOrCreditUnion", "BarOrPub", "BeautySalon",
+            "BedAndBreakfast", "BikeStore", "BookStore", "BowlingAlley", "Brewery",
+            "CafeOrCoffeeShop", "Campground", "CarRental", "Casino", "ChildCare",
+            "ClothingStore", "ComputerStore", "ConvenienceStore", "Crematorium", "DanceStudio",
+            "DaySpa", "Dentist", "DepartmentStore", "DiagnosticLab", "Distillery",
+            "DryCleaningOrLaundry", "ElectronicsStore", "EmergencyService", "EmploymentAgency",
+            "EntertainmentBusiness", "ExerciseGym", "FinancialService", "FireStation", "Florist",
+            "FoodEstablishment", "FurnitureStore", "GardenStore", "GasStation", "GeneralContractor",
+            "GolfCourse", "GovernmentOffice", "GroceryStore", "HairSalon", "HardwareStore",
+            "HealthAndBeautyBusiness", "HealthClub", "HobbyShop", "HomeAndConstructionBusiness",
+            "HomeGoodsStore", "Hospital", "Hostel", "Hotel", "HousePainter", "HVACBusiness",
+            "IceCreamShop", "InsuranceAgency", "InternetCafe", "JewelryStore", "LaundryService",
+            "LegalService", "Library", "LiquorStore", "Locksmith", "LodgingBusiness",
+            "MedicalBusiness", "MedicalClinic", "MensClothingStore", "MobilePhoneStore", "Motel",
+            "MotorcycleDealer", "MotorcycleRepair", "MovingCompany", "MusicStore", "NailSalon",
+            "NightClub", "Notary", "OfficeEquipmentStore", "Optician", "ParkingFacility",
+            "PawnShop", "PetStore", "Pharmacy", "Physician", "Physiotherapist", "PlaceOfWorship",
+            "PlumbingService", "PoliceStation", "PostOffice", "ProfessionalService", "RadioStation",
+            "RealEstateAgent", "RecyclingCenter", "Restaurant", "RoofingContractor", "RVPark",
+            "School", "SelfStorage", "ShoeStore", "ShoppingCenter", "SkiResort",
+            "SportsActivityLocation", "SportsClub", "Store", "TattooParlor", "Taxi",
+            "TelevisionStation", "TennisComplex", "TireShop", "TouristInformationCenter", "ToyStore",
+            "TravelAgency", "VeterinaryCare", "WholesaleStore", "Winery"
+          ]
+        },
+        "address": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "streetAddress": { "type": "string" },
+            "addressLocality": { "type": "string", "description": "City" },
+            "addressRegion": { "type": "string", "description": "State/Province" },
+            "postalCode": { "type": "string" },
+            "addressCountry": { "type": "string", "default": "US" }
+          },
+          "required": ["streetAddress", "addressLocality", "addressRegion", "addressCountry"]
+        },
+        "phone": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "paymentAccepted": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["Cash", "Credit Card", "Debit Card", "Check", "PayPal", "Apple Pay", "Google Pay", "Venmo", "Zelle", "Wire Transfer", "Cryptocurrency"]
+          }
+        },
+        "areaServed": { "type": "string", "description": "Geographic area served" },
+        "availableLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["English", "Spanish", "French", "German", "Italian", "Portuguese", "Arabic", "Russian", "Chinese", "Japanese", "Korean", "Hindi", "Dutch", "Polish", "Swedish", "Norwegian", "Danish", "Finnish"]
+          },
+          "default": ["English"]
+        },
+        "priceRange": {
+          "type": "string",
+          "enum": ["$", "$$", "$$$", "$$$$"]
+        },
+        "businessHours": { "$ref": "#/$defs/businessHours" }
+      },
+      "required": ["businessName", "businessCategory", "address", "phone", "email"]
+    },
+    "businessName": {
+      "type": "string",
+      "description": "Legacy support for top-level businessName"
+    },
+    "logoUrl": { 
+      "type": "string", 
+      "format": "uri-reference",
+      "description": "URL to business logo image"
+    },
+    "colorPalette": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primary": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "description": "Primary brand color for buttons, accents" },
+        "secondary": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$", "description": "Secondary color for icons, bullets" }
+      }
+    },
+    "seo": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "metaTitle": { "type": "string", "maxLength": 60 },
+        "metaDescription": { "type": "string", "maxLength": 160 },
+        "canonicalUrl": { "type": "string", "format": "uri" },
+        "ogImageUrl": { "type": "string", "format": "uri", "description": "Open Graph image for social sharing" },
+        "primaryService": { "type": "string", "description": "Main service offered (e.g., 'Plumbing', 'HVAC')" },
+        "primaryCity": { "type": "string", "description": "Primary city for local SEO" },
+        "googleAnalyticsId": { "type": "string", "pattern": "^(G-[A-Z0-9]+|UA-[0-9]+-[0-9]+|GT-[A-Z0-9]+)?$" }
+      }
+    },
+    "header": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "showLogo": { "type": "boolean", "default": true },
+        "logoSize": { "type": "number", "minimum": 0.5, "maximum": 3.0, "default": 1.0, "description": "Logo size multiplier" },
+        "expandableHeader": { "type": "boolean", "description": "Whether header expands when logo is large" },
+        "textSize": { "type": "number", "minimum": 0.5, "maximum": 2.0, "default": 1.0, "description": "Business name text size" },
+        "colors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "brandText": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+            "navText": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+            "businessNameColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+          }
+        }
+      }
+    },
+    "hero": {
+      "type": "object",
+      "description": "Hero section - main banner at top of page",
+      "additionalProperties": false,
+      "properties": {
+        "heroLargeImageUrl": { "type": "string", "format": "uri-reference", "description": "Main hero background image" },
+        "heroImages": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "type": "string", "format": "uri-reference" },
+          "description": "Multiple images for slideshow"
+        },
+        "slideshowInterval": { "type": "integer", "minimum": 1000, "default": 4000, "description": "Slideshow interval in milliseconds" },
+        "headline": { "type": "string", "minLength": 1 },
+        "headlineTextSize": { "type": "number", "minimum": 0.5, "maximum": 10.0 },
+        "headlineAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "subheadline": { "type": "string" },
+        "subheadlineTextSize": { "type": "number", "minimum": 0.5, "maximum": 10.0 },
+        "subheadlineBold": { "oneOf": [{ "type": "boolean" }, { "type": "string" }], "description": "Make subheadline bold (stored as string in JSON)" },
+        "subheadlineAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "cta": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "label": { "type": "string" },
+            "labelTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            "href": { "type": "string" },
+            "actionType": { "type": "string", "enum": ["contact", "external", "phone"] },
+            "phoneNumber": { "type": "string" }
+          },
+          "required": ["label"]
+        },
+        "ctaAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "phone": { "type": "string" },
+        "colors": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "headline": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{3}$|^rgba?\\(|^hsla?\\(|^[a-z]+" },
+            "subheadline": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{3}$|^rgba?\\(|^hsla?\\(|^[a-z]+" },
+            "ctaText": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{3}$|^rgba?\\(|^hsla?\\(|^[a-z]+" },
+            "ctaBackground": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$|^#[0-9A-Fa-f]{3}$|^rgba?\\(|^hsla?\\(|^[a-z]+" }
+          }
+        },
+        "mediaType": { "type": "string", "enum": ["photo", "video"], "default": "photo" },
+        "video": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "provider": { "type": "string", "enum": ["youtube", "vimeo"] },
+            "url": { "type": "string", "description": "Embed code or URL" },
+            "autoplay": { "type": "boolean", "default": false },
+            "controls": { "type": "boolean", "default": true },
+            "loop": { "type": "boolean", "default": false },
+            "muted": { "type": "boolean", "default": false }
+          },
+          "required": ["provider", "url"]
+        },
+        "layoutStyle": { 
+          "type": "string", 
+          "enum": ["standard", "fullwidth-overlay"], 
+          "default": "standard",
+          "description": "Layout style for hero section"
+        },
+        "overlayBlur": { "type": "boolean", "description": "Enable dark translucent background for overlay text" },
+        "overlayPosition": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number", "minimum": 0, "maximum": 100 },
+            "y": { "type": "number", "minimum": 0, "maximum": 100 }
+          },
+          "description": "Position of overlay text as percentages"
+        }
+      },
+      "required": ["heroLargeImageUrl", "headline", "cta"]
+    },
+    "about": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "description": { "type": "string" },
+        "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "statistics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string" },
+              "nameTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "value": { "type": "string" },
+              "valueTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+              "icon": { "type": "string" }
+            },
+            "required": ["name", "value", "icon"]
+          }
+        },
+        "features": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "featuresTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "imageUrl": { "type": "string", "format": "uri-reference" },
+              "alt": { "type": "string" },
+              "thumbnailUrl": { "type": "string", "format": "uri-reference", "description": "Optional cropped thumbnail" }
+            },
+            "required": ["imageUrl", "alt"]
+          }
+        },
+        "thumbnailSize": { "type": "number", "minimum": 1.0, "maximum": 3.0, "default": 1.0, "description": "Gallery thumbnail size multiplier" },
+        "layoutStyle": { "type": "string", "enum": ["standard", "mosaic"], "default": "standard", "description": "carousel or tiled grid" }
+      },
+      "required": ["title"]
+    },
+    "services": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "subtitle": { "type": "string" },
+        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "description": { "type": "string" },
+              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "imageUrl": { "type": "string", "format": "uri-reference" },
+              "alt": { "type": "string" },
+              "thumbnailUrl": { "type": "string", "format": "uri-reference" }
+            },
+            "required": ["id", "title", "description"]
+          }
+        }
+      },
+      "required": ["title", "subtitle", "items"]
+    },
+    "businessBenefits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string" },
+              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "description": { "type": "string" },
+              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+            },
+            "required": ["title", "description"]
+          }
+        }
+      },
+      "required": ["title", "items"]
+    },
+    "menu": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "subtitle": { "type": "string" },
+        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "tabs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "nameTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "description": { "type": "string" },
+              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "canvaEmbedUrl": { "type": "string", "description": "Canva embed iframe URL" },
+              "htmlContent": { "type": "string", "description": "HTML content to render instead of menu images (supports full HTML like privacy policy)" },
+              "menuImages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": { "type": "string" },
+                    "imageUrl": { "type": "string", "format": "uri-reference" },
+                    "alt": { "type": "string" },
+                    "caption": { "type": "string" }
+                  },
+                  "required": ["id", "imageUrl"]
+                }
+              },
+              "bulkImages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": { "type": "string" },
+                    "imageUrl": { "type": "string", "format": "uri-reference" },
+                    "alt": { "type": "string" },
+                    "caption": { "type": "string" }
+                  },
+                  "required": ["id", "imageUrl"]
+                }
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": { "type": "string" },
+                    "name": { "type": "string" },
+                    "nameTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                    "description": { "type": "string" },
+                    "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                    "layoutStyle": { "type": "string", "enum": ["carousel", "mosaic"], "description": "swiper or grid layout" },
+                    "cardSize": { "type": "number", "minimum": 1.0, "maximum": 3.0, "default": 1.0, "description": "Card size multiplier" },
+                    "items": {
+                      "type": "array",
+                      "items": { "$ref": "#/$defs/menuItem" }
+                    }
+                  },
+                  "required": ["id", "name"]
+                }
+              },
+              "items": {
+                "type": "array",
+                "items": { "$ref": "#/$defs/menuItem" },
+                "description": "Backward compatibility - uncategorized items"
+              }
+            },
+            "required": ["id", "name"]
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/menuItem" },
+          "description": "Backward compatibility"
+        }
+      },
+      "required": ["title"]
+    },
+    "testimonials": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "subtitle": { "type": "string" },
+        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "overallRating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "totalReviews": { "type": "integer", "minimum": 1 },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "authorImageUrl": { "type": "string", "format": "uri-reference" },
+              "authorName": { "type": "string" },
+              "authorNameTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
+              "reviewDate": { "type": "string" },
+              "reviewDateTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "reviewText": { "type": "string" },
+              "reviewTextTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+            },
+            "required": ["authorName", "rating", "reviewText"]
+          }
+        }
+      },
+      "required": ["title", "subtitle", "items"]
+    },
+    "upcomingEvents": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "subtitle": { "type": "string" },
+        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "description": { "type": "string" },
+              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "eventType": { "type": "string" },
+              "eventTypeTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "date": { "type": "string", "format": "date" },
+              "time": { "type": "string", "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" },
+              "capacity": { "type": "string" },
+              "capacityTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "pricePerPerson": { "type": "string" },
+              "pricePerPersonTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "imageUrl": { "type": "string", "format": "uri-reference" },
+              "alt": { "type": "string" },
+              "thumbnailUrl": { "type": "string", "format": "uri-reference" },
+              "inquireUrl": { "type": "string", "format": "uri", "description": "External URL for inquire button" },
+              "isRecurring": { "type": "boolean" },
+              "recurringPattern": {
+                "type": "object",
+                "properties": {
+                  "frequency": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
+                  "interval": { "type": "integer", "minimum": 1 },
+                  "endDate": { "type": "string", "format": "date" },
+                  "daysOfWeek": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 6 } },
+                  "dayOfMonth": { "type": "integer", "minimum": 1, "maximum": 31 }
+                },
+                "required": ["frequency", "interval"]
+              },
+              "longDescription": { "type": "string" },
+              "dressCode": { "type": "string" },
+              "externalLinks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": { "type": "string" },
+                    "url": { "type": "string", "format": "uri" }
+                  },
+                  "required": ["label", "url"]
+                }
+              },
+              "address": {
+                "type": "object",
+                "properties": {
+                  "streetAddress": { "type": "string" },
+                  "addressLocality": { "type": "string" },
+                  "addressRegion": { "type": "string" },
+                  "postalCode": { "type": "string" },
+                  "country": { "type": "string" }
+                }
+              },
+              "imageGallery": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string", "format": "uri-reference" },
+                    "alt": { "type": "string" },
+                    "caption": { "type": "string" }
+                  },
+                  "required": ["url"]
+                }
+              }
+            },
+            "required": ["id", "title", "description", "eventType"]
+          }
+        },
+        "contactInfo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "phone": { "type": "string" },
+            "email": { "type": "string", "format": "email" },
+            "advanceBooking": { "type": "string" }
+          }
+        }
+      },
+      "required": ["title", "subtitle", "items"]
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "subtitle": { "type": "string" },
+        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "address": { "type": "string" },
+        "addressTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "phone": { "type": "string" },
+        "phoneTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "email": { "type": "string", "format": "email" },
+        "mapEmbedUrl": { "type": "string", "format": "uri-reference" },
+        "contactRecipients": {
+          "type": "array",
+          "items": { "type": "string", "format": "email" },
+          "description": "Additional email recipients for form submissions"
+        },
+        "businessHours": { "$ref": "#/$defs/businessHours" },
+        "social": { "$ref": "#/$defs/socialMedia" },
+        "formFields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "label": { "type": "string" },
+              "name": { "type": "string" },
+              "type": { "type": "string", "enum": ["text", "email", "phone", "textarea", "number", "date", "select"] },
+              "placeholder": { "type": "string" },
+              "required": { "type": "boolean" },
+              "options": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["id", "label", "name", "type"]
+          }
+        },
+        "licenseNumber": { "type": "string", "description": "Deprecated - use licenses array" },
+        "licenseNumberTitle": { "type": "string", "description": "Deprecated - use licenses array" },
+        "licenses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string" },
+              "number": { "type": "string" }
+            },
+            "required": ["title", "number"]
+          }
+        },
+        "showConsent": { "type": "boolean" },
+        "consentText": { "type": "string" },
+        "consentRequiresCheckbox": { "type": "boolean" },
+        "consentTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+      },
+      "required": ["title", "subtitle"]
+    },
+    "footer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "socialLinks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "platform": { "type": "string" },
+              "url": { "type": "string", "format": "uri-reference" }
+            },
+            "required": ["platform", "url"]
+          }
+        },
+        "copyrightText": { "type": "string" },
+        "copyrightTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "logoSize": { "type": "number", "minimum": 0.5, "maximum": 3.0, "default": 1.0 },
+        "textSize": { "type": "number", "minimum": 0.5, "maximum": 2.0, "default": 1.0 },
+        "showPrivacyPolicy": { "oneOf": [{ "type": "boolean" }, { "type": "string" }] },
+        "privacyPolicyText": { "type": "string", "description": "Privacy policy content (supports HTML)" },
+        "showTermsAndConditions": { "oneOf": [{ "type": "boolean" }, { "type": "string" }] },
+        "termsAndConditionsText": { "type": "string", "description": "Terms content (supports HTML)" }
+      }
+    },
+    "videos": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "subtitle": { "type": "string" },
+        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": { "type": "string" },
+              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "subtitle": { "type": "string" },
+              "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "provider": { "type": "string", "enum": ["youtube", "vimeo"] },
+              "url": { "type": "string", "description": "Full iframe embed code or URL" },
+              "autoplay": { "type": "boolean", "default": false },
+              "controls": { "type": "boolean", "default": true },
+              "loop": { "type": "boolean", "default": false },
+              "muted": { "type": "boolean", "default": false },
+              "volume": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "width": { "type": "integer", "minimum": 0 },
+              "height": { "type": "integer", "minimum": 0 }
+            },
+            "required": ["provider", "url"]
+          }
+        }
+      }
+    },
+    "payment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "description": { "type": "string" },
+        "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "buttonLabel": { "type": "string" },
+        "buttonLabelTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "buttonColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "provider": { "type": "string", "enum": ["link", "shopify_embed"], "description": "Payment integration type" },
+        "paymentLinkUrl": { "type": "string", "format": "uri", "description": "Payment link (Stripe, Shopify, etc.)" },
+        "shopifyEmbedCode": { "type": "string", "description": "Shopify Buy Button embed code" },
+        "galleryImages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string" },
+              "imageUrl": { "type": "string", "format": "uri-reference" },
+              "alt": { "type": "string" },
+              "caption": { "type": "string" },
+              "thumbnailUrl": { "type": "string", "format": "uri-reference" }
+            },
+            "required": ["id", "imageUrl"]
+          }
+        },
+        "galleryTitle": { "type": "string" },
+        "thumbnailSize": { "type": "number", "minimum": 1.0, "maximum": 3.0, "default": 1.0 },
+        "addHeroCta": { "type": "boolean", "default": false },
+        "heroCtaLabel": { "type": "string" },
+        "heroCtaLabelTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "addHeaderCta": { "type": "boolean", "default": false },
+        "headerCtaLabel": { "type": "string" },
+        "headerCtaLabelTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sections": {
+          "type": "array",
+          "description": "Section ordering and visibility configuration",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": ["hero", "about", "services", "menu", "testimonials", "payment", "upcomingEvents", "contact", "videos", "partners"]
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "enum": ["hero", "about", "services", "menu", "testimonials", "payment", "upcomingEvents", "contact", "videos", "partners"]
+                  },
+                  "enabled": { "type": "boolean" }
+                },
+                "required": ["id"]
+              }
+            ]
+          }
+        }
+      },
+      "required": ["sections"]
+    }
+  },
+  "required": ["businessInfo", "hero", "about", "services", "businessBenefits", "testimonials", "contact", "footer"],
+  "$defs": {
+    "businessHours": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Monday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$", "description": "Time in 12-hour format, e.g., '7:00 AM' or '8 AM'" },
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$", "description": "Time in 12-hour format, e.g., '7:00 PM' or '5 PM'" }
+              },
+              "required": ["open", "close"]
+            }
+          ]
+        },
+        "Tuesday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            { 
+              "type": "object", 
+              "additionalProperties": false,
+              "properties": { 
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" }, 
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" } 
+              }, 
+              "required": ["open", "close"] 
+            }
+          ]
+        },
+        "Wednesday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            { 
+              "type": "object", 
+              "additionalProperties": false,
+              "properties": { 
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" }, 
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" } 
+              }, 
+              "required": ["open", "close"] 
+            }
+          ]
+        },
+        "Thursday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            { 
+              "type": "object", 
+              "additionalProperties": false,
+              "properties": { 
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" }, 
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" } 
+              }, 
+              "required": ["open", "close"] 
+            }
+          ]
+        },
+        "Friday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            { 
+              "type": "object", 
+              "additionalProperties": false,
+              "properties": { 
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" }, 
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" } 
+              }, 
+              "required": ["open", "close"] 
+            }
+          ]
+        },
+        "Saturday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            { 
+              "type": "object", 
+              "additionalProperties": false,
+              "properties": { 
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" }, 
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" } 
+              }, 
+              "required": ["open", "close"] 
+            }
+          ]
+        },
+        "Sunday": {
+          "oneOf": [
+            { "type": "string", "enum": ["closed"] },
+            { 
+              "type": "object", 
+              "additionalProperties": false,
+              "properties": { 
+                "open": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" }, 
+                "close": { "type": "string", "pattern": "^(1[0-2]|[1-9])(:[0-5][0-9])? (AM|PM)$" } 
+              }, 
+              "required": ["open", "close"] 
+            }
+          ]
+        }
+      }
+    },
+    "socialMedia": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "facebook": { "type": "string", "format": "uri-reference" },
+        "twitter": { "type": "string", "format": "uri-reference" },
+        "instagram": { "type": "string", "format": "uri-reference" },
+        "linkedin": { "type": "string", "format": "uri-reference" },
+        "youtube": { "type": "string", "format": "uri-reference" },
+        "tiktok": { "type": "string", "format": "uri-reference" },
+        "yelp": { "type": "string", "format": "uri-reference" },
+        "googleBusinessProfile": { "type": "string", "format": "uri-reference" },
+        "other": { "type": "string", "format": "uri-reference" },
+        "doordash": { "type": "string", "format": "uri-reference" },
+        "ubereats": { "type": "string", "format": "uri-reference" },
+        "grubhub": { "type": "string", "format": "uri-reference" },
+        "postmates": { "type": "string", "format": "uri-reference" },
+        "instacart": { "type": "string", "format": "uri-reference" },
+        "toast": { "type": "string", "format": "uri-reference" }
+      }
+    },
+    "menuItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "description": { "type": "string" },
+        "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "price": { "type": "string" },
+        "priceTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "imageUrl": { "type": "string", "format": "uri-reference" },
+        "alt": { "type": "string" },
+        "thumbnailUrl": { "type": "string", "format": "uri-reference" },
+        "dietary": { "type": "array", "items": { "type": "string" }, "description": "Dietary tags (Vegan, Gluten-Free, etc.)" }
+      },
+      "required": ["id", "title"]
+    }
+  }
+}
