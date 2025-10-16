@@ -88,7 +88,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
     // Default sections if no layout is provided
     const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
     
-    if (!layout?.sections) {
+    if (!Array.isArray(layout?.sections)) {
       return defaultSections.map(section => ({
         key: sectionLabels[section],
         section: section

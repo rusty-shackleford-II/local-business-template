@@ -123,7 +123,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
     const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
     
     let navigationItems;
-    if (!layout?.sections) {
+    if (!Array.isArray(layout?.sections)) {
       navigationItems = defaultSections.map(section => ({
         id: section,
         label: sectionLabels[section],

@@ -30,10 +30,10 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
   const swiperRef = useRef<SwiperType | null>(null);
 
   // Convert gallery images to the format expected by the gallery
-  const images = payment?.galleryImages?.map(img => ({
+  const images = (Array.isArray(payment?.galleryImages) ? payment.galleryImages : []).map(img => ({
     imageUrl: img.imageUrl,
     alt: img.alt || 'Product image'
-  })) || [];
+  }));
 
   const thumbnailSize = payment?.thumbnailSize || 1.0;
 
