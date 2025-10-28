@@ -4,6 +4,157 @@ import { useRouter } from 'next/router';
 import LocalBusinessLandingPage from '../src/components/LocalBusinessLandingPage';
 import site from '../data/site.json';
 
+// Generate JSON-LD structured data for search engines
+// This matches the Python generate_jsonld.py logic
+function generateJsonLd(siteData: any) {
+  const baseUrl = siteData?.seo?.canonicalUrl?.replace(/\/$/, '') || 'https://example.com';
+  const siteUrl = baseUrl + '/';
+  
+  const businessInfo = siteData?.businessInfo || {};
+  const address = businessInfo?.address || {};
+  const about = siteData?.about || {};
+  const seo = siteData?.seo || {};
+  
+  // Helper: Get social links
+  const getSocialLinks = () => {
+    const links: string[] = [];
+    const social = siteData?.contact?.social || {};
+    ['facebook', 'instagram', 'linkedin', 'twitter', 'youtube', 'tiktok', 'yelp', 'googleBusinessProfile', 'other'].forEach(key => {
+      if (social[key]?.trim()) links.push(social[key].trim());
+    });
+    (siteData?.footer?.socialLinks || []).forEach((item: any) => {
+      if (item?.href?.trim()) links.push(item.href.trim());
+    });
+    return links;
+  };
+  
+  // Helper: Get opening hours
+  const getOpeningHours = () => {
+    const hours = businessInfo?.businessHours || siteData?.contact?.businessHours || {};
+    return Object.entries(hours)
+      .filter(([_, cfg]: any) => cfg !== 'closed' && typeof cfg === 'object' && cfg?.open && cfg?.close)
+      .map(([day, cfg]: any) => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: [day],
+        opens: cfg.open,
+        closes: cfg.close
+      }));
+  };
+  
+  // Helper: Get aggregate rating
+  const getAggregateRating = () => {
+    const testimonialsData = siteData?.testimonials || {};
+    if (testimonialsData?.overallRating && testimonialsData?.totalReviews) {
+      const rating = parseFloat(testimonialsData.overallRating);
+      const count = parseInt(testimonialsData.totalReviews);
+      if (rating > 0 && count > 0) {
+        return {
+          '@type': 'AggregateRating',
+          ratingValue: Math.round(rating * 100) / 100,
+          reviewCount: count
+        };
+      }
+    }
+    const items = testimonialsData?.items || [];
+    const ratings = items.map((t: any) => t?.rating).filter((r: any) => r && parseFloat(r) > 0).map(parseFloat);
+    if (ratings.length === 0) return null;
+    return {
+      '@type': 'AggregateRating',
+      ratingValue: Math.round((ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) * 100) / 100,
+      reviewCount: ratings.length
+    };
+  };
+  
+  // Helper: Get business type
+  const getBusinessType = () => {
+    const types = ['LocalBusiness'];
+    if (businessInfo?.businessCategory && businessInfo.businessCategory !== 'LocalBusiness') {
+      types.push(businessInfo.businessCategory);
+    }
+    return types;
+  };
+  
+  // Build JSON-LD structure
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      // WebSite Entity
+      {
+        '@type': 'WebSite',
+        '@id': `${siteUrl}#website`,
+        url: siteUrl,
+        name: businessInfo?.businessName || 'Local Business',
+        publisher: { '@id': `${siteUrl}#organization` },
+        inLanguage: businessInfo?.availableLanguages?.[0] || 'en-US'
+      },
+      // Organization/Brand Entity (THIS IS WHERE THE LOGO IS FOR SEARCH RESULTS)
+      {
+        '@type': ['Organization', 'Brand'],
+        '@id': `${siteUrl}#organization`,
+        name: businessInfo?.businessName || 'Local Business',
+        url: siteUrl,
+        logo: {
+          '@type': 'ImageObject',
+          // Use searchResultsIcon first, then logoUrl as fallback
+          url: seo?.searchResultsIcon || siteData?.logoUrl || '',
+          width: 512,
+          height: 512
+        },
+        sameAs: getSocialLinks()
+      },
+      // LocalBusiness Entity
+      {
+        '@type': getBusinessType(),
+        '@id': `${siteUrl}#localbusiness`,
+        name: businessInfo?.businessName || 'Local Business',
+        url: siteUrl,
+        description: about?.description || '',
+        telephone: businessInfo?.phone || '',
+        email: businessInfo?.email || '',
+        priceRange: businessInfo?.priceRange || '',
+        image: [siteData?.hero?.heroLargeImageUrl, ...(about?.images || []).map((img: any) => img?.imageUrl)].filter(Boolean),
+        logo: { '@id': `${siteUrl}#organization` },
+        sameAs: getSocialLinks(),
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: address?.streetAddress || '',
+          addressLocality: address?.addressLocality || '',
+          addressRegion: address?.addressRegion || '',
+          postalCode: address?.postalCode || '',
+          addressCountry: address?.addressCountry || ''
+        },
+        areaServed: {
+          '@type': 'City',
+          name: businessInfo?.areaServed || address?.addressLocality || ''
+        },
+        openingHoursSpecification: getOpeningHours(),
+        aggregateRating: getAggregateRating() || undefined,
+        paymentAccepted: businessInfo?.paymentAccepted || [],
+        currenciesAccepted: 'USD'
+      },
+      // WebPage Entity
+      {
+        '@type': 'WebPage',
+        '@id': `${siteUrl}#webpage`,
+        url: siteUrl,
+        name: seo?.metaTitle || businessInfo?.businessName || 'Local Business',
+        description: seo?.metaDescription || about?.description || '',
+        isPartOf: { '@id': `${siteUrl}#website` },
+        about: { '@id': `${siteUrl}#localbusiness` },
+        primaryImageOfPage: {
+          '@type': 'ImageObject',
+          url: seo?.ogImageUrl || siteData?.hero?.heroLargeImageUrl || '',
+          width: 1200,
+          height: 630
+        },
+        inLanguage: businessInfo?.availableLanguages?.[0] || 'en-US'
+      }
+    ].filter(Boolean)
+  };
+  
+  return JSON.stringify(jsonLd);
+}
+
 export default function Home() {
   const router = useRouter();
 
@@ -77,6 +228,12 @@ export default function Home() {
         )}
         <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
         <link rel="manifest" href="/manifest.json" />
+        
+        {/* JSON-LD Structured Data for Search Engines */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: generateJsonLd(site) }}
+        />
       </Head>
       
       <LocalBusinessLandingPage {...(site as any)} />
