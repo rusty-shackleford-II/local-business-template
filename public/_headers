@@ -1,0 +1,74 @@
+# Cloudflare Pages Headers Configuration
+# This file automatically applies headers to your deployed sites
+# Reference: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Cache all images aggressively
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex, nofollow, noarchive, noimageindex
+  X-Content-Type-Options: nosniff
+
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex, nofollow, noarchive, noimageindex
+  X-Content-Type-Options: nosniff
+
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex, nofollow, noarchive, noimageindex
+  X-Content-Type-Options: nosniff
+
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex, nofollow, noarchive, noimageindex
+  X-Content-Type-Options: nosniff
+
+/*.gif
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex, nofollow, noarchive, noimageindex
+  X-Content-Type-Options: nosniff
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noindex, nofollow, noarchive, noimageindex
+  X-Content-Type-Options: nosniff
+
+# Exception: OG images and favicons SHOULD be indexed for social sharing
+/og-image.png
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noarchive
+
+/og-image.jpg
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noarchive
+
+/favicon.png
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noarchive
+
+/favicon.svg
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noarchive
+
+/favicon.ico
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noarchive
+
+# Static assets (fonts, etc)
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+# HTML pages - normal caching
+/*.html
+  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Default for all other files
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+
