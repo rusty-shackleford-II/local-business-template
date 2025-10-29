@@ -605,6 +605,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                                 index === currentSlideIndex ? 'opacity-100' : 'opacity-0'
                               }`}
                               priority={index === 0}
+                              loading="eager"
                               sizes={isIdbUrl ? undefined : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"}
                               onLoad={() => {
                                 if (index === 0) setImageLoading(false);

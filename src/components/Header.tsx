@@ -199,6 +199,8 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                   alt={businessName} 
                   width={200}
                   height={60}
+                  loading="eager"
+                  priority
                   className="logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo" 
                 />
               ) : (

@@ -814,6 +814,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             alt="Toast" 
                             width={32}
                             height={32}
+                            loading="lazy"
                             className="object-contain"
                           />
                         </a>

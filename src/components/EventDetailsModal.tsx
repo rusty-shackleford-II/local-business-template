@@ -151,6 +151,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   src={event.imageUrl}
                   alt={event.alt || event.title}
                   fill
+                  loading="lazy"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -378,6 +379,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               alt={allImages[selectedImageIndex].alt || `Image ${selectedImageIndex + 1}`}
               width={800}
               height={600}
+              loading="lazy"
               className="w-full h-full object-contain"
             />
 
@@ -429,6 +431,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     alt={image.alt || `Thumbnail ${index + 1}`}
                     width={64}
                     height={64}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                   />
                 </button>
