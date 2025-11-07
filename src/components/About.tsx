@@ -327,7 +327,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                         />
                       </div>
                       <EditableText
-                        className="text-2xl lg:text-3xl font-bold text-gray-900 mb-1"
+                        className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2"
                         value={stat.value}
                         path={`about.statistics.${index}.value`}
                         editable={editable}

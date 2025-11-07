@@ -10,6 +10,12 @@ type Props = {
   onEdit?: (path: string, value: string) => void;
 };
 
+type VideoPlayerProps = {
+  video: VideoItem;
+  index: number;
+  editable?: boolean;
+};
+
 function extractIframeSrc(input: string): string {
   if (!input) return '';
   const trimmed = input.trim();
@@ -94,7 +100,7 @@ function toVimeoEmbed(urlOrId: string, opts: { autoplay?: boolean; controls?: bo
   return finalUrl;
 }
 
-function VideoPlayer({ video, index }: { video: VideoItem; index: number }) {
+function VideoPlayer({ video, index, editable }: VideoPlayerProps) {
   const {
     provider = 'youtube',
     url = '',
@@ -127,7 +133,27 @@ function VideoPlayer({ video, index }: { video: VideoItem; index: number }) {
     }
   }, [provider, url, autoplay, controls, loop, muted]);
 
-  if (!src) return null;
+  // If no src, show placeholder in edit mode, otherwise return null
+  if (!src) {
+    if (!editable) return null;
+    
+    // Show placeholder in edit mode
+    return (
+      <div className="mb-8 last:mb-0">
+        <div className="mt-4">
+          <div className="relative w-full bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center" style={{ paddingTop: '56.25%' }}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+              <svg className="w-16 h-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <p className="text-gray-600 font-medium mb-1">No video URL provided</p>
+              <p className="text-sm text-gray-500">Add a YouTube or Vimeo URL in the editor to display a video</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Responsive container if no explicit width/height
   const hasFixedSize = typeof width === 'number' && width > 0 && typeof height === 'number' && height > 0;
@@ -167,8 +193,10 @@ function VideoPlayer({ video, index }: { video: VideoItem; index: number }) {
 export default function Videos({ videos, isPreview, backgroundClass = 'bg-white', editable, onEdit }: Props) {
   if (!videos || !videos.items || videos.items.length === 0) return null;
 
-  // Filter out videos without URLs
-  const validVideos = videos.items.filter(video => video.url && video.url.trim());
+  // Filter out videos without URLs (unless in editable mode, where we show placeholders)
+  const validVideos = editable 
+    ? videos.items 
+    : videos.items.filter(video => video.url && video.url.trim());
   
   if (validVideos.length === 0) return null;
 
@@ -246,7 +274,7 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
                   )}
                 </div>
               )}
-              <VideoPlayer video={video} index={index} />
+              <VideoPlayer video={video} index={index} editable={editable} />
             </div>
           ))}
         </div>

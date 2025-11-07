@@ -131,7 +131,31 @@ export default function EditableText({
       // Defer commit while popup is being interacted with
       return;
     }
-    const text = (ref.current?.textContent ?? "").trim();
+    
+    let text = "";
+    if (multiline && ref.current) {
+      // For multiline text, preserve line breaks by converting HTML structure to plain text with \n
+      // ContentEditable creates <br> tags and/or <div> elements for line breaks
+      const clonedNode = ref.current.cloneNode(true) as HTMLElement;
+      
+      // Replace <br> tags with newlines
+      clonedNode.querySelectorAll('br').forEach(br => {
+        br.replaceWith('\n');
+      });
+      
+      // Replace <div> elements with newlines (contentEditable sometimes uses divs for paragraphs)
+      clonedNode.querySelectorAll('div').forEach((div, index) => {
+        if (index > 0) {
+          div.prepend('\n');
+        }
+        const textNode = document.createTextNode(div.textContent || '');
+        div.replaceWith(textNode);
+      });
+      
+      text = (clonedNode.textContent ?? "").trim();
+    } else {
+      text = (ref.current?.textContent ?? "").trim();
+    }
     
     // Use path-based editing if available, otherwise fall back to onChange
     if (path && onEdit) {
@@ -139,7 +163,7 @@ export default function EditableText({
     } else if (onChange) {
       onChange(text);
     }
-  }, [onChange, onEdit, path]);
+  }, [onChange, onEdit, path, multiline]);
 
   // Use MutationObserver for live updates to avoid cursor position issues
   useEffect(() => {
@@ -156,7 +180,29 @@ export default function EditableText({
         return;
       }
       
-      const text = ref.current?.textContent ?? "";
+      let text = "";
+      if (multiline && ref.current) {
+        // For multiline text, preserve line breaks
+        const clonedNode = ref.current.cloneNode(true) as HTMLElement;
+        
+        // Replace <br> tags with newlines
+        clonedNode.querySelectorAll('br').forEach(br => {
+          br.replaceWith('\n');
+        });
+        
+        // Replace <div> elements with newlines
+        clonedNode.querySelectorAll('div').forEach((div, index) => {
+          if (index > 0) {
+            div.prepend('\n');
+          }
+          const textNode = document.createTextNode(div.textContent || '');
+          div.replaceWith(textNode);
+        });
+        
+        text = clonedNode.textContent ?? "";
+      } else {
+        text = ref.current?.textContent ?? "";
+      }
       
       // Send live updates without updating React state to avoid re-renders
       if (path && onEdit) {
@@ -173,7 +219,7 @@ export default function EditableText({
     });
     
     return () => observer.disconnect();
-  }, [editable, path, onEdit, onChange]);
+  }, [editable, path, onEdit, onChange, multiline]);
 
   const handleFocus = useCallback(() => {
     isEditingRef.current = true;
@@ -274,7 +320,30 @@ export default function EditableText({
       // Trigger change event to update the component state
       setTimeout(() => {
         if (ref.current) {
-          const cleanText = ref.current.textContent || '';
+          let cleanText = "";
+          if (multiline) {
+            // For multiline text, preserve line breaks
+            const clonedNode = ref.current.cloneNode(true) as HTMLElement;
+            
+            // Replace <br> tags with newlines
+            clonedNode.querySelectorAll('br').forEach(br => {
+              br.replaceWith('\n');
+            });
+            
+            // Replace <div> elements with newlines
+            clonedNode.querySelectorAll('div').forEach((div, index) => {
+              if (index > 0) {
+                div.prepend('\n');
+              }
+              const textNode = document.createTextNode(div.textContent || '');
+              div.replaceWith(textNode);
+            });
+            
+            cleanText = clonedNode.textContent || '';
+          } else {
+            cleanText = ref.current.textContent || '';
+          }
+          
           if (path && onEdit) {
             onEdit(path, cleanText);
           } else if (onChange) {
@@ -386,8 +455,34 @@ export default function EditableText({
   }
 
   if (!editable) {
+    // For multiline text, convert newlines to <br /> tags
+    if (multiline && internal) {
+      const parts = internal.split('\n');
+      return (
+        <Tag {...domProps}>
+          {parts.map((part, index) => (
+            <React.Fragment key={index}>
+              {part}
+              {index < parts.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </Tag>
+      );
+    }
     return <Tag {...domProps}>{internal || placeholder || null}</Tag>;
   }
+
+  // For editable multiline text, convert newlines to <br /> tags for display
+  const editableContent = multiline && internal ? (
+    internal.split('\n').map((part, index, array) => (
+      <React.Fragment key={index}>
+        {part}
+        {index < array.length - 1 && <br />}
+      </React.Fragment>
+    ))
+  ) : (
+    internal || placeholder || ""
+  );
 
   const editableElement = (
     <Tag
@@ -402,7 +497,7 @@ export default function EditableText({
       onClick={handleClick}
       onPaste={handlePaste}
     >
-      {internal || placeholder || ""}
+      {editableContent}
     </Tag>
   );
 

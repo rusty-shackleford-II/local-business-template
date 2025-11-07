@@ -14,7 +14,7 @@
         "businessName": { "type": "string", "minLength": 1 },
         "businessCategory": { 
           "type": "string",
-          "description": "Schema.org LocalBusiness type",
+          "description": "Canonical Schema.org LocalBusiness type (stored as canonical value, displayed as human-readable in editor)",
           "enum": [
             "LocalBusiness", "AccountingService", "AnimalShelter", "ArchitecturalService",
             "AutoBodyShop", "AutoDealer", "AutoPartsStore", "AutoRental", "AutoRepair", "AutoWash",
@@ -106,6 +106,7 @@
         "metaDescription": { "type": "string", "maxLength": 160 },
         "canonicalUrl": { "type": "string", "format": "uri" },
         "ogImageUrl": { "type": "string", "format": "uri", "description": "Open Graph image for social sharing" },
+        "searchResultsIcon": { "type": "string", "format": "uri", "description": "Favicon for search results and browser tab" },
         "primaryService": { "type": "string", "description": "Main service offered (e.g., 'Plumbing', 'HVAC')" },
         "primaryCity": { "type": "string", "description": "Primary city for local SEO" },
         "googleAnalyticsId": { "type": "string", "pattern": "^(G-[A-Z0-9]+|UA-[0-9]+-[0-9]+|GT-[A-Z0-9]+)?$" }
@@ -144,10 +145,20 @@
         },
         "slideshowInterval": { "type": "integer", "minimum": 1000, "default": 4000, "description": "Slideshow interval in milliseconds" },
         "headline": { "type": "string", "minLength": 1 },
-        "headlineTextSize": { "type": "number", "minimum": 0.5, "maximum": 10.0 },
+        "headlineTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 10.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "headlineAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
         "subheadline": { "type": "string" },
-        "subheadlineTextSize": { "type": "number", "minimum": 0.5, "maximum": 10.0 },
+        "subheadlineTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 10.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subheadlineBold": { "oneOf": [{ "type": "boolean" }, { "type": "string" }], "description": "Make subheadline bold (stored as string in JSON)" },
         "subheadlineAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
         "cta": {
@@ -155,7 +166,12 @@
           "additionalProperties": false,
           "properties": {
             "label": { "type": "string" },
-            "labelTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            "labelTextSize": {
+              "oneOf": [
+                { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+              ]
+            },
             "href": { "type": "string" },
             "actionType": { "type": "string", "enum": ["contact", "external", "phone"] },
             "phoneNumber": { "type": "string" }
@@ -211,9 +227,19 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "description": { "type": "string" },
-        "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "descriptionTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "statistics": {
           "type": "array",
           "items": {
@@ -221,9 +247,19 @@
             "additionalProperties": false,
             "properties": {
               "name": { "type": "string" },
-              "nameTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "nameTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "value": { "type": "string" },
-              "valueTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+              "valueTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "icon": { "type": "string" }
             },
             "required": ["name", "value", "icon"]
@@ -233,7 +269,12 @@
           "type": "array",
           "items": { "type": "string" }
         },
-        "featuresTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "featuresTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "images": {
           "type": "array",
           "items": {
@@ -257,9 +298,19 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subtitle": { "type": "string" },
-        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "subtitleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "items": {
           "type": "array",
           "minItems": 1,
@@ -269,9 +320,19 @@
             "properties": {
               "id": { "type": "string" },
               "title": { "type": "string" },
-              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "titleTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "description": { "type": "string" },
-              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "descriptionTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "imageUrl": { "type": "string", "format": "uri-reference" },
               "alt": { "type": "string" },
               "thumbnailUrl": { "type": "string", "format": "uri-reference" }
@@ -287,7 +348,12 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "items": {
           "type": "array",
           "items": {
@@ -295,9 +361,19 @@
             "additionalProperties": false,
             "properties": {
               "title": { "type": "string" },
-              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "titleTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "description": { "type": "string" },
-              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+              "descriptionTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              }
             },
             "required": ["title", "description"]
           }
@@ -310,9 +386,19 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subtitle": { "type": "string" },
-        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "subtitleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "tabs": {
           "type": "array",
           "items": {
@@ -321,9 +407,19 @@
             "properties": {
               "id": { "type": "string" },
               "name": { "type": "string" },
-              "nameTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "nameTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "description": { "type": "string" },
-              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "descriptionTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "canvaEmbedUrl": { "type": "string", "description": "Canva embed iframe URL" },
               "htmlContent": { "type": "string", "description": "HTML content to render instead of menu images (supports full HTML like privacy policy)" },
               "menuImages": {
@@ -362,9 +458,19 @@
                   "properties": {
                     "id": { "type": "string" },
                     "name": { "type": "string" },
-                    "nameTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                    "nameTextSize": {
+                      "oneOf": [
+                        { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                        { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                      ]
+                    },
                     "description": { "type": "string" },
-                    "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                    "descriptionTextSize": {
+                      "oneOf": [
+                        { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                        { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                      ]
+                    },
                     "layoutStyle": { "type": "string", "enum": ["carousel", "mosaic"], "description": "swiper or grid layout" },
                     "cardSize": { "type": "number", "minimum": 1.0, "maximum": 3.0, "default": 1.0, "description": "Card size multiplier" },
                     "items": {
@@ -397,9 +503,19 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subtitle": { "type": "string" },
-        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "subtitleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "overallRating": { "type": "number", "minimum": 1, "maximum": 5 },
         "totalReviews": { "type": "integer", "minimum": 1 },
         "items": {
@@ -410,12 +526,27 @@
             "properties": {
               "authorImageUrl": { "type": "string", "format": "uri-reference" },
               "authorName": { "type": "string" },
-              "authorNameTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "authorNameTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "rating": { "type": "integer", "minimum": 1, "maximum": 5 },
               "reviewDate": { "type": "string" },
-              "reviewDateTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "reviewDateTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "reviewText": { "type": "string" },
-              "reviewTextTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+              "reviewTextTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              }
             },
             "required": ["authorName", "rating", "reviewText"]
           }
@@ -428,9 +559,19 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subtitle": { "type": "string" },
-        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "subtitleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "items": {
           "type": "array",
           "items": {
@@ -439,17 +580,42 @@
             "properties": {
               "id": { "type": "string" },
               "title": { "type": "string" },
-              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "titleTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "description": { "type": "string" },
-              "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "descriptionTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "eventType": { "type": "string" },
-              "eventTypeTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "eventTypeTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "date": { "type": "string", "format": "date" },
               "time": { "type": "string", "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$" },
               "capacity": { "type": "string" },
-              "capacityTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "capacityTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "pricePerPerson": { "type": "string" },
-              "pricePerPersonTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "pricePerPersonTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "imageUrl": { "type": "string", "format": "uri-reference" },
               "alt": { "type": "string" },
               "thumbnailUrl": { "type": "string", "format": "uri-reference" },
@@ -522,13 +688,33 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subtitle": { "type": "string" },
-        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "subtitleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "address": { "type": "string" },
-        "addressTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "addressTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "phone": { "type": "string" },
-        "phoneTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "phoneTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "email": { "type": "string", "format": "email" },
         "mapEmbedUrl": { "type": "string", "format": "uri-reference" },
         "contactRecipients": {
@@ -572,7 +758,12 @@
         "showConsent": { "type": "boolean" },
         "consentText": { "type": "string" },
         "consentRequiresCheckbox": { "type": "boolean" },
-        "consentTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+        "consentTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        }
       },
       "required": ["title", "subtitle"]
     },
@@ -593,9 +784,20 @@
           }
         },
         "copyrightText": { "type": "string" },
-        "copyrightTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "copyrightTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "logoSize": { "type": "number", "minimum": 0.5, "maximum": 3.0, "default": 1.0 },
-        "textSize": { "type": "number", "minimum": 0.5, "maximum": 2.0, "default": 1.0 },
+        "textSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ],
+          "default": 1.0
+        },
         "showPrivacyPolicy": { "oneOf": [{ "type": "boolean" }, { "type": "string" }] },
         "privacyPolicyText": { "type": "string", "description": "Privacy policy content (supports HTML)" },
         "showTermsAndConditions": { "oneOf": [{ "type": "boolean" }, { "type": "string" }] },
@@ -607,9 +809,19 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "subtitle": { "type": "string" },
-        "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "subtitleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "items": {
           "type": "array",
           "items": {
@@ -617,9 +829,19 @@
             "additionalProperties": false,
             "properties": {
               "title": { "type": "string" },
-              "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+              "titleTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "subtitle": { "type": "string" },
-              "subtitleTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+              "subtitleTextSize": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+                  { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+                ]
+              },
               "provider": { "type": "string", "enum": ["youtube", "vimeo"] },
               "url": { "type": "string", "description": "Full iframe embed code or URL" },
               "autoplay": { "type": "boolean", "default": false },
@@ -640,11 +862,26 @@
       "additionalProperties": false,
       "properties": {
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 5.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "description": { "type": "string" },
-        "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "descriptionTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "buttonLabel": { "type": "string" },
-        "buttonLabelTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "buttonLabelTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "buttonColor": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
         "provider": { "type": "string", "enum": ["link", "shopify_embed"], "description": "Payment integration type" },
         "paymentLinkUrl": { "type": "string", "format": "uri", "description": "Payment link (Stripe, Shopify, etc.)" },
@@ -668,10 +905,20 @@
         "thumbnailSize": { "type": "number", "minimum": 1.0, "maximum": 3.0, "default": 1.0 },
         "addHeroCta": { "type": "boolean", "default": false },
         "heroCtaLabel": { "type": "string" },
-        "heroCtaLabelTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "heroCtaLabelTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "addHeaderCta": { "type": "boolean", "default": false },
         "headerCtaLabel": { "type": "string" },
-        "headerCtaLabelTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 }
+        "headerCtaLabelTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        }
       }
     },
     "layout": {
@@ -839,11 +1086,26 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
-        "titleTextSize": { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+        "titleTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 3.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "description": { "type": "string" },
-        "descriptionTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "descriptionTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "price": { "type": "string" },
-        "priceTextSize": { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+        "priceTextSize": {
+          "oneOf": [
+            { "type": "number", "minimum": 0.5, "maximum": 2.0 },
+            { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
+          ]
+        },
         "imageUrl": { "type": "string", "format": "uri-reference" },
         "alt": { "type": "string" },
         "thumbnailUrl": { "type": "string", "format": "uri-reference" },
