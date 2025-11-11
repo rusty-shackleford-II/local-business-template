@@ -336,7 +336,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
 
             {/* Copyright */}
             <div className="text-center text-sm text-gray-500">
-              © {new Date().getFullYear()} <EditableText
+              {'\u00A9'} {new Date().getFullYear()} <EditableText
                 value={businessName || 'Local Business'}
                 path="businessInfo.businessName"
                 editable={editable}
