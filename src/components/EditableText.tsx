@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TextSizePopup from "./TextSizePopup";
+import { useI18nContext } from "./I18nProvider";
 
 // Utility function to decode common HTML entities that might appear in text content
 const decodeHtmlEntities = (text: string): string => {
@@ -105,6 +106,11 @@ export default function EditableText({
   rel,
 }: EditableTextProps) {
   const Tag: any = as;
+  const i18nContext = useI18nContext();
+  const isDefaultLanguage = !i18nContext?.enabled || i18nContext.currentLanguage === i18nContext.defaultLanguage;
+  // Only allow editing in the default language to prevent editing translations
+  const effectiveEditable = editable && isDefaultLanguage;
+  
   const [internal, setInternal] = useState<string>(
     value === undefined || value === null ? "" : decodeHtmlEntities(String(value))
   );
@@ -119,10 +125,10 @@ export default function EditableText({
   useEffect(() => {
     const next = value === undefined || value === null ? "" : decodeHtmlEntities(String(value));
     // Only update internal state if we're not actively editing to prevent cursor jumps
-    if (next !== internal && !isEditingRef.current) {
+    if (!isEditingRef.current) {
       setInternal(next);
     }
-  }, [value, internal]);
+  }, [value]);
 
   // Intentionally no outside-click handler here; TextSizePopup handles its own
 
@@ -152,9 +158,9 @@ export default function EditableText({
         div.replaceWith(textNode);
       });
       
-      text = (clonedNode.textContent ?? "").trim();
+      text = (clonedNode.textContent ?? "");
     } else {
-      text = (ref.current?.textContent ?? "").trim();
+      text = (ref.current?.textContent ?? "");
     }
     
     // Use path-based editing if available, otherwise fall back to onChange
@@ -167,7 +173,7 @@ export default function EditableText({
 
   // Use MutationObserver for live updates to avoid cursor position issues
   useEffect(() => {
-    if (!ref.current || !editable) return;
+    if (!ref.current || !effectiveEditable) return;
     
     const observer = new MutationObserver(() => {
       if (!isEditingRef.current) return;
@@ -219,7 +225,7 @@ export default function EditableText({
     });
     
     return () => observer.disconnect();
-  }, [editable, path, onEdit, onChange, multiline]);
+  }, [effectiveEditable, path, onEdit, onChange, multiline]);
 
   const handleFocus = useCallback(() => {
     isEditingRef.current = true;
@@ -236,25 +242,33 @@ export default function EditableText({
       console.log('[MenuDebug EditableText] onBlur', { path });
     }
     onCommit();
+    
+    // Sync internal state with value prop after editing completes
+    // This ensures the internal state matches the latest value when switching languages
+    const next = value === undefined || value === null ? "" : decodeHtmlEntities(String(value));
+    if (next !== internal) {
+      setInternal(next);
+    }
+    
     // Call custom onBlur handler if provided
     if (onBlur) {
       onBlur();
     }
-  }, [onCommit, onBlur]);
+  }, [onCommit, onBlur, value, internal]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (editable && onTextSizeChange) {
+      if (effectiveEditable && onTextSizeChange) {
         e.stopPropagation();
         setShowPopup(true);
       }
     },
-    [editable, onTextSizeChange]
+    [effectiveEditable, onTextSizeChange]
   );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!editable) return;
+      if (!effectiveEditable) return;
       if (!multiline && e.key === "Enter") {
         e.preventDefault();
         (e.currentTarget as any).blur();
@@ -268,12 +282,12 @@ export default function EditableText({
         if (showPopup) setShowPopup(false);
       }
     },
-    [editable, multiline, internal, showPopup]
+    [effectiveEditable, multiline, internal, showPopup]
   );
 
   const handlePaste = useCallback(
     (e: React.ClipboardEvent) => {
-      if (!editable) return;
+      if (!effectiveEditable) return;
       
       // Prevent default paste behavior
       e.preventDefault();
@@ -352,7 +366,7 @@ export default function EditableText({
         }
       }, 0);
     },
-    [editable, multiline, path, onEdit, onChange]
+    [effectiveEditable, multiline, path, onEdit, onChange]
   );
 
   const handleTextSizeChange = useCallback(
@@ -366,7 +380,7 @@ export default function EditableText({
 
   const baseClass = useMemo(() => {
     const classes = [className || ""];
-    if (editable) {
+    if (effectiveEditable) {
       classes.push(
         "editable-text", // Marker class for drag handler detection
         "relative outline-none ring-0 focus:ring-2 focus:ring-blue-400/50 cursor-text",
@@ -374,11 +388,11 @@ export default function EditableText({
       );
     }
     return classes.filter(Boolean).join(" ");
-  }, [className, editable]);
+  }, [className, effectiveEditable]);
 
   // Extract font-weight from className to preserve it in contentEditable
   const preserveFontWeight = useMemo(() => {
-    if (!className || !editable) return {};
+    if (!className || !effectiveEditable) return {};
     
     // Check if className contains font-weight classes
     if (className.includes('font-bold')) {
@@ -393,7 +407,7 @@ export default function EditableText({
       return { fontWeight: '100' };
     }
     return {};
-  }, [className, editable]);
+  }, [className, effectiveEditable]);
 
   // Calculate responsive font size for hero headlines and business name
   const isHeroHeadline = path === 'hero.headline';
@@ -454,10 +468,22 @@ export default function EditableText({
     if (rel) domProps.rel = rel;
   }
 
-  if (!editable) {
+  const displayValue = useMemo(() => {
+    if (!path || !i18nContext?.enabled) {
+      return internal;
+    }
+    if (i18nContext.currentLanguage === i18nContext.defaultLanguage) {
+      return internal;
+    }
+    // Use value prop directly for translation fallback to avoid flash when switching languages
+    const fallbackText = value !== undefined && value !== null ? String(value) : internal;
+    return i18nContext.t(path, fallbackText);
+  }, [internal, path, i18nContext, value]);
+
+  if (!effectiveEditable) {
     // For multiline text, convert newlines to <br /> tags
-    if (multiline && internal) {
-      const parts = internal.split('\n');
+    if (multiline && displayValue) {
+      const parts = (displayValue || "").split('\n');
       return (
         <Tag {...domProps}>
           {parts.map((part, index) => (
@@ -469,10 +495,11 @@ export default function EditableText({
         </Tag>
       );
     }
-    return <Tag {...domProps}>{internal || placeholder || null}</Tag>;
+    return <Tag {...domProps}>{displayValue || placeholder || null}</Tag>;
   }
 
   // For editable multiline text, convert newlines to <br /> tags for display
+  // Always use internal for editable content (source text)
   const editableContent = multiline && internal ? (
     internal.split('\n').map((part, index, array) => (
       <React.Fragment key={index}>
@@ -502,7 +529,7 @@ export default function EditableText({
   );
 
   // If editable and has text size controls, render popup alongside element
-  if (editable && onTextSizeChange) {
+  if (effectiveEditable && onTextSizeChange) {
     return (
       <>
         {editableElement}

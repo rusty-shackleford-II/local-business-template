@@ -374,6 +374,13 @@ export type Videos = {
 // Payment section types
 export type PaymentProvider = 'link' | 'shopify_embed';
 
+export type I18nConfig = {
+  enabled?: boolean;
+  defaultLanguage?: string;
+  availableLanguages?: string[];
+  translations?: Record<string, any>;
+};
+
 export type PaymentGalleryImage = {
   id: string;
   imageUrl: string;
@@ -429,6 +436,8 @@ export type BusinessInfo = {
 };
 
 export type SiteData = {
+  version?: string;
+  i18n?: I18nConfig;
   businessInfo?: BusinessInfo;
   businessName?: string; // Legacy support for top-level businessName
   logoUrl?: string;

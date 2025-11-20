@@ -1,4 +1,28 @@
 {
+  "version": "2.0",
+  "i18n": {
+    "enabled": true,
+    "defaultLanguage": "en",
+    "availableLanguages": ["en", "es"],
+    "translations": {
+      "en": {
+        "hero": {
+          "headline": "Clean & Bright Laundry Services",
+          "subheadline": "Sparkling results with friendly service every day",
+          "ctaText": "Schedule a Pickup",
+          "secondaryCtaText": "View Services"
+        }
+      },
+      "es": {
+        "hero": {
+          "headline": "Servicios de lavandería limpios y brillantes",
+          "subheadline": "Resultados impecables con atención amable todos los días",
+          "ctaText": "Programar una recogida",
+          "secondaryCtaText": "Ver servicios"
+        }
+      }
+    }
+  },
   "seo": {
     "metaTitle": "This is the Meta Title in the SEO section",
     "metaDescription": "And this is the Meta Description. ",
@@ -28,7 +52,8 @@
     ],
     "areaServed": "San Mateo & Burlingame",
     "availableLanguages": [
-      "English"
+      "English",
+      "Spanish"
     ],
     "priceRange": "$$",
     "businessHours": {

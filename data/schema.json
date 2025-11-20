@@ -81,6 +81,41 @@
       },
       "required": ["businessName", "businessCategory", "address", "phone", "email"]
     },
+    "version": {
+      "type": "string",
+      "enum": ["1.0", "2.0"],
+      "default": "2.0",
+      "description": "Site JSON specification version"
+    },
+    "i18n": {
+      "type": "object",
+      "description": "Internationalization configuration for language toggle",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "defaultLanguage": {
+          "type": "string",
+          "enum": ["en", "es", "ar"],
+          "default": "en"
+        },
+        "availableLanguages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["en", "es", "ar"]
+          },
+          "minItems": 1,
+          "default": ["en"]
+        },
+        "translations": {
+          "type": "object",
+          "description": "Pre-translated locale bundles keyed by language code",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      }
+    },
     "businessName": {
       "type": "string",
       "description": "Legacy support for top-level businessName"

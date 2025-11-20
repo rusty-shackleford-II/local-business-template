@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "services": "Services",
+    "menu": "Menu",
+    "testimonials": "Testimonials",
+    "events": "Events",
+    "contact": "Contact",
+    "videos": "Videos",
+    "shop": "Shop",
+    "gallery": "Gallery"
+  },
+  "contact": {
+    "form": {
+      "fullName": "Full Name",
+      "emailAddress": "Email Address",
+      "phoneNumber": "Phone Number",
+      "message": "Message",
+      "messagePlaceholder": "Tell us how we can help...",
+      "sendMessage": "Send Message",
+      "sending": "Sending...",
+      "thankYou": "Thank You!",
+      "successMessage": "Your message has been sent. We will get back to you soon."
+    },
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "businessHours": "Business Hours",
+    "closed": "Closed",
+    "open24Hours": "Open 24 hours",
+    "to": "to",
+    "followUs": "Follow Us",
+    "addLicense": "Add License"
+  },
+  "events": {
+    "from": "From",
+    "recurringEvent": "Recurring Event",
+    "aboutThisEvent": "About This Event",
+    "eventInformation": "Event Information",
+    "dressCode": "Dress Code",
+    "relatedLinks": "Related Links",
+    "location": "Location",
+    "inquireAboutThisEvent": "Inquire About This Event",
+    "close": "Close",
+    "noEventsAvailable": "No upcoming events available."
+  },
+  "footer": {
+    "privacyPolicy": "Privacy Policy",
+    "termsAndConditions": "Terms and Conditions",
+    "allRightsReserved": "All rights reserved"
+  }
+}
+

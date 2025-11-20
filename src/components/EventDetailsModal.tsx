@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { UpcomingEventItem } from '../types';
 import { type EventInstance } from '../utils/recurringEvents';
 import IdbImage from './IdbImage';
+import { useI18nContext } from './I18nProvider';
 
 interface EventDetailsModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
 }) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageGalleryOpen, setIsImageGalleryOpen] = useState(false);
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
   // Touch handling for mobile swipe
   const touchStartX = useRef<number>(0);
@@ -205,7 +208,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     {/* Price Display */}
                     {event.pricePerPerson && (
                       <div className="bg-white/95 text-gray-900 px-6 py-3 rounded-xl backdrop-blur-sm">
-                        <div className="text-sm font-medium opacity-70">From</div>
+                        <div className="text-sm font-medium opacity-70">{t('events.from', 'From')}</div>
                         <div className="text-2xl font-bold">{event.pricePerPerson}</div>
                       </div>
                     )}
@@ -220,13 +223,13 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
               {event.isRecurring && (
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
                   <span>🔄</span>
-                  <span>Recurring Event</span>
+                  <span>{t('events.recurringEvent', 'Recurring Event')}</span>
                 </div>
               )}
 
               {/* Description */}
               <div className="mb-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">About This Event</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('events.aboutThisEvent', 'About This Event')}</h3>
                 <p className="text-gray-700 leading-relaxed text-lg mb-4">
                   {event.description}
                 </p>
@@ -242,14 +245,14 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                 {/* Left Column - Additional Info */}
                 {(event.dressCode || (event.externalLinks && event.externalLinks.length > 0)) && (
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-4">Event Information</h4>
+                    <h4 className="text-xl font-bold text-gray-900 mb-4">{t('events.eventInformation', 'Event Information')}</h4>
                     <div className="space-y-4">
                       {/* Dress Code */}
                       {event.dressCode && (
                         <div>
                           <h5 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
                             <span>👔</span>
-                            Dress Code
+                            {t('events.dressCode', 'Dress Code')}
                           </h5>
                           <p className="text-gray-600">{event.dressCode}</p>
                         </div>
@@ -260,7 +263,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                         <div>
                           <h5 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                             <span>🔗</span>
-                            Related Links
+                            {t('events.relatedLinks', 'Related Links')}
                           </h5>
                           <div className="space-y-2">
                             {event.externalLinks.map((link, index) => (
@@ -289,7 +292,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                   <div>
                     <h4 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
                       <span>📍</span>
-                      Location
+                      {t('events.location', 'Location')}
                     </h4>
                     <a 
                       href={getGoogleMapsLinkUrl(event.address)}
@@ -326,7 +329,7 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     rel="noopener noreferrer"
                     className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-center"
                   >
-                    Inquire About This Event
+                    {t('events.inquireAboutThisEvent', 'Inquire About This Event')}
                   </a>
                 ) : (
                   <button 
@@ -338,14 +341,14 @@ const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     }}
                     className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
                   >
-                    Inquire About This Event
+                    {t('events.inquireAboutThisEvent', 'Inquire About This Event')}
                   </button>
                 )}
                 <button 
                   onClick={onClose}
                   className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 border border-gray-300"
                 >
-                  Close
+                  {t('events.close', 'Close')}
                 </button>
               </div>
             </div>

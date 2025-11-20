@@ -3,6 +3,7 @@ import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon, PlusIcon, TrashIcon } f
 import Image from 'next/image';
 import EditableText from './EditableText';
 import BusinessHoursEditor from './BusinessHoursEditor';
+import { useI18nContext } from './I18nProvider';
 import { 
   FaInstagram, 
   FaFacebookF, 
@@ -42,18 +43,18 @@ type Props = {
   siteUrl?: string;
 };
 
-const formatBusinessHours = (businessHours?: ContactCfg['businessHours'] | BusinessInfo['businessHours']) => {
+const formatBusinessHours = (businessHours?: ContactCfg['businessHours'] | BusinessInfo['businessHours'], t?: (key: string, defaultValue?: string) => string) => {
   if (!businessHours) return null;
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
   const abbreviations: Record<typeof days[number], string> = {
-    Monday: 'Mon',
-    Tuesday: 'Tue',
-    Wednesday: 'Wed',
-    Thursday: 'Thu',
-    Friday: 'Fri',
-    Saturday: 'Sat',
-    Sunday: 'Sun',
+    Monday: t?.('contact.days.mon', 'Mon') || 'Mon',
+    Tuesday: t?.('contact.days.tue', 'Tue') || 'Tue',
+    Wednesday: t?.('contact.days.wed', 'Wed') || 'Wed',
+    Thursday: t?.('contact.days.thu', 'Thu') || 'Thu',
+    Friday: t?.('contact.days.fri', 'Fri') || 'Fri',
+    Saturday: t?.('contact.days.sat', 'Sat') || 'Sat',
+    Sunday: t?.('contact.days.sun', 'Sun') || 'Sun',
   };
   const formattedHours: { day: string; hours: string }[] = [];
 
@@ -61,9 +62,19 @@ const formatBusinessHours = (businessHours?: ContactCfg['businessHours'] | Busin
     const hours = businessHours[day];
     if (hours) {
       if (typeof hours === 'string') {
-        formattedHours.push({ day: abbreviations[day], hours: hours === 'closed' ? 'Closed' : hours });
+        formattedHours.push({ day: abbreviations[day], hours: hours === 'closed' ? (t?.('contact.closed', 'Closed') || 'Closed') : hours });
       } else {
-        formattedHours.push({ day: abbreviations[day], hours: `${hours.open} - ${hours.close}` });
+        // Check if it's a 24-hour business (multiple formats for backwards compatibility)
+        const is24Hours = 
+          (hours.open === 'Open 24 hours' && hours.close === 'Open 24 hours') ||
+          (hours.open === '12:00 AM' && hours.close === '11:59 PM') ||
+          (hours.open === '00:00' && hours.close === '23:59');
+        
+        if (is24Hours) {
+          formattedHours.push({ day: abbreviations[day], hours: t?.('contact.open24Hours', 'Open 24 hours') || 'Open 24 hours' });
+        } else {
+          formattedHours.push({ day: abbreviations[day], hours: `${hours.open} - ${hours.close}` });
+        }
       }
     }
   });
@@ -98,12 +109,15 @@ const generateMapEmbedUrl = (address: string): string => {
 };
 
 const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, siteUrl }) => {
-  // Use custom form fields if provided, otherwise use defaults
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Use custom form fields if provided, otherwise use defaults with translations
   const defaultFormFields = [
-    { id: 'name', label: 'Full Name', name: 'name', type: 'text' as const, placeholder: 'Full Name', required: true },
-    { id: 'email', label: 'Email Address', name: 'email', type: 'email' as const, placeholder: 'your.email@example.com', required: true },
-    { id: 'phone', label: 'Phone Number', name: 'phone', type: 'phone' as const, placeholder: '(555) 123-4567', required: false },
-    { id: 'message', label: 'Message', name: 'message', type: 'textarea' as const, placeholder: 'Tell us how we can help...', required: true },
+    { id: 'name', label: t('contact.form.fullName', 'Full Name'), name: 'name', type: 'text' as const, placeholder: t('contact.form.fullName', 'Full Name'), required: true },
+    { id: 'email', label: t('contact.form.emailAddress', 'Email Address'), name: 'email', type: 'email' as const, placeholder: 'your.email@example.com', required: true },
+    { id: 'phone', label: t('contact.form.phoneNumber', 'Phone Number'), name: 'phone', type: 'phone' as const, placeholder: '(555) 123-4567', required: false },
+    { id: 'message', label: t('contact.form.message', 'Message'), name: 'message', type: 'textarea' as const, placeholder: t('contact.form.messagePlaceholder', 'Tell us how we can help...'), required: true },
   ];
   
   const formFields = contact?.formFields && contact.formFields.length > 0 ? contact.formFields : defaultFormFields;
@@ -284,10 +298,10 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       ></path>
                     </svg>
                     <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-                      Thank You!
+                      {t('contact.form.thankYou', 'Thank You!')}
                     </h3>
                     <p className="text-lg text-gray-600 max-w-md mx-auto">
-                      Your message has been sent. We will get back to you soon.
+                      {t('contact.form.successMessage', 'Your message has been sent. We will get back to you soon.')}
                     </p>
                   </div>
                 ) : (
@@ -430,10 +444,10 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Sending...
+                          {t('contact.form.sending', 'Sending...')}
                         </span>
                       ) : (
-                        'Send Message'
+                        t('contact.form.sendMessage', 'Send Message')
                       )}
                     </button>
                   </form>
@@ -537,13 +551,13 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                     const businessHours = businessInfo?.businessHours || contact?.businessHours;
                     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
                     const abbreviations: Record<typeof days[number], string> = {
-                      Monday: 'Mon',
-                      Tuesday: 'Tue',
-                      Wednesday: 'Wed',
-                      Thursday: 'Thu',
-                      Friday: 'Fri',
-                      Saturday: 'Sat',
-                      Sunday: 'Sun',
+                      Monday: t('contact.days.mon', 'Mon'),
+                      Tuesday: t('contact.days.tue', 'Tue'),
+                      Wednesday: t('contact.days.wed', 'Wed'),
+                      Thursday: t('contact.days.thu', 'Thu'),
+                      Friday: t('contact.days.fri', 'Fri'),
+                      Saturday: t('contact.days.sat', 'Sat'),
+                      Sunday: t('contact.days.sun', 'Sun'),
                     };
                     
                     return (
@@ -553,7 +567,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                           style={{ color: colorPalette?.secondary || '#6B7280' }}
                         />
                         <div className="flex flex-col space-y-1 w-full">
-                          <span className="text-sm font-medium text-gray-900 mb-2">Business Hours</span>
+                          <span className="text-sm font-medium text-gray-900 mb-2">{t('contact.businessHours', 'Business Hours')}</span>
                           <div className="space-y-1">
                             {days.map((day) => {
                               const dayHours = businessHours?.[day];
@@ -631,7 +645,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                           className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
                         >
                           <PlusIcon className="h-4 w-4" />
-                          <span>Add License</span>
+                          <span>{t('contact.addLicense', 'Add License')}</span>
                         </button>
                       )}
                     </div>
@@ -642,7 +656,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                 {contact?.social && Object.values(contact.social).some(url => url && url.trim()) && (
                   <div className="border-t border-gray-300 pt-6 px-4 sm:px-0 mb-4">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                      Follow Us
+                      {t('contact.followUs', 'Follow Us')}
                     </h4>
                     <div className="flex flex-wrap gap-3">
                       {contact.social.facebook && (

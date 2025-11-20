@@ -401,3 +401,134 @@ html {
     overflow-x: hidden !important;
   }
 }
+
+/* ===== RTL (RIGHT-TO-LEFT) SUPPORT ===== */
+/* Automatically applied when html[dir="rtl"] */
+
+/* RTL Typography */
+[dir="rtl"] {
+  font-family: 'Cairo', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* RTL Text Alignment - Flip default alignments */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* RTL Mobile Left - Flip mobile-left class to right */
+[dir="rtl"] .mobile-left {
+  text-align: right !important;
+}
+
+[dir="rtl"] .text-center.mobile-left {
+  text-align: right !important;
+}
+
+/* RTL Flexbox - Reverse flex direction for rows */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* RTL Grid - Reverse grid flow */
+[dir="rtl"] .grid {
+  direction: rtl;
+}
+
+/* RTL Spacing - Flip margins and padding */
+[dir="rtl"] .ml-auto {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+[dir="rtl"] .mr-auto {
+  margin-right: 0;
+  margin-left: auto;
+}
+
+/* RTL Navigation - Flip menu items */
+[dir="rtl"] nav {
+  direction: rtl;
+}
+
+/* RTL Icons - Flip directional icons */
+[dir="rtl"] .chevron-right {
+  transform: scaleX(-1);
+}
+
+[dir="rtl"] .arrow-right {
+  transform: scaleX(-1);
+}
+
+/* RTL Forms - Align inputs properly */
+[dir="rtl"] input,
+[dir="rtl"] textarea,
+[dir="rtl"] select {
+  text-align: right;
+}
+
+/* RTL Buttons - Keep button content aligned */
+[dir="rtl"] button {
+  direction: rtl;
+}
+
+/* RTL Language Toggle - Adjust dropdown position */
+[dir="rtl"] .language-toggle .dropdown {
+  left: 0;
+  right: auto;
+}
+
+/* RTL Testimonials - Flip quote marks and alignment */
+[dir="rtl"] .testimonial-quote::before {
+  content: "»";
+}
+
+[dir="rtl"] .testimonial-quote::after {
+  content: "«";
+}
+
+/* RTL Lists - Flip bullet/number position */
+[dir="rtl"] ul,
+[dir="rtl"] ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+/* RTL Shadows - Flip shadow direction for depth perception */
+[dir="rtl"] .shadow-lg {
+  box-shadow: -10px 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* RTL Animations - Flip slide-in animations */
+[dir="rtl"] .slide-in-from-right {
+  animation: slideInFromLeft 300ms ease-out;
+}
+
+[dir="rtl"] .slide-in-from-left {
+  animation: slideInFromRight 300ms ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

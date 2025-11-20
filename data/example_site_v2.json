@@ -1,0 +1,94 @@
+{
+  "version": "2.0",
+  "i18n": {
+    "enabled": true,
+    "defaultLanguage": "en",
+    "availableLanguages": ["en", "es", "ar"],
+    "translations": {
+      "en": {
+        "hero": {
+          "headline": "Best Pizza in Town",
+          "subheadline": "Fresh ingredients, authentic recipes, made with love daily",
+          "ctaText": "Order Now",
+          "secondaryCtaText": "View Menu"
+        }
+      },
+      "es": {
+        "hero": {
+          "headline": "La mejor pizza de la ciudad",
+          "subheadline": "Ingredientes frescos, recetas auténticas y amor diario",
+          "ctaText": "Pide ahora",
+          "secondaryCtaText": "Ver menú"
+        }
+      },
+      "ar": {
+        "hero": {
+          "headline": "أفضل بيتزا في المدينة",
+          "subheadline": "مكونات طازجة ووصفات أصلية ومذاق يصنع يوميًا بحب",
+          "ctaText": "اطلب الآن",
+          "secondaryCtaText": "عرض القائمة"
+        }
+      }
+    }
+  },
+  "businessInfo": {
+    "businessName": "Joe's Pizza",
+    "tagline": "Authentic Italian Pizza Since 1985",
+    "phone": "(555) 123-4567",
+    "email": "info@joespizza.com",
+    "address": {
+      "streetAddress": "123 Main Street",
+      "addressLocality": "New York",
+      "addressRegion": "NY",
+      "postalCode": "10001",
+      "addressCountry": "US"
+    }
+  },
+  "hero": {
+    "headline": "Best Pizza in Town",
+    "subheadline": "Fresh ingredients, authentic recipes, made with love daily",
+    "ctaText": "Order Now",
+    "secondaryCtaText": "View Menu",
+    "heroLargeImageUrl": "/og-image.png"
+  },
+  "about": {
+    "headline": "Our Story",
+    "description": "Family-owned and operated since 1985, we bring authentic Italian pizza to New York. Our secret? Fresh dough made daily and imported Italian tomatoes."
+  },
+  "services": {
+    "title": "Our Services",
+    "subtitle": "How we serve you",
+    "items": [
+      {
+        "id": "dine-in",
+        "title": "Dine In",
+        "description": "Enjoy our cozy atmosphere with friends and family"
+      },
+      {
+        "id": "takeout",
+        "title": "Takeout",
+        "description": "Order ahead and pick up your favorite pizza"
+      },
+      {
+        "id": "delivery",
+        "title": "Delivery",
+        "description": "We deliver fresh, hot pizza right to your door"
+      }
+    ]
+  },
+  "contact": {
+    "headline": "Get In Touch",
+    "description": "Visit us, call us, or order online. We're here to serve you!"
+  },
+  "footer": {
+    "copyrightText": "© 2025 Joe's Pizza. All rights reserved."
+  },
+  "seo": {
+    "metaTitle": "Joe's Pizza - Best Pizza in NYC",
+    "metaDescription": "Family-owned pizza restaurant serving authentic Italian pizza since 1985. Dine in, takeout, or delivery available.",
+    "canonicalUrl": "https://joespizza.example.com",
+    "ogImageUrl": "/og-image.png"
+  },
+  "logoUrl": "/logo.png"
+}
+

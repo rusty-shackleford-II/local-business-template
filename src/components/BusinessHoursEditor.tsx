@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import TimeSelector from './TimeSelector';
+import { useI18nContext } from './I18nProvider';
 
 interface BusinessHoursEditorProps {
   day: string;
@@ -17,12 +18,25 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
   path
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
 
   const formatHours = (hours: string | { open: string; close: string } | undefined): string => {
-    if (!hours) return 'Closed';
+    if (!hours) return t('contact.closed', 'Closed');
     if (typeof hours === 'string') {
-      return hours === 'closed' ? 'Closed' : hours;
+      return hours === 'closed' ? t('contact.closed', 'Closed') : hours;
     }
+    
+    // Check if it's a 24-hour business (multiple formats for backwards compatibility)
+    const is24Hours = 
+      (hours.open === 'Open 24 hours' && hours.close === 'Open 24 hours') ||
+      (hours.open === '12:00 AM' && hours.close === '11:59 PM') ||
+      (hours.open === '00:00' && hours.close === '23:59');
+    
+    if (is24Hours) {
+      return t('contact.open24Hours', 'Open 24 hours');
+    }
+    
     return `${hours.open} - ${hours.close}`;
   };
 
@@ -96,7 +110,7 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
           onChange={handleToggleClosed}
           className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
         />
-        <span className="text-xs text-gray-500">Closed</span>
+        <span className="text-xs text-gray-500">{t('contact.closed', 'Closed')}</span>
       </label>
 
       {/* Time Selectors (only show if not closed) */}
@@ -109,7 +123,7 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
             placeholder="9:00 AM"
             className="text-sm"
           />
-          <span className="text-xs text-gray-500">to</span>
+          <span className="text-xs text-gray-500">{t('contact.to', 'to')}</span>
           <TimeSelector
             value={isOpen ? convertTo24Hour(hours.close) : convertTo24Hour('5:00 PM')}
             onChange={(newTime) => handleTimeChange('close', newTime)}
@@ -122,7 +136,7 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
 
       {/* Show "Closed" text if closed */}
       {isClosed && (
-        <span className="text-sm text-gray-500">Closed</span>
+        <span className="text-sm text-gray-500">{t('contact.closed', 'Closed')}</span>
       )}
     </div>
   );

@@ -3,6 +3,8 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
+import LanguageToggle from './LanguageToggle';
+import { useI18nContext } from './I18nProvider';
 import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette } from '../types';
 
 type Props = {
@@ -21,6 +23,8 @@ type Props = {
 
 const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, colorPalette }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
   // Calculate logo size and header height
   const logoSize = header?.logoSize || 1.0;
@@ -107,15 +111,15 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
   // Generate navigation links based on enabled sections
   const getNavigationLinks = () => {
     const sectionLabels: Record<SectionKey, string> = {
-      hero: 'Home',
-      about: 'About',
-      services: 'Services',
-      menu: 'Menu',
-      testimonials: 'Testimonials',
-      upcomingEvents: 'Events',
-      contact: 'Contact',
-      videos: 'Videos',
-      payment: 'Shop',
+      hero: t('nav.home', 'Home'),
+      about: t('nav.about', 'About'),
+      services: t('nav.services', 'Services'),
+      menu: t('nav.menu', 'Menu'),
+      testimonials: t('nav.testimonials', 'Testimonials'),
+      upcomingEvents: t('nav.events', 'Events'),
+      contact: t('nav.contact', 'Contact'),
+      videos: t('nav.videos', 'Videos'),
+      payment: t('nav.shop', 'Shop'),
       partners: 'Partners' // Hidden section - only accessible via HiDev logo
     };
 
@@ -235,7 +239,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           </div>
 
           {/* Desktop Navigation - Right Aligned */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <nav className="hidden md:flex space-x-8 mr-4">
               {navigationLinks.map((link) => (
                 <button
@@ -258,6 +262,14 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                 </button>
               )}
             </nav>
+            
+            {/* Language Toggle - Desktop */}
+            <div className="hidden md:block">
+              <LanguageToggle 
+                navTextColor={header?.colors?.navText}
+                enableHoverSelection={false}
+              />
+            </div>
 
             {/* Mobile Menu Button */}
             <button
@@ -301,6 +313,14 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                   {payment.headerCtaLabel || 'Buy Now'}
                 </button>
               )}
+              
+              {/* Language Toggle - Mobile */}
+              <div className="pt-2 border-t border-gray-200">
+                <LanguageToggle 
+                  navTextColor={header?.colors?.navText}
+                  enableHoverSelection={false}
+                />
+              </div>
             </nav>
           </div>
         )}

@@ -8,6 +8,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import IdbImage from './IdbImage';
 import EditableText from './EditableText';
+import { useI18nContext } from './I18nProvider';
 import type { Testimonials as TestimonialsCfg, TestimonialItem, ColorPalette } from '../types';
 
 interface Review {
@@ -32,6 +33,8 @@ type Props = {
 
 const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-white', editable, onEdit, colorPalette }) => {
   const swiperRef = useRef<SwiperType | null>(null);
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
 
   // Google Reviews data
   const reviews: Review[] = (testimonials?.items || []).map((t: TestimonialItem, idx: number) => ({
@@ -289,7 +292,7 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
                         <EditableText
                           as="p"
                           className="text-gray-700 leading-relaxed italic"
-                          value={`"${review.review_text}"`}
+                          value={`"${typeof review.originalIndex === 'number' ? t(`testimonials.items.${review.originalIndex}.reviewText`, review.review_text || '') : review.review_text}"`}
                           path={typeof review.originalIndex === 'number' ? `testimonials.items.${review.originalIndex}.reviewText` : undefined}
                           editable={editable}
                           onEdit={onEdit}

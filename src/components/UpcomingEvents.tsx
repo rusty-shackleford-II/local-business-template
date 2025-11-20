@@ -12,6 +12,7 @@ import EditableText from './EditableText';
 import TimeSelector from './TimeSelector';
 import DateSelector from './DateSelector';
 import IdbImage from './IdbImage';
+import { useI18nContext } from './I18nProvider';
 
 type Props = {
   upcomingEvents?: UpcomingEvents;
@@ -27,6 +28,8 @@ const UpcomingEventsSection: React.FC<Props> = ({ upcomingEvents: upcomingEvents
   const swiperRef = useRef<SwiperType | null>(null);
   const [selectedEventInstance, setSelectedEventInstance] = useState<EventInstance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
 
   // Handle upcomingEvents data with proper fallback logic
   const upcomingEvents = upcomingEventsProp || {
@@ -560,7 +563,7 @@ Thank you!`;
             }} />
           </div>
         ) : (
-          <div className="text-center mobile-left text-gray-500 mb-16">No upcoming events available.</div>
+          <div className="text-center mobile-left text-gray-500 mb-16">{t('events.noEventsAvailable', 'No upcoming events available.')}</div>
         )}
 
       </div>

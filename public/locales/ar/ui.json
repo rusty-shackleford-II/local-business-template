@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "about": "عن",
+    "services": "الخدمات",
+    "menu": "القائمة",
+    "testimonials": "الشهادات",
+    "events": "الفعاليات",
+    "contact": "اتصل",
+    "videos": "فيديوهات",
+    "shop": "متجر",
+    "gallery": "معرض"
+  },
+  "contact": {
+    "form": {
+      "fullName": "الاسم الكامل",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "phoneNumber": "رقم الهاتف",
+      "message": "رسالة",
+      "messagePlaceholder": "أخبرنا كيف يمكننا المساعدة...",
+      "sendMessage": "إرسال الرسالة",
+      "sending": "جارٍ الإرسال...",
+      "thankYou": "شكراً لك!",
+      "successMessage": "تم إرسال رسالتك. سنعاود الاتصال بك قريباً."
+    },
+    "days": {
+      "mon": "الإثنين",
+      "tue": "الثلاثاء",
+      "wed": "الأربعاء",
+      "thu": "الخميس",
+      "fri": "الجمعة",
+      "sat": "السبت",
+      "sun": "الأحد"
+    },
+    "businessHours": "ساعات العمل",
+    "closed": "مغلق",
+    "open24Hours": "مفتوح 24 ساعة",
+    "to": "إلى",
+    "followUs": "تابعنا",
+    "addLicense": "إضافة ترخيص"
+  },
+  "events": {
+    "from": "من",
+    "recurringEvent": "حدث متكرر",
+    "aboutThisEvent": "حول هذا الحدث",
+    "eventInformation": "معلومات الحدث",
+    "dressCode": "قواعد اللباس",
+    "relatedLinks": "روابط ذات صلة",
+    "location": "الموقع",
+    "inquireAboutThisEvent": "الاستفسار عن هذا الحدث",
+    "close": "إغلاق",
+    "noEventsAvailable": "لا توجد أحداث قادمة متاحة."
+  },
+  "footer": {
+    "privacyPolicy": "سياسة الخصوصية",
+    "termsAndConditions": "الشروط والأحكام",
+    "allRightsReserved": "جميع الحقوق محفوظة"
+  }
+}
+

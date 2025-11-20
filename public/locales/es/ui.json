@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "services": "Servicios",
+    "menu": "Menú",
+    "testimonials": "Testimonios",
+    "events": "Eventos",
+    "contact": "Contacto",
+    "videos": "Videos",
+    "shop": "Tienda",
+    "gallery": "Galería"
+  },
+  "contact": {
+    "form": {
+      "fullName": "Nombre Completo",
+      "emailAddress": "Correo Electrónico",
+      "phoneNumber": "Número de Teléfono",
+      "message": "Mensaje",
+      "messagePlaceholder": "Cuéntanos cómo podemos ayudarte...",
+      "sendMessage": "Enviar Mensaje",
+      "sending": "Enviando...",
+      "thankYou": "¡Gracias!",
+      "successMessage": "Tu mensaje ha sido enviado. Te responderemos pronto."
+    },
+    "days": {
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb",
+      "sun": "Dom"
+    },
+    "businessHours": "Horario de Atención",
+    "closed": "Cerrado",
+    "open24Hours": "Abierto 24 horas",
+    "to": "a",
+    "followUs": "Síguenos",
+    "addLicense": "Agregar Licencia"
+  },
+  "events": {
+    "from": "Desde",
+    "recurringEvent": "Evento Recurrente",
+    "aboutThisEvent": "Acerca de Este Evento",
+    "eventInformation": "Información del Evento",
+    "dressCode": "Código de Vestimenta",
+    "relatedLinks": "Enlaces Relacionados",
+    "location": "Ubicación",
+    "inquireAboutThisEvent": "Consultar Sobre Este Evento",
+    "close": "Cerrar",
+    "noEventsAvailable": "No hay eventos próximos disponibles."
+  },
+  "footer": {
+    "privacyPolicy": "Política de Privacidad",
+    "termsAndConditions": "Términos y Condiciones",
+    "allRightsReserved": "Todos los derechos reservados"
+  }
+}
+

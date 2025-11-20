@@ -2,6 +2,7 @@ import React from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import LocalBusinessLandingPage from '../src/components/LocalBusinessLandingPage';
+import { I18nProvider } from '../src/components/I18nProvider';
 import site from '../data/site.json';
 
 // Generate JSON-LD structured data for search engines
@@ -157,8 +158,13 @@ function generateJsonLd(siteData: any) {
 
 export default function Home() {
   const router = useRouter();
-
-  return (
+  
+  // Check site version and i18n configuration
+  const siteVersion = (site as any)?.version || '1.0';
+  const i18nConfig = (site as any)?.i18n;
+  const i18nEnabled = Boolean(i18nConfig?.enabled && (i18nConfig?.availableLanguages?.length ?? 0) > 0);
+  // Head content (shared between both versions)
+  const headContent = (
     <>
       <Head>
         <title>{(site as any)?.seo?.metaTitle || (site as any)?.businessInfo?.businessName || (site as any)?.businessName || 'Local Business'}</title>
@@ -235,8 +241,31 @@ export default function Home() {
           dangerouslySetInnerHTML={{ __html: generateJsonLd(site) }}
         />
       </Head>
-      
-      <LocalBusinessLandingPage {...(site as any)} />
+    </>
+  );
+
+  // Legacy sites (v1) - render directly without i18n wrapper
+  if (siteVersion === '1.0' || !i18nEnabled) {
+    return (
+      <>
+        {headContent}
+        <LocalBusinessLandingPage {...(site as any)} />
+      </>
+    );
+  }
+
+  // New sites (v2+) - wrap with i18n provider
+  return (
+    <>
+      {headContent}
+      <I18nProvider
+        defaultLanguage={i18nConfig?.defaultLanguage || 'en'}
+        availableLanguages={i18nConfig?.availableLanguages || ['en']}
+        siteData={site}
+        enabled={i18nEnabled}
+      >
+        <LocalBusinessLandingPage {...(site as any)} />
+      </I18nProvider>
     </>
   );
 }

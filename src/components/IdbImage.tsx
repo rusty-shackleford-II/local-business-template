@@ -33,15 +33,25 @@ const IdbImage: React.FC<IdbImageProps> = ({
   style,
   onLoad
 }) => {
-  const [imageSrc, setImageSrc] = useState<string>(src);
-  const [isLoading, setIsLoading] = useState(src.startsWith('idb://'));
-  const [hasError, setHasError] = useState(false);
+  // Validate src is a string
+  const isValidSrc = typeof src === 'string' && src.length > 0;
+  const [imageSrc, setImageSrc] = useState<string>(isValidSrc ? src : '');
+  const [isLoading, setIsLoading] = useState(isValidSrc && src.startsWith('idb://'));
+  const [hasError, setHasError] = useState(!isValidSrc);
 
   useEffect(() => {
     let isMounted = true;
     let objectUrl: string | null = null;
 
     const loadImage = async () => {
+      if (!isValidSrc) {
+        if (isMounted) {
+          setHasError(true);
+          setIsLoading(false);
+        }
+        return;
+      }
+
       if (src.startsWith('idb://')) {
         try {
           setIsLoading(true);
@@ -109,7 +119,7 @@ const IdbImage: React.FC<IdbImageProps> = ({
   }
 
   // For blob URLs, use regular img tag since Next.js Image might not support them
-  if (imageSrc.startsWith('blob:')) {
+  if (imageSrc && typeof imageSrc === 'string' && imageSrc.startsWith('blob:')) {
     return (
       <img
         src={imageSrc}

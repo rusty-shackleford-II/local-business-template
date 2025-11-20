@@ -4,6 +4,7 @@ import Link from 'next/link';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LegalTextModal from './LegalTextModal';
+import { useI18nContext } from './I18nProvider';
 import type { Footer as FooterCfg, Layout, SectionKey } from '../types';
 
 // Use public folder assets instead of src/assets to avoid build issues
@@ -22,6 +23,23 @@ type Props = {
 const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, editable, onEdit }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Debug: log what translations the footer is getting
+  console.log(`🦶 [Footer] RENDER - i18n enabled:`, i18n?.enabled, `language:`, i18n?.currentLanguage);
+  console.log(`🦶 [Footer] businessName:`, businessName);
+  console.log(`🦶 [Footer] Actual t() results in render:`, {
+    privacyPolicy: t('footer.privacyPolicy', 'Privacy Policy'),
+    termsAndConditions: t('footer.termsAndConditions', 'Terms and Conditions'),
+    allRightsReserved: t('footer.allRightsReserved', 'All rights reserved')
+  });
+  
+  // Force variables to check they're being used
+  const privacyText = t('footer.privacyPolicy', 'Privacy Policy');
+  const termsText = t('footer.termsAndConditions', 'Terms and Conditions');
+  const rightsText = t('footer.allRightsReserved', 'All rights reserved');
+  console.log(`🦶 [Footer] Variables:`, { privacyText, termsText, rightsText });
   
   // Convert string booleans to actual booleans (editor stores everything as strings)
   const showPrivacyPolicy = footer?.showPrivacyPolicy === true || footer?.showPrivacyPolicy === 'true';
@@ -73,15 +91,15 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   // Generate footer links based on enabled sections
   const getFooterLinks = () => {
     const sectionLabels: Record<SectionKey, string> = {
-      hero: 'Home',
-      about: 'About',
-      services: 'Services',
-      menu: 'Menu',
-      testimonials: 'Testimonials',
-      upcomingEvents: 'Events',
-      contact: 'Contact',
-      videos: 'Videos',
-      payment: 'Shop',
+      hero: t('nav.home', 'Home'),
+      about: t('nav.about', 'About'),
+      services: t('nav.services', 'Services'),
+      menu: t('nav.menu', 'Menu'),
+      testimonials: t('nav.testimonials', 'Testimonials'),
+      upcomingEvents: t('nav.events', 'Events'),
+      contact: t('nav.contact', 'Contact'),
+      videos: t('nav.videos', 'Videos'),
+      payment: t('nav.shop', 'Shop'),
       partners: 'Partners' // Hidden section - only accessible via HiDev logo
     };
 
@@ -317,7 +335,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                     onClick={() => setPrivacyModalOpen(true)}
                     className="text-gray-600 hover:text-gray-900 underline transition-colors"
                   >
-                    Privacy Policy
+                    {privacyText}
                   </button>
                 )}
                 {showPrivacyPolicy && showTermsAndConditions && (
@@ -328,7 +346,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                     onClick={() => setTermsModalOpen(true)}
                     className="text-gray-600 hover:text-gray-900 underline transition-colors"
                   >
-                    Terms and Conditions
+                    {termsText}
                   </button>
                 )}
               </div>
@@ -349,7 +367,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                 textSizeMax={1.5}
                 onTextSizeChange={onEdit ? (size: number) => onEdit('footer.copyrightTextSize', size.toString()) : undefined}
                 textSizeLabel="Copyright Text Size"
-              />. All rights reserved.
+              />. {rightsText}.
             </div>
           </div>
         </div>
@@ -359,7 +377,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       <LegalTextModal
         isOpen={privacyModalOpen}
         onClose={() => setPrivacyModalOpen(false)}
-        title="Privacy Policy"
+        title={privacyText}
         content={footer?.privacyPolicyText || ''}
         editable={editable}
         onEdit={onEdit ? (value: string) => onEdit('footer.privacyPolicyText', value) : undefined}
@@ -367,7 +385,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       <LegalTextModal
         isOpen={termsModalOpen}
         onClose={() => setTermsModalOpen(false)}
-        title="Terms and Conditions"
+        title={termsText}
         content={footer?.termsAndConditionsText || ''}
         editable={editable}
         onEdit={onEdit ? (value: string) => onEdit('footer.termsAndConditionsText', value) : undefined}
