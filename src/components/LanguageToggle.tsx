@@ -45,18 +45,6 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ navTextColor = '#374151
   const dropdownRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
 
-  // Don't render if i18n is not enabled
-  if (!i18nContext || !i18nContext.enabled) {
-    return null;
-  }
-
-  const { currentLanguage, availableLanguages, changeLanguage } = i18nContext;
-
-  // Only show if there are multiple languages
-  if (availableLanguages.length <= 1) {
-    return null;
-  }
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,6 +69,18 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ navTextColor = '#374151
       }
     };
   }, []);
+
+  // Don't render if i18n is not enabled
+  if (!i18nContext || !i18nContext.enabled) {
+    return null;
+  }
+
+  const { currentLanguage, availableLanguages, changeLanguage } = i18nContext;
+
+  // Only show if there are multiple languages
+  if (availableLanguages.length <= 1) {
+    return null;
+  }
 
   const openDropdown = () => setIsOpen(true);
   const closeDropdown = () => setIsOpen(false);

@@ -1,26 +1,8 @@
 /** @type {import('next').NextConfig} */
-const fs = require('fs');
-const path = require('path');
 
-// Check if site.json has i18n enabled
-let i18nConfig = null;
-const siteJsonPath = path.join(__dirname, 'data', 'site.json');
-
-if (fs.existsSync(siteJsonPath)) {
-  try {
-    const site = JSON.parse(fs.readFileSync(siteJsonPath, 'utf8'));
-    if (site.version === '2.0' && site.i18n?.enabled) {
-      i18nConfig = {
-        locales: site.i18n.availableLanguages || ['en'],
-        defaultLocale: site.i18n.defaultLanguage || 'en',
-        localeDetection: false, // Disable automatic locale detection for static export
-      };
-      console.log('✅ i18n enabled with locales:', i18nConfig.locales);
-    }
-  } catch (e) {
-    console.warn('⚠️  Could not parse site.json for i18n config:', e.message);
-  }
-}
+// Note: We use react-i18next for i18n instead of Next.js's built-in i18n
+// because Next.js i18n is incompatible with output: 'export' (static export).
+// The i18n configuration is handled client-side via I18nProvider component.
 
 const nextConfig = {
   reactStrictMode: true,
@@ -35,8 +17,6 @@ const nextConfig = {
     ],
     unoptimized: true, // Required for static export
   },
-  // Add i18n config only if enabled in site.json (v2 sites)
-  ...(i18nConfig && { i18n: i18nConfig }),
 }
 
 module.exports = nextConfig;
