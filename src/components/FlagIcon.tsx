@@ -7,7 +7,7 @@ interface FlagIconProps {
 
 // SVG flag components - cross-platform compatible
 const FlagIcon: React.FC<FlagIconProps> = ({ countryCode, className = "w-6 h-6" }) => {
-  const flags: Record<string, JSX.Element> = {
+  const flags: Record<string, React.ReactElement> = {
     // US Flag
     en: (
       <svg className={className} viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">

@@ -94,6 +94,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       hero: t('nav.home', 'Home'),
       about: t('nav.about', 'About'),
       services: t('nav.services', 'Services'),
+      benefits: t('nav.benefits', 'Benefits'),
       menu: t('nav.menu', 'Menu'),
       testimonials: t('nav.testimonials', 'Testimonials'),
       upcomingEvents: t('nav.events', 'Events'),

@@ -127,7 +127,7 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ navTextColor = '#374151
         <ChevronDownIcon className="h-4 w-4" />
       </button>
       
-      <style jsx>{`
+      <style>{`
         .language-toggle-btn:hover {
           background-color: rgba(243, 244, 246, 0.95);
           color: var(--hover-text-color) !important;

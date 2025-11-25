@@ -26,6 +26,9 @@ export type SiteData = SiteDataType & {
   onTextSizeChange?: (elementId: string, size: number) => void;
   onTextContentChange?: (elementId: string, text: string) => void;
   getTextSize?: (elementId: string) => number;
+  // Image upload handlers
+  onLogoClick?: () => void;
+  onHeroImageClick?: () => void;
 };
 
 export default function LocalBusinessLandingPage(site: SiteData) {
@@ -71,6 +74,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           backgroundClass={backgroundClass}
           editable={site.editable}
           onEdit={site.onEdit}
+          onHeroImageClick={site.onHeroImageClick}
           colorPalette={site.colorPalette}
         />;
       case 'about':
@@ -170,6 +174,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         onEdit={site.onEdit}
         onTextSizeChange={site.onEdit ? (size: number) => site.onEdit!('header.textSize', size.toString()) : undefined}
         onBusinessNameColorChange={site.onEdit ? (color: string) => site.onEdit!('header.colors.businessNameColor', color) : undefined}
+        onLogoClick={site.onLogoClick}
         colorPalette={site.colorPalette}
       />
       <main>
