@@ -182,10 +182,12 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         `
       }} />
       <header 
-        className={`${isPreview ? 'sticky top-0' : 'fixed left-0 right-0'} z-40 bg-white/95 backdrop-blur-sm border-b border-gray-200 transition-all duration-300 ease-in-out`}
+        className={`${isPreview ? 'sticky top-0' : 'fixed left-0 right-0'} z-40 backdrop-blur-sm border-b transition-all duration-300 ease-in-out`}
         style={{ 
           height: expandableHeader ? calculateHeaderHeight() : undefined,
           minHeight: expandableHeader ? calculateHeaderHeight() : '4rem',
+          backgroundColor: header?.colors?.background || 'rgba(255, 255, 255, 0.95)',
+          borderBottomColor: header?.colors?.background || 'rgba(229, 231, 235, 1)',
           '--logo-height-sm': `${logoHeights.sm}rem`,
           '--logo-height-md': `${logoHeights.md}rem`,
           '--logo-height-lg': `${logoHeights.lg}rem`,
@@ -288,7 +290,10 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 animate-fade-in">
+          <div 
+            className="md:hidden absolute top-full left-0 right-0 border-b border-gray-200 shadow-lg z-50 animate-fade-in"
+            style={{ backgroundColor: header?.colors?.background || '#ffffff' }}
+          >
             <nav className="px-4 py-4 space-y-4">
               {navigationLinks.map((link) => (
                 <button

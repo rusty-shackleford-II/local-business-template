@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { useI18nContext } from './I18nProvider';
+import FlagIcon from './FlagIcon';
 
 // Language name mapping (all in English for clarity)
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -16,22 +17,6 @@ const LANGUAGE_NAMES: Record<string, string> = {
   ar: 'Arabic',
   ru: 'Russian',
   hi: 'Hindi',
-};
-
-// Language flag emojis
-const LANGUAGE_FLAGS: Record<string, string> = {
-  en: '🇺🇸',
-  es: '🇪🇸',
-  fr: '🇫🇷',
-  de: '🇩🇪',
-  it: '🇮🇹',
-  pt: '🇵🇹',
-  zh: '🇨🇳',
-  ja: '🇯🇵',
-  ko: '🇰🇷',
-  ar: '🇸🇦',
-  ru: '🇷🇺',
-  hi: '🇮🇳',
 };
 
 interface LanguageToggleProps {
@@ -112,7 +97,6 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ navTextColor = '#374151
     }
   };
 
-  const currentFlag = LANGUAGE_FLAGS[currentLanguage] || '🌐';
   const currentName = LANGUAGE_NAMES[currentLanguage] || currentLanguage.toUpperCase();
 
   return (
@@ -131,20 +115,29 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ navTextColor = '#374151
           }
           setIsOpen(!isOpen);
         }}
-        className="flex items-center gap-1 p-2 rounded-lg hover:bg-gray-100 transition-all duration-200"
-        style={{ color: navTextColor }}
+        className="flex items-center gap-1 p-2 rounded-lg transition-all duration-200 language-toggle-btn"
+        style={{ 
+          color: navTextColor,
+          '--hover-text-color': '#1f2937'
+        } as React.CSSProperties & { [key: string]: string }}
         aria-label="Change language"
       >
-        <span className="text-xl">{currentFlag}</span>
+        <FlagIcon countryCode={currentLanguage} className="w-5 h-5" />
         <span className="font-medium text-sm">{currentLanguage.toUpperCase()}</span>
         <ChevronDownIcon className="h-4 w-4" />
       </button>
+      
+      <style jsx>{`
+        .language-toggle-btn:hover {
+          background-color: rgba(243, 244, 246, 0.95);
+          color: var(--hover-text-color) !important;
+        }
+      `}</style>
 
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
           {availableLanguages.map((lang) => {
-            const flag = LANGUAGE_FLAGS[lang] || '🌐';
             const name = LANGUAGE_NAMES[lang] || lang.toUpperCase();
             const isActive = lang === currentLanguage;
 
@@ -157,11 +150,11 @@ const LanguageToggle: React.FC<LanguageToggleProps> = ({ navTextColor = '#374151
                     handleLanguageChange(lang);
                   }
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 transition ${
+                className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 transition text-gray-900 ${
                   isActive ? 'bg-gray-50 font-semibold' : ''
                 }`}
               >
-                <span className="text-xl">{flag}</span>
+                <FlagIcon countryCode={lang} className="w-5 h-5" />
                 <span className="text-sm">{name}</span>
                 {isActive && (
                   <svg

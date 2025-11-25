@@ -119,7 +119,7 @@ export default function EditableText({
   // Popup manages its own outside-click; we avoid double-handling here
   const isEditingRef = useRef(false);
   const suppressBlurCommitRef = useRef(false);
-  const DEBUG = false;
+  const DEBUG = true; // Temporarily enabled to debug translation issues
   const isMenuPath = useMemo(() => typeof path === 'string' && path.startsWith('menu.'), [path]);
 
   useEffect(() => {
@@ -186,6 +186,16 @@ export default function EditableText({
         return;
       }
       
+      // Skip live updates for multiline text to prevent duplication issues with Enter key
+      // Multiline fields will commit their changes on blur instead
+      if (multiline) {
+        if (DEBUG) {
+          // eslint-disable-next-line no-console
+          console.log('[EditableText] mutation skipped live update for multiline', { path });
+        }
+        return;
+      }
+      
       let text = "";
       if (multiline && ref.current) {
         // For multiline text, preserve line breaks
@@ -241,20 +251,66 @@ export default function EditableText({
       // eslint-disable-next-line no-console
       console.log('[MenuDebug EditableText] onBlur', { path });
     }
-    onCommit();
     
-    // Sync internal state with value prop after editing completes
-    // This ensures the internal state matches the latest value when switching languages
-    const next = value === undefined || value === null ? "" : decodeHtmlEntities(String(value));
-    if (next !== internal) {
-      setInternal(next);
+    // Extract the current text from the DOM
+    let text = "";
+    if (multiline && ref.current) {
+      // For multiline text, preserve line breaks by converting HTML structure to plain text with \n
+      const clonedNode = ref.current.cloneNode(true) as HTMLElement;
+      
+      // Replace <br> tags with newlines
+      clonedNode.querySelectorAll('br').forEach(br => {
+        br.replaceWith('\n');
+      });
+      
+      // Replace <div> elements with newlines (contentEditable sometimes uses divs for paragraphs)
+      clonedNode.querySelectorAll('div').forEach((div, index) => {
+        if (index > 0) {
+          div.prepend('\n');
+        }
+        const textNode = document.createTextNode(div.textContent || '');
+        div.replaceWith(textNode);
+      });
+      
+      text = clonedNode.textContent ?? "";
+      
+      // Normalize whitespace around newlines:
+      // - Remove trailing spaces before newlines
+      // - Remove leading spaces after newlines
+      // - Collapse multiple consecutive newlines to double newlines max
+      text = text
+        .replace(/[ \t]+\n/g, '\n')  // Remove trailing spaces before newlines
+        .replace(/\n[ \t]+/g, '\n')  // Remove leading spaces after newlines
+        .replace(/\n{3,}/g, '\n\n')  // Collapse 3+ newlines to 2
+        .trim();  // Remove leading/trailing whitespace from entire text
+    } else {
+      text = (ref.current?.textContent ?? "").trim();
+    }
+    
+    // Update internal state with the clean text
+    setInternal(text);
+    
+    // Commit the changes to parent
+    if (path && onEdit) {
+      onEdit(path, text);
+    } else if (onChange) {
+      onChange(text);
+    }
+    
+    // Normalize the DOM to our clean structure to prevent React reconciliation errors
+    if (ref.current && effectiveEditable) {
+      if (multiline) {
+        ref.current.innerHTML = text.replace(/\n/g, '<br>');
+      } else {
+        ref.current.textContent = text;
+      }
     }
     
     // Call custom onBlur handler if provided
     if (onBlur) {
       onBlur();
     }
-  }, [onCommit, onBlur, value, internal]);
+  }, [path, onEdit, onChange, onBlur, multiline, effectiveEditable]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -269,14 +325,24 @@ export default function EditableText({
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (!effectiveEditable) return;
-      if (!multiline && e.key === "Enter") {
-        e.preventDefault();
-        (e.currentTarget as any).blur();
+      
+      // Handle Enter key
+      if (e.key === "Enter") {
+        if (!multiline) {
+          // Single-line: blur on Enter
+          e.preventDefault();
+          (e.currentTarget as any).blur();
+        }
+        // For multiline, let the browser handle Enter naturally
+        // We'll normalize whatever structure it creates on blur
       }
+      
       if (e.key === "Escape") {
         e.preventDefault();
         // Revert on escape
-        if (ref.current) ref.current.textContent = internal;
+        if (ref.current) {
+          ref.current.innerHTML = internal.replace(/\n/g, '<br>');
+        }
         (e.currentTarget as any).blur();
         // Close popup if open
         if (showPopup) setShowPopup(false);
@@ -470,15 +536,58 @@ export default function EditableText({
 
   const displayValue = useMemo(() => {
     if (!path || !i18nContext?.enabled) {
+      if (DEBUG) console.log(`[EditableText] No path or i18n disabled, returning internal:`, internal);
       return internal;
     }
     if (i18nContext.currentLanguage === i18nContext.defaultLanguage) {
+      if (DEBUG) console.log(`[EditableText] Default language, returning internal:`, internal);
       return internal;
     }
     // Use value prop directly for translation fallback to avoid flash when switching languages
     const fallbackText = value !== undefined && value !== null ? String(value) : internal;
-    return i18nContext.t(path, fallbackText);
+    const translatedText = i18nContext.t(path, fallbackText);
+    
+    if (DEBUG) {
+      console.log(`[EditableText] Translation lookup for path "${path}":`, {
+        currentLanguage: i18nContext.currentLanguage,
+        fallbackText: fallbackText,
+        translatedText: translatedText,
+        valueLength: String(value).length,
+        translatedLength: translatedText.length
+      });
+    }
+    
+    // Debug: Check if we're getting concatenated translations
+    if (DEBUG && translatedText && fallbackText && translatedText !== fallbackText && translatedText.includes(fallbackText)) {
+      console.warn(`⚠️ [EditableText] Possible concatenation detected for path "${path}":`, {
+        fallbackText,
+        translatedText,
+        currentLanguage: i18nContext.currentLanguage
+      });
+    }
+    
+    return translatedText;
   }, [internal, path, i18nContext, value]);
+
+  // For contentEditable elements, we use ref to control the DOM directly
+  // This prevents React reconciliation errors when the browser modifies the DOM structure
+  // NOTE: This hook MUST be defined before any conditional returns to comply with Rules of Hooks
+  const setInitialContent = useCallback((el: HTMLElement | null) => {
+    if (!el) return;
+    
+    ref.current = el;
+    
+    // Only set content when not actively editing
+    if (!isEditingRef.current) {
+      if (multiline) {
+        // Use innerHTML for multiline to support <br> tags
+        el.innerHTML = internal ? internal.replace(/\n/g, '<br>') : (placeholder || '');
+      } else {
+        // Use textContent for single-line (cleaner)
+        el.textContent = internal || placeholder || '';
+      }
+    }
+  }, [internal, multiline, placeholder]);
 
   if (!effectiveEditable) {
     // For multiline text, convert newlines to <br /> tags
@@ -498,22 +607,12 @@ export default function EditableText({
     return <Tag {...domProps}>{displayValue || placeholder || null}</Tag>;
   }
 
-  // For editable multiline text, convert newlines to <br /> tags for display
-  // Always use internal for editable content (source text)
-  const editableContent = multiline && internal ? (
-    internal.split('\n').map((part, index, array) => (
-      <React.Fragment key={index}>
-        {part}
-        {index < array.length - 1 && <br />}
-      </React.Fragment>
-    ))
-  ) : (
-    internal || placeholder || ""
-  );
-
-  const editableElement = (
+  // For editable elements, don't use React children - control via ref
+  // For non-editable elements, use React children for proper rendering
+  const editableElement = effectiveEditable ? (
     <Tag
       {...domProps}
+      ref={setInitialContent}
       contentEditable
       suppressContentEditableWarning
       role="textbox"
@@ -523,8 +622,20 @@ export default function EditableText({
       onBlur={handleBlur}
       onClick={handleClick}
       onPaste={handlePaste}
-    >
-      {editableContent}
+    />
+  ) : (
+    // Non-editable: use React children for proper rendering
+    <Tag {...domProps}>
+      {multiline && displayValue ? (
+        displayValue.split('\n').map((part, index, array) => (
+          <React.Fragment key={index}>
+            {part}
+            {index < array.length - 1 && <br />}
+          </React.Fragment>
+        ))
+      ) : (
+        displayValue || placeholder || null
+      )}
     </Tag>
   );
 

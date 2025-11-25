@@ -1,18 +1,17 @@
 import React from 'react';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
-import type { Services, BusinessBenefits, ColorPalette } from '../types';
+import type { Services, ColorPalette } from '../types';
 
 type Props = { 
   services?: Services;
-  businessBenefits?: BusinessBenefits;
   backgroundClass?: string;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
 };
 
-const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: businessBenefitsProp, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette }) => {
+const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette }) => {
 
   const services = servicesProp ?? {
     title: "Our Services",
@@ -39,18 +38,6 @@ const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: b
         imageUrl: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80',
         alt: 'Installation and setup work',
       },
-    ]
-  };
-
-  const businessBenefits = businessBenefitsProp ?? {
-    title: "Why Choose Our Services",
-    items: [
-      { title: "24/7 availability", description: "Available whenever you need us most" },
-      { title: "Rapid response", description: "Quick response times to serve you better" },
-      { title: "Expert professionals", description: "Licensed professionals with years of experience" },
-      { title: "Modern equipment", description: "Advanced tools for efficient service delivery" },
-      { title: "Transparent pricing", description: "No hidden fees or surprise charges" },
-      { title: "Quality guarantee", description: "All work backed by our satisfaction guarantee" }
     ]
   };
 
@@ -131,9 +118,9 @@ const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: b
                   editable={editable}
                   onEdit={onEdit}
                   placeholder="Service title"
-                  textSize={service.titleTextSize || 1.25} // Default to sister site medium headline size
-                  onTextSizeChange={onEdit ? (size: number) => onEdit(`services.items.${services.items.indexOf(service)}.titleTextSize`, size.toString()) : undefined}
-                  textSizeLabel="Service Title Size"
+                  textSize={services.titleTextSize || 1.25} // Uniform size for ALL service titles
+                  onTextSizeChange={onEdit ? (size: number) => onEdit(`services.titleTextSize`, size.toString()) : undefined}
+                  textSizeLabel="Service Title Size (All Cards)"
                   textSizePresets={[1.0, 1.25, 1.5, 1.75]} // Medium headline presets
                   textSizeNormal={1.25} // 20px - sister site medium headline size
                   textSizeMin={0.875}
@@ -148,9 +135,9 @@ const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: b
                   onEdit={onEdit}
                   placeholder="Service description"
                   multiline
-                  textSize={service.descriptionTextSize || 1.0} // Default to standard body text
-                  onTextSizeChange={onEdit ? (size: number) => onEdit(`services.items.${services.items.indexOf(service)}.descriptionTextSize`, size.toString()) : undefined}
-                  textSizeLabel="Service Description Size"
+                  textSize={services.descriptionTextSize || 1.0} // Uniform size for ALL service descriptions
+                  onTextSizeChange={onEdit ? (size: number) => onEdit(`services.descriptionTextSize`, size.toString()) : undefined}
+                  textSizeLabel="Service Description Size (All Cards)"
                   textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
                   textSizeNormal={1.0} // 16px - standard body text
                   textSizeMin={0.75}
@@ -159,86 +146,6 @@ const Services: React.FC<Props> = ({ services: servicesProp, businessBenefits: b
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Business Benefits Section */}
-        <div id="benefits" className="mt-16 bg-white rounded-2xl shadow-lg p-8 lg:p-12">
-          <EditableText
-            as="h3"
-            className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center mobile-left"
-            value={businessBenefits.title}
-            path="businessBenefits.title"
-            editable={editable}
-            onEdit={onEdit}
-            placeholder="Benefits section title"
-            textSize={businessBenefits.titleTextSize || 1.5} // Default to sister site subsection title size
-            onTextSizeChange={onEdit ? (size: number) => onEdit('businessBenefits.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Benefits Title Size"
-            textSizePresets={[1.25, 1.5, 1.875, 2.25]} // Subsection title presets
-            textSizeNormal={1.5} // 24px - sister site subsection title size
-            textSizeMin={1.0}
-            textSizeMax={2.75}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {(Array.isArray(businessBenefits.items) ? businessBenefits.items : [])
-              .filter(benefit => benefit.title?.trim() || benefit.description?.trim())
-              .map((benefit, index: number) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <div 
-                    className="flex items-center justify-center w-8 h-8 rounded-full"
-                    style={{ 
-                      backgroundColor: `${colorPalette?.primary || '#10B981'}20`,
-                    }}
-                  >
-                    <span 
-                      className="font-semibold text-sm"
-                      style={{ 
-                        color: colorPalette?.primary || '#10B981'
-                      }}
-                    >
-                      {index + 1}
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <EditableText
-                    as="h4"
-                    className="text-gray-900 font-semibold mb-1"
-                    value={benefit.title}
-                    path={`businessBenefits.items.${businessBenefits.items.indexOf(benefit)}.title`}
-                    editable={editable}
-                    onEdit={onEdit}
-                    placeholder="Benefit title"
-                    textSize={benefit.titleTextSize || 1.0} // Default to standard body text
-                    onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.items.${businessBenefits.items.indexOf(benefit)}.titleTextSize`, size.toString()) : undefined}
-                    textSizeLabel="Benefit Title Size"
-                    textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
-                    textSizeNormal={1.0} // 16px - standard body text
-                    textSizeMin={0.75}
-                    textSizeMax={1.75}
-                  />
-                  <EditableText
-                    as="p"
-                    className="text-gray-700 leading-relaxed"
-                    value={benefit.description}
-                    path={`businessBenefits.items.${businessBenefits.items.indexOf(benefit)}.description`}
-                    editable={editable}
-                    onEdit={onEdit}
-                    placeholder="Benefit description"
-                    multiline
-                    textSize={benefit.descriptionTextSize || 1.0} // Default to standard body text
-                    onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.items.${businessBenefits.items.indexOf(benefit)}.descriptionTextSize`, size.toString()) : undefined}
-                    textSizeLabel="Benefit Description Size"
-                    textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
-                    textSizeNormal={1.0} // 16px - standard body text
-                    textSizeMin={0.75}
-                    textSizeMax={1.75}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>

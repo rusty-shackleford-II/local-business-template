@@ -162,8 +162,9 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         `
       }} />
       <footer 
-        className="bg-white border-t border-gray-200"
+        className="border-t border-gray-200"
         style={{ 
+          backgroundColor: footer?.colors?.background || '#ffffff',
           '--logo-height-sm': `${logoHeights.sm}rem`,
           '--logo-height-md': `${logoHeights.md}rem`,
           '--logo-height-lg': `${logoHeights.lg}rem`

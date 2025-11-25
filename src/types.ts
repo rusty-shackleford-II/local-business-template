@@ -3,7 +3,7 @@ export type ColorPalette = {
   secondary: string;  // Minor color - for secondary buttons, icons, breadcrumbs, bullet points
 };
 
-export type HeaderColors = { brandText?: string; navText?: string; businessNameColor?: string };
+export type HeaderColors = { brandText?: string; navText?: string; businessNameColor?: string; background?: string };
 export type Header = { 
   showLogo?: boolean; 
   colors?: HeaderColors;
@@ -95,6 +95,7 @@ export type Services = {
   subtitle: string;
   subtitleTextSize?: number;
   items: ServiceItem[];
+  descriptionTextSize?: number; // Uniform text size for all service descriptions
 };
 
 export type BusinessBenefitItem = {
@@ -106,8 +107,10 @@ export type BusinessBenefitItem = {
 
 export type BusinessBenefits = {
   title: string;
-  titleTextSize?: number;
+  titleTextSize?: number; // Main section title size
   items: BusinessBenefitItem[];
+  itemTitleTextSize?: number; // Uniform text size for all benefit item titles
+  itemDescriptionTextSize?: number; // Uniform text size for all benefit item descriptions
 };
 
 
@@ -130,6 +133,7 @@ export type Testimonials = {
   subtitleTextSize?: number;
   overallRating?: number;
   totalReviews?: number;
+  showGoogleReviewsBadge?: boolean;
   items: TestimonialItem[] 
 };
 
@@ -334,6 +338,7 @@ export type Footer = {
   privacyPolicyText?: string; // Privacy policy content (supports text/HTML)
   showTermsAndConditions?: boolean | string; // Toggle terms and conditions link visibility (stored as string in editor)
   termsAndConditionsText?: string; // Terms and conditions content (supports text/HTML)
+  colors?: { background?: string }; // Footer color customization
 };
 
 export type SEO = {
@@ -411,7 +416,7 @@ export type Payment = {
 };
 
 // Optional layout configuration allowing section ordering and visibility
-export type SectionKey = 'hero' | 'about' | 'services' | 'menu' | 'testimonials' | 'upcomingEvents' | 'contact' | 'videos' | 'payment' | 'partners';
+export type SectionKey = 'hero' | 'about' | 'services' | 'benefits' | 'menu' | 'testimonials' | 'upcomingEvents' | 'contact' | 'videos' | 'payment' | 'partners';
 export type Layout = {
   sections: Array<SectionKey | { id: SectionKey; enabled?: boolean }>;
 };

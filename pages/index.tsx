@@ -97,7 +97,11 @@ function generateJsonLd(siteData: any) {
         logo: {
           '@type': 'ImageObject',
           // Use searchResultsIcon first, then logoUrl as fallback
-          url: seo?.searchResultsIcon || siteData?.logoUrl || '',
+          url: (seo?.searchResultsIcon && 
+                (seo.searchResultsIcon.startsWith('http') || seo.searchResultsIcon.startsWith('/')) &&
+                !seo.searchResultsIcon.startsWith('ERROR')) 
+               ? seo.searchResultsIcon 
+               : (siteData?.logoUrl || ''),
           width: 512,
           height: 512
         },
@@ -220,7 +224,9 @@ export default function Home() {
         )}
         
         {/* Icons */}
-        {(site as any)?.seo?.searchResultsIcon ? (
+        {(site as any)?.seo?.searchResultsIcon && 
+         (((site as any).seo.searchResultsIcon.startsWith('http') || (site as any).seo.searchResultsIcon.startsWith('/'))) &&
+         !((site as any).seo.searchResultsIcon.startsWith('ERROR')) ? (
           <>
             <link rel="icon" href={(site as any).seo.searchResultsIcon} type="image/png" />
             <link rel="apple-touch-icon" href={(site as any).seo.searchResultsIcon} />

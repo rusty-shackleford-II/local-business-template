@@ -151,6 +151,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       }
 
       if (typeof value === 'string') {
+        console.log(`[I18n] Found inline translation for "${key}":`, value.substring(0, Math.min(100, value.length)));
         return value;
       }
     }
@@ -163,11 +164,14 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
+        console.log(`[I18n] No translation found for "${key}", using default:`, defaultValue ? defaultValue.substring(0, Math.min(100, defaultValue.length)) : 'undefined');
         return defaultValue || key;
       }
     }
 
-    return typeof value === 'string' ? value : defaultValue || key;
+    const result = typeof value === 'string' ? value : defaultValue || key;
+    console.log(`[I18n] Returning file-based translation for "${key}":`, typeof result === 'string' ? result.substring(0, Math.min(100, result.length)) : result);
+    return result;
   };
 
   // Set initial HTML dir attribute based on default language

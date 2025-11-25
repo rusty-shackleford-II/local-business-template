@@ -3,6 +3,7 @@ import Header from "./Header";
 import Hero from "./Hero";
 import About from "./About";
 import Services from "./Services";
+import BusinessBenefits from "./BusinessBenefits";
 import Menu from "./Menu";
 import Testimonials from "./Testimonials";
 import UpcomingEvents from "./UpcomingEvents";
@@ -36,7 +37,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     }
   }, [site.colorPalette]);
   // Build sections list from layout or fallback to default order
-  const defaultOrder: SectionKey[] = ['hero', 'about', 'services', 'menu', 'testimonials', 'payment', 'videos', 'upcomingEvents', 'contact'];
+  const defaultOrder: SectionKey[] = ['hero', 'about', 'services', 'benefits', 'menu', 'testimonials', 'payment', 'videos', 'upcomingEvents', 'contact'];
   
   // Safely get sections array, ensuring it's always an array
   const sectionsSource = (site.layout?.sections && Array.isArray(site.layout.sections)) 
@@ -83,6 +84,13 @@ export default function LocalBusinessLandingPage(site: SiteData) {
       case 'services':
         return <Services 
           services={site.services} 
+          backgroundClass={backgroundClass}
+          editable={site.editable}
+          onEdit={site.onEdit}
+          colorPalette={site.colorPalette}
+        />;
+      case 'benefits':
+        return <BusinessBenefits 
           businessBenefits={site.businessBenefits} 
           backgroundClass={backgroundClass}
           editable={site.editable}
