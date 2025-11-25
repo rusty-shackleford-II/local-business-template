@@ -141,12 +141,13 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       navigationItems = layout.sections
         .map(section => {
           const sectionData = typeof section === 'string' 
-            ? { id: section as SectionKey, enabled: true }
-            : { id: section.id, enabled: section.enabled !== false };
+            ? { id: section as SectionKey, enabled: true, navLabel: undefined }
+            : { id: section.id, enabled: section.enabled !== false, navLabel: section.navLabel };
           
           return {
             id: sectionData.id,
-            label: sectionLabels[sectionData.id],
+            // Use custom navLabel if provided, otherwise fall back to default label
+            label: sectionData.navLabel || sectionLabels[sectionData.id],
             enabled: sectionData.enabled,
             isSection: true
           };

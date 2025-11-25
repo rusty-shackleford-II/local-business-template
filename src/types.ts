@@ -418,7 +418,7 @@ export type Payment = {
 // Optional layout configuration allowing section ordering and visibility
 export type SectionKey = 'hero' | 'about' | 'services' | 'benefits' | 'menu' | 'testimonials' | 'upcomingEvents' | 'contact' | 'videos' | 'payment' | 'partners';
 export type Layout = {
-  sections: Array<SectionKey | { id: SectionKey; enabled?: boolean }>;
+  sections: Array<SectionKey | { id: SectionKey; enabled?: boolean; navLabel?: string }>;
 };
 
 export type BusinessInfo = {

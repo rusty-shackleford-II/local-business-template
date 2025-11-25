@@ -117,6 +117,12 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
     }
   }, [categoryIndex]);
   
+  // Note: We use key={`carousel-${category.items.length}`} on the Swiper component
+  // to force a full remount when items are added/removed. This is necessary because
+  // the breakpoints configuration uses Math.min(X, category.items.length), which
+  // changes the slidesPerView dynamically. Swiper doesn't recalculate breakpoints
+  // on update(), so we need to recreate the instance.
+  
   if (!category.items || category.items.length === 0) return null;
   
   // Get layout style and card size
@@ -264,6 +270,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
           <div className="sm:hidden">
             <div className="relative menu-category-swiper-container" style={{ touchAction: 'pan-y pinch-zoom' }}>
               <Swiper
+                key={`mosaic-${category.items.length}`}
                 modules={[Navigation, Pagination]}
                 spaceBetween={16}
                 slidesPerView={1}
@@ -302,6 +309,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
           }}
         >
           <Swiper
+            key={`carousel-${category.items.length}`}
             modules={[Navigation, Pagination]}
             spaceBetween={16 * cardSize}
             slidesPerView={1}

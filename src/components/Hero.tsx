@@ -17,7 +17,7 @@ function extractIframeSrc(input: string): string {
   return trimmed;
 }
 
-function extractIframeDimensions(input: string): { width: number; height: number } {
+function extractIframeDimensions(input: string): { width: number; height: number } | null {
   const trimmed = input.trim();
   if (trimmed.startsWith('<iframe')) {
     const widthMatch = trimmed.match(/width="(\d+)"/);
@@ -29,8 +29,7 @@ function extractIframeDimensions(input: string): { width: number; height: number
       };
     }
   }
-  // Default dimensions
-  return { width: 640, height: 360 };
+  return null;
 }
 
 function toYouTubeEmbed(urlOrId: string, opts: { autoplay?: boolean; controls?: boolean; loop?: boolean; muted?: boolean }): string {
@@ -280,14 +279,18 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   };
 
-  // Generate video embed URL and extract dimensions
-  const { videoEmbedSrc, videoDimensions } = useMemo(() => {
-    if (hero?.mediaType !== 'video' || !hero?.video?.url) return { videoEmbedSrc: null, videoDimensions: null };
+  // Generate video embed URL and get dimensions
+  const { videoEmbedSrc, videoAspectRatio } = useMemo(() => {
+    if (hero?.mediaType !== 'video' || !hero?.video?.url) return { videoEmbedSrc: null, videoAspectRatio: 56.25 };
     
     const input = extractIframeSrc(hero.video.url);
-    if (!input) return { videoEmbedSrc: null, videoDimensions: null };
+    if (!input) return { videoEmbedSrc: null, videoAspectRatio: 56.25 };
     
+    // Extract dimensions to get proper aspect ratio
     const dimensions = extractIframeDimensions(hero.video.url);
+    const aspectRatio = dimensions 
+      ? (dimensions.height / dimensions.width) * 100 
+      : 56.25; // Default to 16:9
     
     const opts = {
       autoplay: hero.video.autoplay ?? true,  // Default to autoplay
@@ -314,7 +317,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       embedSrc = toYouTubeEmbed(input, opts);
     }
     
-    return { videoEmbedSrc: embedSrc, videoDimensions: dimensions };
+    return { videoEmbedSrc: embedSrc, videoAspectRatio: aspectRatio };
   }, [hero?.mediaType, hero?.video]);
 
   // Reset loading states when media type or source changes
@@ -548,12 +551,10 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
 
                 {/* Media container */}
                 {hero?.mediaType === 'video' && videoEmbedSrc ? (
-                  <div className="relative z-10 w-full max-w-4xl mx-auto">
+                  <div className="relative z-10 w-full mx-auto">
                     <div 
                       className="relative w-full overflow-hidden rounded-2xl shadow-2xl"
-                      style={{
-                        paddingTop: videoDimensions ? `${(videoDimensions.height / videoDimensions.width) * 100}%` : '56.25%'
-                      }}
+                      style={{ paddingTop: `${videoAspectRatio}%` }}
                     >
                       {videoLoading && (
                         <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center">
@@ -567,7 +568,14 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       <iframe
                         src={videoEmbedSrc}
                         className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${videoLoading ? 'opacity-0' : 'opacity-100'}`}
-                        style={{ border: 'none' }}
+                        style={{ 
+                          border: 'none',
+                          width: '100%',
+                          height: '100%',
+                          position: 'absolute',
+                          top: 0,
+                          left: 0
+                        }}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                         allowFullScreen
                         frameBorder="0"

@@ -118,11 +118,12 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
     return layout.sections
       .map(section => {
         const sectionData = typeof section === 'string' 
-          ? { id: section as SectionKey, enabled: true }
-          : { id: section.id, enabled: section.enabled !== false };
+          ? { id: section as SectionKey, enabled: true, navLabel: undefined }
+          : { id: section.id, enabled: section.enabled !== false, navLabel: section.navLabel };
         
         return {
-          key: sectionLabels[sectionData.id],
+          // Use custom navLabel if provided, otherwise fall back to default label
+          key: sectionData.navLabel || sectionLabels[sectionData.id],
           section: sectionData.id,
           enabled: sectionData.enabled
         };
