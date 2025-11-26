@@ -5,7 +5,7 @@ import Head from 'next/head';
 import { stripPhoneNumber } from '../lib/phoneUtils';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
-import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette } from '../types';
+import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton } from '../types';
 
 // Video utility functions (copied from Videos component)
 function extractIframeSrc(input: string): string {
@@ -119,12 +119,52 @@ type Props = {
 const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, colorPalette }) => {
   const [videoLoading, setVideoLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
-  const [isCtaHovered, setIsCtaHovered] = useState(false);
+  const [hoveredButtonId, setHoveredButtonId] = useState<string | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Get CTA buttons array with backwards compatibility
+  // If ctaButtons array exists, use it; otherwise, convert single cta to array format
+  const ctaButtons = useMemo((): HeroCtaButton[] => {
+    // Check if payment has override CTA
+    if (payment?.addHeroCta) {
+      return [{
+        id: 'payment-cta',
+        label: payment?.heroCtaLabel || hero?.cta?.label || 'Buy Now',
+        labelTextSize: payment?.heroCtaLabelTextSize || hero?.cta?.labelTextSize,
+        actionType: 'contact', // Payment CTA scrolls to payment section
+        showArrow: true
+      }];
+    }
+    
+    // Use ctaButtons array if it exists and has items
+    if (hero?.ctaButtons && hero.ctaButtons.length > 0) {
+      return hero.ctaButtons;
+    }
+    
+    // Backwards compatibility: convert single cta to array format
+    if (hero?.cta) {
+      return [{
+        id: 'legacy-cta',
+        label: hero.cta.label || 'Get Started Today',
+        labelTextSize: hero.cta.labelTextSize,
+        href: hero.cta.href,
+        actionType: hero.cta.actionType,
+        phoneNumber: hero.cta.phoneNumber,
+        showArrow: true
+      }];
+    }
+    
+    // Default button if nothing is configured
+    return [{
+      id: 'default-cta',
+      label: 'Get Started Today',
+      showArrow: true
+    }];
+  }, [hero?.ctaButtons, hero?.cta, payment?.addHeroCta, payment?.heroCtaLabel, payment?.heroCtaLabelTextSize]);
   
   // Determine layout style - handle both string and potential type mismatches
   const layoutStyle = hero?.layoutStyle || 'standard';
@@ -200,11 +240,11 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     return color; // Fallback to original color if we can't parse it
   };
 
-  const onCtaClick = () => {
-    // Handle different action types based on the new actionType field
+  const onButtonClick = (button: HeroCtaButton) => {
+    // Handle different action types based on the actionType field
     // For backward compatibility, if actionType is not set but href exists, treat as external
-    let actionType = hero?.cta?.actionType;
-    if (!actionType && hero?.cta?.href) {
+    let actionType = button.actionType;
+    if (!actionType && button.href) {
       actionType = 'external';
     } else if (!actionType) {
       actionType = 'contact';
@@ -213,25 +253,25 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     switch (actionType) {
       case 'phone':
         // Handle phone number action
-        if (hero?.cta?.phoneNumber) {
+        if (button.phoneNumber) {
           // Clean the phone number and create tel: link
-          const cleanedNumber = stripPhoneNumber(hero.cta.phoneNumber);
+          const cleanedNumber = stripPhoneNumber(button.phoneNumber);
           window.location.href = `tel:${cleanedNumber}`;
         }
         return;
         
       case 'external':
         // Handle external URL action
-        if (hero?.cta?.href) {
-          const href = hero.cta.href;
+        if (button.href) {
+          const href = button.href;
           
           // Handle internal anchor links (scroll to section)
           if (href.startsWith('#')) {
             const element = document.getElementById(href.substring(1));
             if (element) {
               // Calculate header height offset
-              const isMobile = window.innerWidth < 768;
-              const headerOffset = isMobile ? 80 : 96; // Match CSS values
+              const isMobileScreen = window.innerWidth < 768;
+              const headerOffset = isMobileScreen ? 80 : 96; // Match CSS values
               const elementPosition = element.offsetTop - headerOffset;
               
               window.scrollTo({
@@ -266,8 +306,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         const element = document.getElementById(targetId);
         if (element) {
           // Calculate header height offset
-          const isMobile = window.innerWidth < 768;
-          const headerOffset = isMobile ? 80 : 96; // Match CSS values
+          const isMobileScreen = window.innerWidth < 768;
+          const headerOffset = isMobileScreen ? 80 : 96; // Match CSS values
           const elementPosition = element.offsetTop - headerOffset;
           
           window.scrollTo({
@@ -276,6 +316,38 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           });
         }
         return;
+    }
+  };
+  
+  // Get button styles based on variant
+  const getButtonStyles = (button: HeroCtaButton, isHovered: boolean, index: number) => {
+    const defaultBg = colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb';
+    const defaultText = hero?.colors?.ctaText || '#ffffff';
+    
+    // Use button-specific colors if set, otherwise fall back to defaults
+    const bgColor = button.backgroundColor || defaultBg;
+    const textColor = button.textColor || defaultText;
+    
+    // Handle different variants
+    switch (button.variant) {
+      case 'secondary':
+        return {
+          backgroundColor: isHovered ? darkenColor(bgColor) : bgColor,
+          color: textColor,
+          opacity: 0.9
+        };
+      case 'outline':
+        return {
+          backgroundColor: isHovered ? bgColor : 'transparent',
+          color: isHovered ? defaultText : bgColor,
+          border: `2px solid ${bgColor}`
+        };
+      case 'primary':
+      default:
+        return {
+          backgroundColor: isHovered ? darkenColor(bgColor) : bgColor,
+          color: textColor
+        };
     }
   };
 
@@ -514,31 +586,35 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 showBoldToggle={true}
               />
                 
-                <button
-                  onClick={editable ? undefined : onCtaClick}
-                  className="group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press cta-pulse"
-                  style={{ 
-                    backgroundColor: isCtaHovered 
-                      ? darkenColor(colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb')
-                      : (colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb'), 
-                    color: hero?.colors?.ctaText || '#ffffff',
-                    cursor: editable ? 'text' : 'pointer'
-                  }}
-                  onMouseEnter={() => setIsCtaHovered(true)}
-                  onMouseLeave={() => setIsCtaHovered(false)}
-                >
-                  <EditableText
-                    value={payment?.addHeroCta ? (payment?.heroCtaLabel || hero?.cta?.label || 'Buy Now') : (hero?.cta?.label || 'Get Started Today')}
-                    path={payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label"}
-                    editable={editable}
-                    onEdit={onEdit}
-                    placeholder="Button text"
-                    textSize={hero?.cta?.labelTextSize || 1.0}
-                    onTextSizeChange={onEdit ? (size: number) => onEdit(payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize', size.toString()) : undefined}
-                    textSizeLabel="CTA Button Text Size"
-                  />
-                  <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                </button>
+                <div className="flex flex-wrap gap-4">
+                  {ctaButtons.map((button, index) => (
+                    <button
+                      key={button.id}
+                      onClick={editable ? undefined : () => onButtonClick(button)}
+                      className={`group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
+                      style={{ 
+                        ...getButtonStyles(button, hoveredButtonId === button.id, index),
+                        cursor: editable ? 'text' : 'pointer'
+                      }}
+                      onMouseEnter={() => setHoveredButtonId(button.id)}
+                      onMouseLeave={() => setHoveredButtonId(null)}
+                    >
+                      <EditableText
+                        value={button.label}
+                        path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
+                        editable={editable}
+                        onEdit={onEdit}
+                        placeholder="Button text"
+                        textSize={button.labelTextSize || 1.0}
+                        onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
+                        textSizeLabel="CTA Button Text Size"
+                      />
+                      {(button.showArrow !== false) && (
+                        <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -896,35 +972,37 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showAlignmentToggle={true}
                   />
                   
-                  <div style={{ textAlign: hero?.ctaAlign || 'center' }}>
-                    <button
-                      onClick={editable ? undefined : onCtaClick}
-                      className="group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press cta-pulse"
-                      style={{ 
-                        backgroundColor: isCtaHovered 
-                          ? darkenColor(colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb')
-                          : (colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb'), 
-                        color: hero?.colors?.ctaText || '#ffffff',
-                        cursor: editable ? 'text' : 'pointer'
-                      }}
-                      onMouseEnter={() => setIsCtaHovered(true)}
-                      onMouseLeave={() => setIsCtaHovered(false)}
-                    >
-                      <EditableText
-                        value={payment?.addHeroCta ? (payment?.heroCtaLabel || hero?.cta?.label || 'Buy Now') : (hero?.cta?.label || 'Get Started Today')}
-                        path={payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label"}
-                        editable={editable}
-                        onEdit={onEdit}
-                        placeholder="Button text"
-                        textSize={hero?.cta?.labelTextSize || 1.0}
-                        onTextSizeChange={onEdit ? (size: number) => onEdit(payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize', size.toString()) : undefined}
-                        textSizeLabel="CTA Button Text Size"
-                        textAlign={hero?.ctaAlign || 'center'}
-                        onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
-                        showAlignmentToggle={true}
-                      />
-                      <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                    </button>
+                  <div className="flex flex-wrap gap-4" style={{ justifyContent: hero?.ctaAlign === 'left' ? 'flex-start' : hero?.ctaAlign === 'right' ? 'flex-end' : 'center' }}>
+                    {ctaButtons.map((button, index) => (
+                      <button
+                        key={button.id}
+                        onClick={editable ? undefined : () => onButtonClick(button)}
+                        className={`group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
+                        style={{ 
+                          ...getButtonStyles(button, hoveredButtonId === button.id, index),
+                          cursor: editable ? 'text' : 'pointer'
+                        }}
+                        onMouseEnter={() => setHoveredButtonId(button.id)}
+                        onMouseLeave={() => setHoveredButtonId(null)}
+                      >
+                        <EditableText
+                          value={button.label}
+                          path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
+                          editable={editable}
+                          onEdit={onEdit}
+                          placeholder="Button text"
+                          textSize={button.labelTextSize || 1.0}
+                          onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
+                          textSizeLabel="CTA Button Text Size"
+                          textAlign={hero?.ctaAlign || 'center'}
+                          onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
+                          showAlignmentToggle={index === 0}
+                        />
+                        {(button.showArrow !== false) && (
+                          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </div>
               ) : (
@@ -990,35 +1068,37 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showAlignmentToggle={true}
                   />
                   
-                  <div style={{ textAlign: hero?.ctaAlign || 'center' }}>
-                    <button
-                      onClick={editable ? undefined : onCtaClick}
-                      className="group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press cta-pulse"
-                      style={{ 
-                        backgroundColor: isCtaHovered 
-                          ? darkenColor(colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb')
-                          : (colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb'), 
-                        color: hero?.colors?.ctaText || '#ffffff',
-                        cursor: editable ? 'text' : 'pointer'
-                      }}
-                      onMouseEnter={() => setIsCtaHovered(true)}
-                      onMouseLeave={() => setIsCtaHovered(false)}
-                    >
-                      <EditableText
-                        value={payment?.addHeroCta ? (payment?.heroCtaLabel || hero?.cta?.label || 'Buy Now') : (hero?.cta?.label || 'Get Started Today')}
-                        path={payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label"}
-                        editable={editable}
-                        onEdit={onEdit}
-                        placeholder="Button text"
-                        textSize={hero?.cta?.labelTextSize || 1.0}
-                        onTextSizeChange={onEdit ? (size: number) => onEdit(payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize', size.toString()) : undefined}
-                        textSizeLabel="CTA Button Text Size"
-                        textAlign={hero?.ctaAlign || 'center'}
-                        onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
-                        showAlignmentToggle={true}
-                      />
-                      <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                    </button>
+                  <div className="flex flex-wrap gap-4" style={{ justifyContent: hero?.ctaAlign === 'left' ? 'flex-start' : hero?.ctaAlign === 'right' ? 'flex-end' : 'center' }}>
+                    {ctaButtons.map((button, index) => (
+                      <button
+                        key={button.id}
+                        onClick={editable ? undefined : () => onButtonClick(button)}
+                        className={`group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
+                        style={{ 
+                          ...getButtonStyles(button, hoveredButtonId === button.id, index),
+                          cursor: editable ? 'text' : 'pointer'
+                        }}
+                        onMouseEnter={() => setHoveredButtonId(button.id)}
+                        onMouseLeave={() => setHoveredButtonId(null)}
+                      >
+                        <EditableText
+                          value={button.label}
+                          path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
+                          editable={editable}
+                          onEdit={onEdit}
+                          placeholder="Button text"
+                          textSize={button.labelTextSize || 1.0}
+                          onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
+                          textSizeLabel="CTA Button Text Size"
+                          textAlign={hero?.ctaAlign || 'center'}
+                          onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
+                          showAlignmentToggle={index === 0}
+                        />
+                        {(button.showArrow !== false) && (
+                          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                        )}
+                      </button>
+                    ))}
                   </div>
                 </>
               )}

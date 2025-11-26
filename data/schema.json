@@ -983,7 +983,11 @@
                     "type": "string",
                     "enum": ["hero", "about", "services", "menu", "testimonials", "payment", "upcomingEvents", "contact", "videos", "partners"]
                   },
-                  "enabled": { "type": "boolean" }
+                  "enabled": { "type": "boolean" },
+                  "navLabel": { "type": "string", "description": "Custom navigation link label for this section" },
+                  "backgroundColor": { "type": "string", "description": "Custom background color for this section (hex color)" },
+                  "textColor": { "type": "string", "description": "Custom text color for this section (hex color)" },
+                  "fontFamily": { "type": "string", "description": "Custom font family for this section" }
                 },
                 "required": ["id"]
               }

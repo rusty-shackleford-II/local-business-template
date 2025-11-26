@@ -18,9 +18,10 @@ type Props = {
   layout?: Layout;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
+  isPreview?: boolean;
 };
 
-const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, editable, onEdit }) => {
+const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, editable, onEdit, isPreview }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const i18n = useI18nContext();
@@ -63,28 +64,44 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   };
 
   const scrollToSection = (sectionId: string) => {
+    // Only run client-side
+    if (typeof window === 'undefined') return;
+    
     const element = document.getElementById(sectionId);
+    
     if (element) {
-      // Calculate header height offset using the dynamic header height
-      const dynamicHeaderHeight = document.documentElement.style.getPropertyValue('--dynamic-header-height');
-      let headerOffset = 80; // Default fallback
-      
-      if (dynamicHeaderHeight) {
-        // Convert rem to pixels (assuming 1rem = 16px)
-        const remValue = parseFloat(dynamicHeaderHeight.replace('rem', ''));
-        headerOffset = remValue * 16;
-      } else {
-        // Fallback to responsive values if dynamic height not set
-        const isMobile = window.innerWidth < 768;
-        headerOffset = isMobile ? 80 : 96;
+      // Find scrollable ancestor (for preview mode where content is in a scrollable div)
+      let scrollableParent: HTMLElement | null = element.parentElement;
+      while (scrollableParent) {
+        const style = window.getComputedStyle(scrollableParent);
+        const overflowY = style.overflowY;
+        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && 
+                             scrollableParent.scrollHeight > scrollableParent.clientHeight;
+        if (isScrollable) break;
+        scrollableParent = scrollableParent.parentElement;
       }
       
-      const elementPosition = element.offsetTop - headerOffset;
+      if (scrollableParent) {
+        // Calculate position relative to the scrollable container
+        const elementRect = element.getBoundingClientRect();
+        const containerRect = scrollableParent.getBoundingClientRect();
+        const offset = elementRect.top - containerRect.top + scrollableParent.scrollTop;
+        
+        scrollableParent.scrollTo({
+          top: offset,
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback to scrollIntoView
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    } else if (!isPreview) {
+      // Only navigate to a different page if NOT in preview mode
+      const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
       
-      window.scrollTo({
-        top: elementPosition,
-        behavior: 'smooth'
-      });
+      if (!isHomePage) {
+        window.location.href = `/#${sectionId}`;
+      }
     }
   };
 

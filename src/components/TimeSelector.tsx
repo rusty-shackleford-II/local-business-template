@@ -46,10 +46,16 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Track if a change was made to prevent blur from closing prematurely
+  const changeInProgressRef = useRef(false);
 
   const displayValue = value ? convertTo12Hour(value) : placeholder;
 
+  // DEBUG
+  console.log('[TimeSelector] render', { value, editable, isEditing, displayValue });
+
   const handleClick = () => {
+    console.log('[TimeSelector] handleClick', { editable });
     if (editable) {
       setIsEditing(true);
     }
@@ -57,12 +63,27 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = e.target.value;
+    console.log('[TimeSelector] handleTimeChange FIRED', { newTime, previousValue: value });
+    changeInProgressRef.current = true;
     onChange(newTime);
-    setIsEditing(false);
+    // Small delay to ensure state update completes before unmounting
+    setTimeout(() => {
+      console.log('[TimeSelector] closing after change');
+      setIsEditing(false);
+      changeInProgressRef.current = false;
+    }, 50);
   };
 
   const handleBlur = () => {
-    setIsEditing(false);
+    console.log('[TimeSelector] handleBlur FIRED', { changeInProgress: changeInProgressRef.current });
+    // Delay blur handling to allow time picker selection to register
+    // This prevents the input from closing before a selection is made
+    setTimeout(() => {
+      console.log('[TimeSelector] blur timeout, changeInProgress:', changeInProgressRef.current);
+      if (!changeInProgressRef.current) {
+        setIsEditing(false);
+      }
+    }, 200);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

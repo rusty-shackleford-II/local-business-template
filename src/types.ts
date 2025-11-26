@@ -12,6 +12,20 @@ export type Header = {
   textSize?: number; // Text size multiplier (0.5 to 2.0, default 1.0)
 };
 
+// Hero CTA button type for multiple buttons support
+export type HeroCtaButton = {
+  id: string;
+  label: string;
+  labelTextSize?: number;
+  href?: string;
+  actionType?: 'contact' | 'external' | 'phone';
+  phoneNumber?: string;
+  variant?: 'primary' | 'secondary' | 'outline'; // Button style variant
+  backgroundColor?: string; // Override button background color
+  textColor?: string; // Override button text color
+  showArrow?: boolean; // Whether to show arrow icon (default: true for first button)
+};
+
 export type Hero = {
   heroLargeImageUrl: string;
   heroImages?: string[]; // Multiple images for slideshow (up to 10)
@@ -23,6 +37,7 @@ export type Hero = {
   subheadlineTextSize?: number;
   subheadlineBold?: boolean | string; // Make subheadline text bold (stored as string in JSON)
   subheadlineAlign?: 'left' | 'center' | 'right'; // Text alignment for subheadline
+  // Legacy single CTA (for backwards compatibility)
   cta?: { 
     label: string;
     labelTextSize?: number;
@@ -30,6 +45,8 @@ export type Hero = {
     actionType?: 'contact' | 'external' | 'phone';
     phoneNumber?: string;
   };
+  // Multiple CTA buttons (takes precedence over single cta)
+  ctaButtons?: HeroCtaButton[];
   ctaAlign?: 'left' | 'center' | 'right'; // CTA button alignment in fullwidth overlay
   phone?: string;
   colors?: { headline?: string; subheadline?: string; ctaText?: string; ctaBackground?: string };
@@ -418,7 +435,7 @@ export type Payment = {
 // Optional layout configuration allowing section ordering and visibility
 export type SectionKey = 'hero' | 'about' | 'services' | 'benefits' | 'menu' | 'testimonials' | 'upcomingEvents' | 'contact' | 'videos' | 'payment' | 'partners';
 export type Layout = {
-  sections: Array<SectionKey | { id: SectionKey; enabled?: boolean; navLabel?: string }>;
+  sections: Array<SectionKey | { id: SectionKey; enabled?: boolean; navLabel?: string; backgroundColor?: string; textColor?: string; fontFamily?: string }>;
 };
 
 export type BusinessInfo = {

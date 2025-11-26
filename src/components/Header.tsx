@@ -66,6 +66,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
   }, [logoSize, expandableHeader]);
 
   const handleNavigation = (linkId: string, isSection: boolean) => {
+    console.log('🔗 [Nav] handleNavigation called:', linkId, 'isSection:', isSection);
     setIsMenuOpen(false);
     
     // Handle section navigation
@@ -73,38 +74,51 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       // Only run client-side
       if (typeof window === 'undefined') return;
       
-      // Check if we're on the home page
-      const isHomePage = window.location.pathname === '/';
-      
-      if (!isHomePage) {
-        // If not on home page, navigate to home page with hash
-        window.location.href = `/#${linkId}`;
-        return;
-      }
-      
-      // If on home page, scroll to section
+      // Try to scroll to the section
       const element = document.getElementById(linkId);
+      console.log('🔗 [Nav] Element found:', !!element, element);
+      
       if (element) {
-        // Calculate header height offset using the dynamic header height
-        const dynamicHeaderHeight = document.documentElement.style.getPropertyValue('--dynamic-header-height');
-        let headerOffset = 80; // Default fallback
-        
-        if (dynamicHeaderHeight) {
-          // Convert rem to pixels (assuming 1rem = 16px)
-          const remValue = parseFloat(dynamicHeaderHeight.replace('rem', ''));
-          headerOffset = remValue * 16;
-        } else {
-          // Fallback to responsive values if dynamic height not set
-          const isMobile = window.innerWidth < 768;
-          headerOffset = isMobile ? 80 : 96;
+        // Find scrollable ancestor (for preview mode where content is in a scrollable div)
+        let scrollableParent: HTMLElement | null = element.parentElement;
+        while (scrollableParent) {
+          const style = window.getComputedStyle(scrollableParent);
+          const overflowY = style.overflowY;
+          const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && 
+                               scrollableParent.scrollHeight > scrollableParent.clientHeight;
+          if (isScrollable) {
+            console.log('🔗 [Nav] Found scrollable parent:', scrollableParent.className);
+            break;
+          }
+          scrollableParent = scrollableParent.parentElement;
         }
         
-        const elementPosition = element.offsetTop - headerOffset;
+        if (scrollableParent) {
+          // Calculate position relative to the scrollable container
+          const elementRect = element.getBoundingClientRect();
+          const containerRect = scrollableParent.getBoundingClientRect();
+          const offset = elementRect.top - containerRect.top + scrollableParent.scrollTop;
+          console.log('🔗 [Nav] Scrolling container to offset:', offset);
+          
+          scrollableParent.scrollTo({
+            top: offset,
+            behavior: 'smooth'
+          });
+        } else {
+          // Fallback to scrollIntoView
+          console.log('🔗 [Nav] No scrollable parent, using scrollIntoView');
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else if (!isPreview) {
+        // Only navigate to a different page if NOT in preview mode
+        const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
+        console.log('🔗 [Nav] Element not found, navigating. isHomePage:', isHomePage);
         
-        window.scrollTo({
-          top: elementPosition,
-          behavior: 'smooth'
-        });
+        if (!isHomePage) {
+          window.location.href = `/#${linkId}`;
+        }
+      } else {
+        console.log('🔗 [Nav] Element not found and in preview mode');
       }
     }
   };

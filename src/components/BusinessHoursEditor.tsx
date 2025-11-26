@@ -21,6 +21,9 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
 
+  // DEBUG
+  console.log('[BusinessHoursEditor] render', { day, hours, editable, hasOnEdit: !!onEdit, path });
+
   const formatHours = (hours: string | { open: string; close: string } | undefined): string => {
     if (!hours) return t('contact.closed', 'Closed');
     if (typeof hours === 'string') {
@@ -53,7 +56,22 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
   };
 
   const handleTimeChange = (timeType: 'open' | 'close', newTime: string) => {
-    if (!onEdit || typeof hours === 'string') return;
+    console.log('[BusinessHoursEditor] handleTimeChange called', { 
+      timeType, 
+      newTime, 
+      hours, 
+      hasOnEdit: !!onEdit,
+      hoursType: typeof hours 
+    });
+    
+    if (!onEdit) {
+      console.log('[BusinessHoursEditor] BLOCKED: no onEdit callback');
+      return;
+    }
+    if (typeof hours === 'string') {
+      console.log('[BusinessHoursEditor] BLOCKED: hours is a string:', hours);
+      return;
+    }
     
     const currentHours = hours || { open: '9:00 AM', close: '5:00 PM' };
     const updatedHours = {
@@ -61,6 +79,7 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
       [timeType]: convertTo12Hour(newTime)
     };
     
+    console.log('[BusinessHoursEditor] calling onEdit', { path, updatedHours });
     onEdit(path, updatedHours);
   };
 

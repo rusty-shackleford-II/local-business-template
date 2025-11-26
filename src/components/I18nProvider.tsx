@@ -64,6 +64,7 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   const [translations, setTranslations] = useState<Record<string, any>>(
     inlineTranslations[safeDefaultLanguage] || {}
   );
+  const [translationsLoaded, setTranslationsLoaded] = useState(false);
   const isI18nActive = Boolean(enabled && normalizedLanguages.length > 0);
 
   // Keep state in sync when default language changes
@@ -103,11 +104,13 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
         
         console.log(`🌐 [I18n] Merged translations:`, merged);
         setTranslations(merged);
+        setTranslationsLoaded(true);
       } catch (error) {
         if ((error as any)?.name === 'AbortError') return;
         console.error('❌ [I18n] Error loading translations:', error);
         // Fallback to inline translations only
         setTranslations(inlineTranslations[currentLanguage] || {});
+        setTranslationsLoaded(true);
       }
     };
 
@@ -151,7 +154,6 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       }
 
       if (typeof value === 'string') {
-        console.log(`[I18n] Found inline translation for "${key}":`, value.substring(0, Math.min(100, value.length)));
         return value;
       }
     }
@@ -164,14 +166,15 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        console.log(`[I18n] No translation found for "${key}", using default:`, defaultValue ? defaultValue.substring(0, Math.min(100, defaultValue.length)) : 'undefined');
+        // Only log warnings after translations have loaded to avoid noise on initial render
+        if (translationsLoaded) {
+          console.warn(`[I18n] No translation found for "${key}", using default:`, defaultValue || 'undefined');
+        }
         return defaultValue || key;
       }
     }
 
-    const result = typeof value === 'string' ? value : defaultValue || key;
-    console.log(`[I18n] Returning file-based translation for "${key}":`, typeof result === 'string' ? result.substring(0, Math.min(100, result.length)) : result);
-    return result;
+    return typeof value === 'string' ? value : defaultValue || key;
   };
 
   // Set initial HTML dir attribute based on default language

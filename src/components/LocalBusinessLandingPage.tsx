@@ -31,6 +31,23 @@ export type SiteData = SiteDataType & {
   onHeroImageClick?: () => void;
 };
 
+// Google Fonts that need to be loaded dynamically
+// Maps the font-family CSS value to the Google Fonts family name
+const GOOGLE_FONTS_MAP: Record<string, string> = {
+  'Inter, sans-serif': 'Inter',
+  'Roboto, sans-serif': 'Roboto',
+  'Open Sans, sans-serif': 'Open+Sans',
+  'Lato, sans-serif': 'Lato',
+  'Montserrat, sans-serif': 'Montserrat',
+  'Poppins, sans-serif': 'Poppins',
+  'Playfair Display, serif': 'Playfair+Display',
+  'Merriweather, serif': 'Merriweather',
+  'Raleway, sans-serif': 'Raleway',
+  'Oswald, sans-serif': 'Oswald',
+  'Nunito, sans-serif': 'Nunito',
+  'Source Sans Pro, sans-serif': 'Source+Sans+Pro',
+};
+
 export default function LocalBusinessLandingPage(site: SiteData) {
   // Set CSS custom properties for color palette
   React.useEffect(() => {
@@ -39,6 +56,58 @@ export default function LocalBusinessLandingPage(site: SiteData) {
       document.documentElement.style.setProperty('--palette-secondary', site.colorPalette.secondary);
     }
   }, [site.colorPalette]);
+
+  // Dynamically load Google Fonts used by sections
+  React.useEffect(() => {
+    // Collect all fonts used across sections
+    const fontsToLoad = new Set<string>();
+    
+    if (site.layout?.sections && Array.isArray(site.layout.sections)) {
+      for (const section of site.layout.sections) {
+        if (typeof section === 'object' && section.fontFamily) {
+          const googleFontName = GOOGLE_FONTS_MAP[section.fontFamily];
+          if (googleFontName) {
+            fontsToLoad.add(googleFontName);
+          }
+        }
+      }
+    }
+    
+    // If there are Google Fonts to load, inject the link tag
+    if (fontsToLoad.size > 0) {
+      const fontFamilies = Array.from(fontsToLoad).map(f => `family=${f}:wght@300;400;500;600;700`).join('&');
+      const linkId = 'google-fonts-dynamic';
+      
+      // Check if link already exists
+      let linkElement = document.getElementById(linkId) as HTMLLinkElement | null;
+      
+      if (!linkElement) {
+        // Create preconnect links for faster loading
+        const preconnect1 = document.createElement('link');
+        preconnect1.rel = 'preconnect';
+        preconnect1.href = 'https://fonts.googleapis.com';
+        document.head.appendChild(preconnect1);
+        
+        const preconnect2 = document.createElement('link');
+        preconnect2.rel = 'preconnect';
+        preconnect2.href = 'https://fonts.gstatic.com';
+        preconnect2.crossOrigin = 'anonymous';
+        document.head.appendChild(preconnect2);
+        
+        // Create the font link
+        linkElement = document.createElement('link');
+        linkElement.id = linkId;
+        linkElement.rel = 'stylesheet';
+        document.head.appendChild(linkElement);
+      }
+      
+      // Update the href with the fonts to load
+      const newHref = `https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`;
+      if (linkElement.href !== newHref) {
+        linkElement.href = newHref;
+      }
+    }
+  }, [site.layout?.sections]);
   // Build sections list from layout or fallback to default order
   const defaultOrder: SectionKey[] = ['hero', 'about', 'services', 'benefits', 'menu', 'testimonials', 'payment', 'videos', 'upcomingEvents', 'contact'];
   
@@ -47,22 +116,52 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     ? site.layout.sections 
     : defaultOrder;
   
-  const normalizedSections: { id: SectionKey; enabled: boolean }[] = sectionsSource
+  const normalizedSections: { id: SectionKey; enabled: boolean; backgroundColor?: string; textColor?: string; fontFamily?: string }[] = sectionsSource
     .map((entry) => {
       if (typeof entry === 'string') return { id: entry as SectionKey, enabled: true };
-      return { id: entry.id as SectionKey, enabled: entry.enabled !== false };
+      return { 
+        id: entry.id as SectionKey, 
+        enabled: entry.enabled !== false,
+        backgroundColor: entry.backgroundColor,
+        textColor: entry.textColor,
+        fontFamily: entry.fontFamily
+      };
     })
     .filter((section, index, array) => {
       // Remove duplicates - keep the first occurrence of each section
       return array.findIndex(s => s.id === section.id) === index;
     });
   
-
-  const renderSection = (section: SectionKey, index: number) => {
-    // Alternating backgrounds: even index = white, odd index = gray-50
-    // Hero always starts with white (index 0), then alternates
+  // Helper to get section styles (background, text color, font)
+  const getSectionStyle = (
+    backgroundColor: string | undefined, 
+    textColor: string | undefined, 
+    fontFamily: string | undefined,
+    index: number
+  ) => {
+    const hasCustomStyles = backgroundColor || textColor || fontFamily;
+    
+    if (hasCustomStyles) {
+      // Build the style object with any custom properties
+      const style: React.CSSProperties = {};
+      if (backgroundColor) style.backgroundColor = backgroundColor;
+      if (textColor) style.color = textColor;
+      if (fontFamily) style.fontFamily = fontFamily;
+      
+      return { 
+        style, 
+        className: backgroundColor ? 'bg-transparent' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50'),
+        hasWrapper: true
+      };
+    }
+    // Default alternating pattern
     const isEven = index % 2 === 0;
-    const backgroundClass = isEven ? 'bg-white' : 'bg-gray-50';
+    return { style: undefined, className: isEven ? 'bg-white' : 'bg-gray-50', hasWrapper: false };
+  };
+
+  const renderSection = (section: SectionKey, index: number, backgroundColor?: string) => {
+    // Get background class - use transparent if custom color (parent wrapper handles it), otherwise alternate
+    const backgroundClass = backgroundColor ? 'bg-transparent' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50');
     
     
     switch (section) {
@@ -161,6 +260,32 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     }
   };
 
+  // Wrap section in a div with custom styles if needed
+  const renderSectionWithStyles = (
+    sectionConfig: { id: SectionKey; enabled: boolean; backgroundColor?: string; textColor?: string; fontFamily?: string },
+    index: number
+  ) => {
+    const { style, hasWrapper } = getSectionStyle(
+      sectionConfig.backgroundColor, 
+      sectionConfig.textColor,
+      sectionConfig.fontFamily,
+      index
+    );
+    const content = renderSection(sectionConfig.id, index, sectionConfig.backgroundColor);
+    
+    if (hasWrapper && style) {
+      // Custom styles - wrap in a div with the styles
+      return (
+        <div key={sectionConfig.id} style={style}>
+          {content}
+        </div>
+      );
+    }
+    
+    // No custom styles, render as normal
+    return <React.Fragment key={sectionConfig.id}>{content}</React.Fragment>;
+  };
+
   return (
     <div className="App">
       <Header 
@@ -178,9 +303,9 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         colorPalette={site.colorPalette}
       />
       <main>
-        {normalizedSections.filter(s => s.enabled).map(({ id }, index) => (
-          <React.Fragment key={id}>{renderSection(id, index)}</React.Fragment>
-        ))}
+        {normalizedSections.filter(s => s.enabled).map((sectionConfig, index) => 
+          renderSectionWithStyles(sectionConfig, index)
+        )}
       </main>
       <Footer 
         businessName={site.businessInfo?.businessName || site.businessName || 'Local Business'} 
@@ -189,6 +314,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         layout={site.layout}
         editable={site.editable}
         onEdit={site.onEdit}
+        isPreview={site.isPreview}
       />
     </div>
   );
