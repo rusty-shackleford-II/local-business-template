@@ -68,12 +68,16 @@ const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
       console.log('[BusinessHoursEditor] BLOCKED: no onEdit callback');
       return;
     }
-    if (typeof hours === 'string') {
-      console.log('[BusinessHoursEditor] BLOCKED: hours is a string:', hours);
+    // Only block if explicitly 'closed' - empty strings and other values should initialize defaults
+    if (hours === 'closed') {
+      console.log('[BusinessHoursEditor] BLOCKED: hours is closed');
       return;
     }
     
-    const currentHours = hours || { open: '9:00 AM', close: '5:00 PM' };
+    // Use existing hours if object, otherwise use defaults
+    const currentHours = (typeof hours === 'object' && hours !== null) 
+      ? hours 
+      : { open: '9:00 AM', close: '5:00 PM' };
     const updatedHours = {
       ...currentHours,
       [timeType]: convertTo12Hour(newTime)
