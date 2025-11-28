@@ -126,6 +126,11 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const [isMobile, setIsMobile] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Button drag state
+  const [draggedButtonIndex, setDraggedButtonIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+  const buttonsContainerRef = useRef<HTMLDivElement>(null);
+  
   // Get CTA buttons array with backwards compatibility
   // If ctaButtons array exists, use it; otherwise, convert single cta to array format
   const ctaButtons = useMemo((): HeroCtaButton[] => {
@@ -165,6 +170,94 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       showArrow: true
     }];
   }, [hero?.ctaButtons, hero?.cta, payment?.addHeroCta, payment?.heroCtaLabel, payment?.heroCtaLabelTextSize]);
+  
+  // Compute grid columns for buttons
+  // Auto-detect based on button count if not explicitly set
+  const buttonsColumns = useMemo(() => {
+    if (hero?.buttonsColumns) return hero.buttonsColumns;
+    // Auto-detect: 1 button = 1 col, 2 buttons = 2 cols, 3+ buttons = 3 cols max
+    const count = ctaButtons.length;
+    if (count <= 1) return 1;
+    if (count === 2) return 2;
+    return Math.min(count, 3) as 1 | 2 | 3;
+  }, [hero?.buttonsColumns, ctaButtons.length]);
+  
+  // Button drag handlers for reordering
+  const handleButtonDragStart = useCallback((e: React.DragEvent, index: number) => {
+    if (!editable || !hero?.ctaButtons) return;
+    setDraggedButtonIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+    // Add visual feedback
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '0.5';
+  }, [editable, hero?.ctaButtons]);
+
+  const handleButtonDragEnd = useCallback((e: React.DragEvent) => {
+    const target = e.currentTarget as HTMLElement;
+    target.style.opacity = '1';
+    setDraggedButtonIndex(null);
+    setDropTargetIndex(null);
+  }, []);
+
+  const handleButtonDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedButtonIndex !== null && draggedButtonIndex !== index) {
+      setDropTargetIndex(index);
+    }
+  }, [draggedButtonIndex]);
+
+  const handleButtonDragLeave = useCallback(() => {
+    setDropTargetIndex(null);
+  }, []);
+
+  const handleButtonDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedButtonIndex === null || draggedButtonIndex === dropIndex || !onEdit || !hero?.ctaButtons) {
+      setDraggedButtonIndex(null);
+      setDropTargetIndex(null);
+      return;
+    }
+    
+    // Reorder buttons
+    const newButtons = [...hero.ctaButtons];
+    const [movedButton] = newButtons.splice(draggedButtonIndex, 1);
+    newButtons.splice(dropIndex, 0, movedButton);
+    
+    onEdit('hero.ctaButtons', newButtons as any);
+    setDraggedButtonIndex(null);
+    setDropTargetIndex(null);
+  }, [draggedButtonIndex, hero?.ctaButtons, onEdit]);
+  
+  // Update columns based on drop position (auto-detect columns from layout)
+  const handleContainerDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!buttonsContainerRef.current || !onEdit || !hero?.ctaButtons || ctaButtons.length <= 1) return;
+    
+    const container = buttonsContainerRef.current;
+    const rect = container.getBoundingClientRect();
+    const dropX = e.clientX - rect.left;
+    const containerWidth = rect.width;
+    
+    // Determine columns based on where the button was dropped
+    const dropRatio = dropX / containerWidth;
+    let newColumns: 1 | 2 | 3;
+    
+    if (ctaButtons.length === 2) {
+      // For 2 buttons: left third = 1 col, middle = 2 cols, right = 2 cols
+      newColumns = dropRatio < 0.33 ? 1 : 2;
+    } else {
+      // For 3+ buttons: left = 1 col, middle = 2 cols, right = 3 cols
+      if (dropRatio < 0.25) newColumns = 1;
+      else if (dropRatio < 0.6) newColumns = 2;
+      else newColumns = 3;
+    }
+    
+    if (newColumns !== buttonsColumns) {
+      onEdit('hero.buttonsColumns', newColumns as any);
+    }
+  }, [buttonsColumns, ctaButtons.length, hero?.ctaButtons, onEdit]);
   
   // Determine layout style - handle both string and potential type mismatches
   const layoutStyle = hero?.layoutStyle || 'standard';
@@ -586,35 +679,67 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 showBoldToggle={true}
               />
                 
-                <div className="flex flex-wrap gap-4">
+                {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
+                <div 
+                  ref={buttonsContainerRef}
+                  className={`grid gap-4 ${
+                    isMobile 
+                      ? 'grid-cols-1' 
+                      : buttonsColumns === 1 
+                        ? 'grid-cols-1 max-w-xs' 
+                        : buttonsColumns === 2 
+                          ? 'grid-cols-2 max-w-md' 
+                          : 'grid-cols-3 max-w-xl'
+                  }`}
+                  onDrop={editable && ctaButtons.length > 1 ? handleContainerDrop : undefined}
+                  onDragOver={editable ? (e) => e.preventDefault() : undefined}
+                >
                   {ctaButtons.map((button, index) => (
-                    <button
+                    <div
                       key={button.id}
-                      onClick={editable ? undefined : () => onButtonClick(button)}
-                      className={`group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
-                      style={{ 
-                        ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                        cursor: editable ? 'text' : 'pointer'
-                      }}
-                      onMouseEnter={() => setHoveredButtonId(button.id)}
-                      onMouseLeave={() => setHoveredButtonId(null)}
+                      draggable={editable && hero?.ctaButtons && ctaButtons.length > 1}
+                      onDragStart={(e) => handleButtonDragStart(e, index)}
+                      onDragEnd={handleButtonDragEnd}
+                      onDragOver={(e) => handleButtonDragOver(e, index)}
+                      onDragLeave={handleButtonDragLeave}
+                      onDrop={(e) => handleButtonDrop(e, index)}
+                      className={`${editable && hero?.ctaButtons && ctaButtons.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${
+                        dropTargetIndex === index ? 'ring-2 ring-blue-400 ring-offset-2 rounded-lg' : ''
+                      } ${draggedButtonIndex === index ? 'opacity-50' : ''}`}
                     >
-                      <EditableText
-                        value={button.label}
-                        path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                        editable={editable}
-                        onEdit={onEdit}
-                        placeholder="Button text"
-                        textSize={button.labelTextSize || 1.0}
-                        onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                        textSizeLabel="CTA Button Text Size"
-                      />
-                      {(button.showArrow !== false) && (
-                        <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                      )}
-                    </button>
+                      <button
+                        onClick={editable ? undefined : () => onButtonClick(button)}
+                        className={`w-full group inline-flex items-center justify-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
+                        style={{ 
+                          ...getButtonStyles(button, hoveredButtonId === button.id, index),
+                          cursor: editable ? (hero?.ctaButtons && ctaButtons.length > 1 ? 'grab' : 'text') : 'pointer'
+                        }}
+                        onMouseEnter={() => setHoveredButtonId(button.id)}
+                        onMouseLeave={() => setHoveredButtonId(null)}
+                      >
+                        <EditableText
+                          value={button.label}
+                          path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
+                          editable={editable}
+                          onEdit={onEdit}
+                          placeholder="Button text"
+                          textSize={button.labelTextSize || 1.0}
+                          onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
+                          textSizeLabel="CTA Button Text Size"
+                        />
+                        {(button.showArrow !== false) && (
+                          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                        )}
+                      </button>
+                    </div>
                   ))}
                 </div>
+                {/* Column hint for editor */}
+                {editable && hero?.ctaButtons && ctaButtons.length > 1 && !isMobile && (
+                  <p className="text-xs text-gray-400 mt-2 select-none">
+                    Drag buttons to reorder • Drop at edge to change columns ({buttonsColumns} col{buttonsColumns > 1 ? 's' : ''})
+                  </p>
+                )}
               </div>
             </div>
 
@@ -972,36 +1097,62 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showAlignmentToggle={true}
                   />
                   
-                  <div className="flex flex-wrap gap-4" style={{ justifyContent: hero?.ctaAlign === 'left' ? 'flex-start' : hero?.ctaAlign === 'right' ? 'flex-end' : 'center' }}>
+                  {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
+                  <div 
+                    className={`grid gap-4 w-full ${
+                      isMobile 
+                        ? 'grid-cols-1' 
+                        : buttonsColumns === 1 
+                          ? 'grid-cols-1 max-w-xs mx-auto' 
+                          : buttonsColumns === 2 
+                            ? 'grid-cols-2 max-w-lg mx-auto' 
+                            : 'grid-cols-3 max-w-2xl mx-auto'
+                    }`}
+                    style={{ justifyItems: hero?.ctaAlign === 'left' ? 'start' : hero?.ctaAlign === 'right' ? 'end' : 'center' }}
+                    onDrop={editable && ctaButtons.length > 1 ? handleContainerDrop : undefined}
+                    onDragOver={editable ? (e) => e.preventDefault() : undefined}
+                  >
                     {ctaButtons.map((button, index) => (
-                      <button
+                      <div
                         key={button.id}
-                        onClick={editable ? undefined : () => onButtonClick(button)}
-                        className={`group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
-                        style={{ 
-                          ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                          cursor: editable ? 'text' : 'pointer'
-                        }}
-                        onMouseEnter={() => setHoveredButtonId(button.id)}
-                        onMouseLeave={() => setHoveredButtonId(null)}
+                        draggable={editable && hero?.ctaButtons && ctaButtons.length > 1}
+                        onDragStart={(e) => handleButtonDragStart(e, index)}
+                        onDragEnd={handleButtonDragEnd}
+                        onDragOver={(e) => handleButtonDragOver(e, index)}
+                        onDragLeave={handleButtonDragLeave}
+                        onDrop={(e) => handleButtonDrop(e, index)}
+                        className={`${editable && hero?.ctaButtons && ctaButtons.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${
+                          dropTargetIndex === index ? 'ring-2 ring-blue-400 ring-offset-2 rounded-lg' : ''
+                        } ${draggedButtonIndex === index ? 'opacity-50' : ''} w-full`}
                       >
-                        <EditableText
-                          value={button.label}
-                          path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                          editable={editable}
-                          onEdit={onEdit}
-                          placeholder="Button text"
-                          textSize={button.labelTextSize || 1.0}
-                          onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                          textSizeLabel="CTA Button Text Size"
-                          textAlign={hero?.ctaAlign || 'center'}
-                          onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
-                          showAlignmentToggle={index === 0}
-                        />
-                        {(button.showArrow !== false) && (
-                          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                        )}
-                      </button>
+                        <button
+                          onClick={editable ? undefined : () => onButtonClick(button)}
+                          className={`w-full group inline-flex items-center justify-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
+                          style={{ 
+                            ...getButtonStyles(button, hoveredButtonId === button.id, index),
+                            cursor: editable ? (hero?.ctaButtons && ctaButtons.length > 1 ? 'grab' : 'text') : 'pointer'
+                          }}
+                          onMouseEnter={() => setHoveredButtonId(button.id)}
+                          onMouseLeave={() => setHoveredButtonId(null)}
+                        >
+                          <EditableText
+                            value={button.label}
+                            path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
+                            editable={editable}
+                            onEdit={onEdit}
+                            placeholder="Button text"
+                            textSize={button.labelTextSize || 1.0}
+                            onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
+                            textSizeLabel="CTA Button Text Size"
+                            textAlign={hero?.ctaAlign || 'center'}
+                            onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
+                            showAlignmentToggle={index === 0}
+                          />
+                          {(button.showArrow !== false) && (
+                            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                          )}
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -1068,36 +1219,62 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showAlignmentToggle={true}
                   />
                   
-                  <div className="flex flex-wrap gap-4" style={{ justifyContent: hero?.ctaAlign === 'left' ? 'flex-start' : hero?.ctaAlign === 'right' ? 'flex-end' : 'center' }}>
+                  {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
+                  <div 
+                    className={`grid gap-4 w-full ${
+                      isMobile 
+                        ? 'grid-cols-1' 
+                        : buttonsColumns === 1 
+                          ? 'grid-cols-1 max-w-xs mx-auto' 
+                          : buttonsColumns === 2 
+                            ? 'grid-cols-2 max-w-lg mx-auto' 
+                            : 'grid-cols-3 max-w-2xl mx-auto'
+                    }`}
+                    style={{ justifyItems: hero?.ctaAlign === 'left' ? 'start' : hero?.ctaAlign === 'right' ? 'end' : 'center' }}
+                    onDrop={editable && ctaButtons.length > 1 ? handleContainerDrop : undefined}
+                    onDragOver={editable ? (e) => e.preventDefault() : undefined}
+                  >
                     {ctaButtons.map((button, index) => (
-                      <button
+                      <div
                         key={button.id}
-                        onClick={editable ? undefined : () => onButtonClick(button)}
-                        className={`group inline-flex items-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
-                        style={{ 
-                          ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                          cursor: editable ? 'text' : 'pointer'
-                        }}
-                        onMouseEnter={() => setHoveredButtonId(button.id)}
-                        onMouseLeave={() => setHoveredButtonId(null)}
+                        draggable={editable && hero?.ctaButtons && ctaButtons.length > 1}
+                        onDragStart={(e) => handleButtonDragStart(e, index)}
+                        onDragEnd={handleButtonDragEnd}
+                        onDragOver={(e) => handleButtonDragOver(e, index)}
+                        onDragLeave={handleButtonDragLeave}
+                        onDrop={(e) => handleButtonDrop(e, index)}
+                        className={`${editable && hero?.ctaButtons && ctaButtons.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${
+                          dropTargetIndex === index ? 'ring-2 ring-blue-400 ring-offset-2 rounded-lg' : ''
+                        } ${draggedButtonIndex === index ? 'opacity-50' : ''} w-full`}
                       >
-                        <EditableText
-                          value={button.label}
-                          path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                          editable={editable}
-                          onEdit={onEdit}
-                          placeholder="Button text"
-                          textSize={button.labelTextSize || 1.0}
-                          onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                          textSizeLabel="CTA Button Text Size"
-                          textAlign={hero?.ctaAlign || 'center'}
-                          onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
-                          showAlignmentToggle={index === 0}
-                        />
-                        {(button.showArrow !== false) && (
-                          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                        )}
-                      </button>
+                        <button
+                          onClick={editable ? undefined : () => onButtonClick(button)}
+                          className={`w-full group inline-flex items-center justify-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
+                          style={{ 
+                            ...getButtonStyles(button, hoveredButtonId === button.id, index),
+                            cursor: editable ? (hero?.ctaButtons && ctaButtons.length > 1 ? 'grab' : 'text') : 'pointer'
+                          }}
+                          onMouseEnter={() => setHoveredButtonId(button.id)}
+                          onMouseLeave={() => setHoveredButtonId(null)}
+                        >
+                          <EditableText
+                            value={button.label}
+                            path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
+                            editable={editable}
+                            onEdit={onEdit}
+                            placeholder="Button text"
+                            textSize={button.labelTextSize || 1.0}
+                            onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
+                            textSizeLabel="CTA Button Text Size"
+                            textAlign={hero?.ctaAlign || 'center'}
+                            onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
+                            showAlignmentToggle={index === 0}
+                          />
+                          {(button.showArrow !== false) && (
+                            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                          )}
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </>

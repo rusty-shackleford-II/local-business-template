@@ -5,7 +5,7 @@ import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LanguageToggle from './LanguageToggle';
 import { useI18nContext } from './I18nProvider';
-import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette } from '../types';
+import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette, Page } from '../types';
 
 type Props = {
   businessName?: string;
@@ -13,6 +13,10 @@ type Props = {
   header?: HeaderCfg;
   payment?: PaymentCfg;
   layout?: Layout;
+  // Multipage support
+  pages?: Page[];
+  currentPageSlug?: string;
+  isMultipage?: boolean;
   isPreview?: boolean;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
@@ -22,7 +26,7 @@ type Props = {
   colorPalette?: ColorPalette;
 };
 
-const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, colorPalette }) => {
+const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, colorPalette }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
@@ -65,11 +69,32 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
     }
   }, [logoSize, expandableHeader]);
 
-  const handleNavigation = (linkId: string, isSection: boolean) => {
-    console.log('🔗 [Nav] handleNavigation called:', linkId, 'isSection:', isSection);
+  const handleNavigation = (linkId: string, isSection: boolean, isPage: boolean = false) => {
+    console.log('🔗 [Nav] handleNavigation called:', linkId, 'isSection:', isSection, 'isPage:', isPage);
     setIsMenuOpen(false);
     
-    // Handle section navigation
+    // Handle page navigation (multipage mode)
+    if (isPage) {
+      if (typeof window === 'undefined') return;
+      
+      // Find the page by ID or slug
+      const targetPage = pages?.find(p => p.id === linkId || p.slug === linkId);
+      const slug = targetPage?.slug || linkId;
+      
+      // Update hash to trigger page change
+      if (slug === '' || slug === 'home') {
+        window.location.hash = '';
+        // Also scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.location.hash = slug;
+        // Scroll to top of new page
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+    
+    // Handle section navigation (single-page mode or scrolling within a page)
     if (isSection) {
       // Only run client-side
       if (typeof window === 'undefined') return;
@@ -123,7 +148,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
     }
   };
 
-  // Generate navigation links based on enabled sections
+  // Generate navigation links based on pages (multipage) or sections (single-page)
   const getNavigationLinks = () => {
     const sectionLabels: Record<SectionKey, string> = {
       hero: t('nav.home', 'Home'),
@@ -139,6 +164,20 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       partners: 'Partners' // Hidden section - only accessible via HiDev logo
     };
 
+    // Multipage mode: show pages as nav items
+    if (isMultipage && pages && pages.length > 1) {
+      return pages.map(page => ({
+        id: page.id,
+        label: page.name,
+        slug: page.slug,
+        enabled: true,
+        isSection: false,
+        isPage: true,
+        isActive: currentPageSlug === page.slug || (page.slug === '' && (!currentPageSlug || currentPageSlug === 'home'))
+      }));
+    }
+
+    // Single-page mode: show sections as nav items
     // Default sections if no layout is provided
     const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
     
@@ -147,8 +186,11 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       navigationItems = defaultSections.map(section => ({
         id: section,
         label: sectionLabels[section],
+        slug: undefined as string | undefined,
         enabled: true,
-        isSection: true
+        isSection: true,
+        isPage: false,
+        isActive: false
       }));
     } else {
       // Filter enabled sections and map to navigation items
@@ -162,8 +204,11 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             id: sectionData.id,
             // Use custom navLabel if provided, otherwise fall back to default label
             label: sectionData.navLabel || sectionLabels[sectionData.id],
+            slug: undefined as string | undefined,
             enabled: sectionData.enabled,
-            isSection: true
+            isSection: true,
+            isPage: false,
+            isActive: false
           };
         })
         .filter(item => item.enabled && item.label && item.id !== 'partners' && item.id !== 'hero'); // Only show sections with labels, exclude partners and home
@@ -282,10 +327,11 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
               {navigationLinks.map((link) => (
                 <button
                   key={link.id}
-                  onClick={() => handleNavigation(link.id, link.isSection)}
-                  className="nav-link font-medium"
+                  onClick={() => handleNavigation(link.isPage ? link.slug || link.id : link.id, link.isSection, link.isPage)}
+                  className={`nav-link font-medium transition-colors ${link.isActive ? 'border-b-2' : ''}`}
                   style={{ 
-                    color: header?.colors?.navText || '#374151'
+                    color: header?.colors?.navText || '#374151',
+                    borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
                   }}
                 >
                   {link.label}
@@ -293,7 +339,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
               ))}
               {payment?.addHeaderCta && !navigationLinks.some(link => link.id === 'payment') && (
                 <button
-                  onClick={() => handleNavigation('payment', true)}
+                  onClick={() => handleNavigation('payment', true, false)}
                   className="ml-2 inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-white text-sm font-semibold shadow hover:bg-black transition"
                 >
                   {payment.headerCtaLabel || 'Buy Now'}
@@ -334,10 +380,11 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
               {navigationLinks.map((link) => (
                 <button
                   key={link.id}
-                  onClick={() => handleNavigation(link.id, link.isSection)}
-                  className="mobile-nav-link block w-full text-left font-medium py-2"
+                  onClick={() => handleNavigation(link.isPage ? link.slug || link.id : link.id, link.isSection, link.isPage)}
+                  className={`mobile-nav-link block w-full text-left font-medium py-2 ${link.isActive ? 'border-l-4 pl-3' : ''}`}
                   style={{ 
-                    color: header?.colors?.navText || '#374151'
+                    color: header?.colors?.navText || '#374151',
+                    borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
                   }}
                 >
                   {link.label}
@@ -345,7 +392,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
               ))}
               {payment?.addHeaderCta && !navigationLinks.some(link => link.id === 'payment') && (
                 <button
-                  onClick={() => handleNavigation('payment', true)}
+                  onClick={() => handleNavigation('payment', true, false)}
                   className="mobile-nav-link block w-full text-left font-medium py-2"
                   style={{ 
                     color: header?.colors?.navText || '#374151'

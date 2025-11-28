@@ -5,7 +5,7 @@ import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LegalTextModal from './LegalTextModal';
 import { useI18nContext } from './I18nProvider';
-import type { Footer as FooterCfg, Layout, SectionKey } from '../types';
+import type { Footer as FooterCfg, Layout, SectionKey, Page } from '../types';
 
 // Use public folder assets instead of src/assets to avoid build issues
 const logo = '/logo.png';
@@ -16,12 +16,16 @@ type Props = {
   logoUrl?: string; 
   footer?: FooterCfg; 
   layout?: Layout;
+  // Multipage support
+  pages?: Page[];
+  currentPageSlug?: string;
+  isMultipage?: boolean;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   isPreview?: boolean;
 };
 
-const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, editable, onEdit, isPreview }) => {
+const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, pages, currentPageSlug, isMultipage, editable, onEdit, isPreview }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const i18n = useI18nContext();
@@ -63,11 +67,28 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
     lg: baseLogoHeights.lg * logoSize
   };
 
-  const scrollToSection = (sectionId: string) => {
+  // Handle navigation - supports both section scrolling and page switching
+  const handleNavigation = (id: string, isPage: boolean = false, slug?: string) => {
     // Only run client-side
     if (typeof window === 'undefined') return;
     
-    const element = document.getElementById(sectionId);
+    // Handle page navigation (multipage mode)
+    if (isPage) {
+      const targetSlug = slug || id;
+      
+      // Update hash to trigger page change
+      if (targetSlug === '' || targetSlug === 'home') {
+        window.location.hash = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        window.location.hash = targetSlug;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+      return;
+    }
+    
+    // Handle section navigation (scroll)
+    const element = document.getElementById(id);
     
     if (element) {
       // Find scrollable ancestor (for preview mode where content is in a scrollable div)
@@ -100,12 +121,12 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
       
       if (!isHomePage) {
-        window.location.href = `/#${sectionId}`;
+        window.location.href = `/#${id}`;
       }
     }
   };
 
-  // Generate footer links based on enabled sections
+  // Generate footer links based on pages (multipage) or sections (single-page)
   const getFooterLinks = () => {
     const sectionLabels: Record<SectionKey, string> = {
       hero: t('nav.home', 'Home'),
@@ -121,13 +142,28 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       partners: 'Partners' // Hidden section - only accessible via HiDev logo
     };
 
+    // Multipage mode: show pages as nav items
+    if (isMultipage && pages && pages.length > 1) {
+      return pages.map(page => ({
+        key: page.name,
+        id: page.id,
+        slug: page.slug,
+        isPage: true,
+        isActive: currentPageSlug === page.slug || (page.slug === '' && (!currentPageSlug || currentPageSlug === 'home'))
+      }));
+    }
+
+    // Single-page mode: show sections as nav items
     // Default sections if no layout is provided
     const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
     
     if (!Array.isArray(layout?.sections)) {
       return defaultSections.map(section => ({
         key: sectionLabels[section],
-        section: section
+        id: section,
+        slug: undefined as string | undefined,
+        isPage: false,
+        isActive: false
       }));
     }
 
@@ -141,11 +177,14 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         return {
           // Use custom navLabel if provided, otherwise fall back to default label
           key: sectionData.navLabel || sectionLabels[sectionData.id],
-          section: sectionData.id,
-          enabled: sectionData.enabled
+          id: sectionData.id,
+          slug: undefined as string | undefined,
+          enabled: sectionData.enabled,
+          isPage: false,
+          isActive: false
         };
       })
-      .filter(item => item.enabled && item.key && item.section !== 'partners' && item.section !== 'hero'); // Only show sections with labels, exclude partners and home
+      .filter(item => item.enabled && item.key && item.id !== 'partners' && item.id !== 'hero'); // Only show sections with labels, exclude partners and home
   };
 
   const footerLinks = getFooterLinks();
@@ -239,9 +278,9 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           <nav className="flex space-x-8">
             {footerLinks.map((link) => (
               <button
-                key={link.section}
-                onClick={() => scrollToSection(link.section)}
-                className="footer-link text-gray-600 font-medium"
+                key={link.id}
+                onClick={() => handleNavigation(link.id, link.isPage, link.slug)}
+                className={`footer-link text-gray-600 font-medium ${link.isActive ? 'underline' : ''}`}
               >
                 {link.key}
               </button>
@@ -318,9 +357,9 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           }`}>
             {footerLinks.map((link) => (
               <button
-                key={link.section}
-                onClick={() => scrollToSection(link.section)}
-                className="footer-link text-gray-600 font-medium"
+                key={link.id}
+                onClick={() => handleNavigation(link.id, link.isPage, link.slug)}
+                className={`footer-link text-gray-600 font-medium ${link.isActive ? 'underline' : ''}`}
               >
                 {link.key}
               </button>

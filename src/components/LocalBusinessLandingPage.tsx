@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Header from "./Header";
 import Hero from "./Hero";
 import About from "./About";
@@ -13,7 +13,7 @@ import Videos from "./Videos";
 import Payment from "./Payment";
 
 // Import proper types
-import type { SiteData as SiteDataType, SectionKey } from '../types';
+import type { SiteData as SiteDataType, SectionKey, Page, PageSection, Hero as HeroType, About as AboutType, Services as ServicesType, BusinessBenefits as BusinessBenefitsType, Menu as MenuType, Testimonials as TestimonialsType, UpcomingEvents as UpcomingEventsType, Contact as ContactType, Videos as VideosType, Payment as PaymentType } from '../types';
 
 // Basic type aligned with data/schema.json
 export type SiteData = SiteDataType & {
@@ -29,7 +29,105 @@ export type SiteData = SiteDataType & {
   // Image upload handlers
   onLogoClick?: () => void;
   onHeroImageClick?: () => void;
+  // Multipage props
+  currentPageSlug?: string; // For preview mode - parent controls current page
+  onPageChange?: (slug: string) => void; // Callback when page changes
 };
+
+// Type for any section data
+type AnySectionData = HeroType | AboutType | ServicesType | BusinessBenefitsType | MenuType | TestimonialsType | UpcomingEventsType | ContactType | VideosType | PaymentType;
+
+// Helper to extract section type from sectionId
+function getSectionType(sectionId: string): SectionKey {
+  const parts = sectionId.split('_');
+  return parts[0] as SectionKey;
+}
+
+// Helper to check if sectionId is a custom instance
+function isCustomInstance(sectionId: string): boolean {
+  return sectionId.includes('_');
+}
+
+// Helper to get section data from site
+function getSectionData(site: SiteData, sectionId: string): AnySectionData | undefined {
+  const sectionType = getSectionType(sectionId);
+  
+  // If NOT a custom instance, use top-level data
+  if (!isCustomInstance(sectionId)) {
+    switch (sectionType) {
+      case 'hero': return site.hero;
+      case 'about': return site.about;
+      case 'services': return site.services;
+      case 'benefits': return site.businessBenefits;
+      case 'menu': return site.menu;
+      case 'testimonials': return site.testimonials;
+      case 'upcomingEvents': return site.upcomingEvents;
+      case 'contact': return site.contact;
+      case 'videos': return site.videos;
+      case 'payment': return site.payment;
+      default: return undefined;
+    }
+  }
+  
+  // Custom instance - look in sectionInstances
+  return site.sectionInstances?.[sectionId];
+}
+
+// Helper to convert legacy sections to pages format
+function migrateLegacySectionsToPages(legacySections: Array<string | { id: string; enabled?: boolean; navLabel?: string; backgroundColor?: string; textColor?: string; fontFamily?: string }>): Page[] {
+  return [{
+    id: 'home',
+    name: 'Home',
+    slug: '',
+    heroEnabled: true,
+    sections: legacySections.map((section): PageSection => {
+      if (typeof section === 'string') {
+        return { sectionId: section, enabled: true };
+      }
+      return {
+        sectionId: section.id,
+        enabled: section.enabled !== false,
+        navLabel: section.navLabel,
+        backgroundColor: section.backgroundColor,
+        textColor: section.textColor,
+        fontFamily: section.fontFamily,
+      };
+    }),
+  }];
+}
+
+// Helper to get pages from site data with backwards compatibility
+function getPages(site: SiteData): Page[] {
+  if (site.layout?.pages && site.layout.pages.length > 0) {
+    return site.layout.pages;
+  }
+  
+  if (site.layout?.sections) {
+    return migrateLegacySectionsToPages(site.layout.sections);
+  }
+  
+  // Default single page with all sections
+  return [{
+    id: 'home',
+    name: 'Home',
+    slug: '',
+    heroEnabled: true,
+    sections: [
+      { sectionId: 'hero', enabled: true },
+      { sectionId: 'about', enabled: true },
+      { sectionId: 'services', enabled: true },
+      { sectionId: 'benefits', enabled: true },
+      { sectionId: 'testimonials', enabled: true },
+      { sectionId: 'contact', enabled: true },
+    ],
+  }];
+}
+
+// Check if site is in multipage mode (more than one page)
+function isMultipageMode(site: SiteData): boolean {
+  const pages = getPages(site);
+  return pages.length > 1;
+}
 
 // Google Fonts that need to be loaded dynamically
 // Maps the font-family CSS value to the Google Fonts family name
@@ -49,8 +147,45 @@ const GOOGLE_FONTS_MAP: Record<string, string> = {
 };
 
 export default function LocalBusinessLandingPage(site: SiteData) {
+  // Get pages with backwards compatibility
+  const pages = getPages(site);
+  const isMultipage = isMultipageMode(site);
+  
+  // Current page state - controlled by parent in preview mode, or by hash in production
+  const [currentPageSlug, setCurrentPageSlug] = useState<string>(() => {
+    if (site.currentPageSlug !== undefined) return site.currentPageSlug;
+    if (typeof window === 'undefined') return '';
+    const hash = window.location.hash;
+    if (!hash || hash === '#' || hash === '#home') return '';
+    return hash.substring(1);
+  });
+  
+  // Sync with parent-controlled page slug (preview mode)
+  useEffect(() => {
+    if (site.currentPageSlug !== undefined) {
+      setCurrentPageSlug(site.currentPageSlug);
+    }
+  }, [site.currentPageSlug]);
+  
+  // Listen for hash changes (both preview and production mode)
+  // In preview mode, this handles nav clicks within the preview iframe
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      const newSlug = (!hash || hash === '#' || hash === '#home') ? '' : hash.substring(1);
+      setCurrentPageSlug(newSlug);
+      site.onPageChange?.(newSlug);
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [site.onPageChange]);
+  
+  // Find current page
+  const currentPage = pages.find(p => p.slug === currentPageSlug) || pages[0];
+  
   // Set CSS custom properties for color palette
-  React.useEffect(() => {
+  useEffect(() => {
     if (site.colorPalette) {
       document.documentElement.style.setProperty('--palette-primary', site.colorPalette.primary);
       document.documentElement.style.setProperty('--palette-secondary', site.colorPalette.secondary);
@@ -58,10 +193,22 @@ export default function LocalBusinessLandingPage(site: SiteData) {
   }, [site.colorPalette]);
 
   // Dynamically load Google Fonts used by sections
-  React.useEffect(() => {
-    // Collect all fonts used across sections
+  useEffect(() => {
+    // Collect all fonts used across all pages
     const fontsToLoad = new Set<string>();
     
+    for (const page of pages) {
+      for (const section of page.sections) {
+        if (section.fontFamily) {
+          const googleFontName = GOOGLE_FONTS_MAP[section.fontFamily];
+          if (googleFontName) {
+            fontsToLoad.add(googleFontName);
+          }
+        }
+      }
+    }
+    
+    // Also check legacy sections for backwards compat
     if (site.layout?.sections && Array.isArray(site.layout.sections)) {
       for (const section of site.layout.sections) {
         if (typeof section === 'object' && section.fontFamily) {
@@ -107,29 +254,34 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         linkElement.href = newHref;
       }
     }
-  }, [site.layout?.sections]);
-  // Build sections list from layout or fallback to default order
-  const defaultOrder: SectionKey[] = ['hero', 'about', 'services', 'benefits', 'menu', 'testimonials', 'payment', 'videos', 'upcomingEvents', 'contact'];
+  }, [pages, site.layout?.sections]);
   
-  // Safely get sections array, ensuring it's always an array
-  const sectionsSource = (site.layout?.sections && Array.isArray(site.layout.sections)) 
-    ? site.layout.sections 
-    : defaultOrder;
+  // Get sections for current page
+  const currentSections = currentPage?.sections || [];
   
-  const normalizedSections: { id: SectionKey; enabled: boolean; backgroundColor?: string; textColor?: string; fontFamily?: string }[] = sectionsSource
-    .map((entry) => {
-      if (typeof entry === 'string') return { id: entry as SectionKey, enabled: true };
-      return { 
-        id: entry.id as SectionKey, 
-        enabled: entry.enabled !== false,
-        backgroundColor: entry.backgroundColor,
-        textColor: entry.textColor,
-        fontFamily: entry.fontFamily
+  // Check if this page's hero should be shown (for non-home pages, respect heroEnabled)
+  const isHomePage = currentPage?.id === 'home' || currentPage?.slug === '';
+  const showPageHero = isHomePage || currentPage?.heroEnabled !== false;
+  
+  // Normalize sections for rendering
+  const normalizedSections: { sectionId: string; sectionType: SectionKey; enabled: boolean; backgroundColor?: string; textColor?: string; fontFamily?: string }[] = currentSections
+    .map((section) => {
+      const sectionType = getSectionType(section.sectionId);
+      
+      // For hero sections on non-home pages, respect heroEnabled
+      let enabled = section.enabled !== false;
+      if (sectionType === 'hero' && !isHomePage && !showPageHero) {
+        enabled = false;
+      }
+      
+      return {
+        sectionId: section.sectionId,
+        sectionType,
+        enabled,
+        backgroundColor: section.backgroundColor,
+        textColor: section.textColor,
+        fontFamily: section.fontFamily,
       };
-    })
-    .filter((section, index, array) => {
-      // Remove duplicates - keep the first occurrence of each section
-      return array.findIndex(s => s.id === section.id) === index;
     });
   
   // Helper to get section styles (background, text color, font)
@@ -159,99 +311,117 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     return { style: undefined, className: isEven ? 'bg-white' : 'bg-gray-50', hasWrapper: false };
   };
 
-  const renderSection = (section: SectionKey, index: number, backgroundColor?: string) => {
+  // Render a section using its sectionId to look up data
+  const renderSection = (sectionId: string, sectionType: SectionKey, index: number, backgroundColor?: string) => {
     // Get background class - use transparent if custom color (parent wrapper handles it), otherwise alternate
     const backgroundClass = backgroundColor ? 'bg-transparent' : (index % 2 === 0 ? 'bg-white' : 'bg-gray-50');
     
+    // Get section data from either top-level or sectionInstances
+    const sectionData = getSectionData(site, sectionId);
     
-    switch (section) {
+    // Determine the edit path based on whether this is a custom instance
+    const editBasePath = isCustomInstance(sectionId) 
+      ? `sectionInstances.${sectionId}` 
+      : sectionType;
+    
+    switch (sectionType) {
       case 'hero':
+        const heroData = sectionData as HeroType || site.hero;
         return <Hero 
-          hero={site.hero} 
-          payment={(site as any).payment} 
+          hero={heroData} 
+          payment={site.payment} 
           isPreview={site.isPreview}
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('hero.', '')}`, value) : undefined}
           onHeroImageClick={site.onHeroImageClick}
           colorPalette={site.colorPalette}
         />;
       case 'about':
+        const aboutData = sectionData as AboutType || site.about;
         return <About 
-          about={site.about} 
+          about={aboutData} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('about.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
         />;
       case 'services':
+        const servicesData = sectionData as ServicesType || site.services;
         return <Services 
-          services={site.services} 
+          services={servicesData} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('services.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
         />;
       case 'benefits':
+        const benefitsData = sectionData as BusinessBenefitsType || site.businessBenefits;
         return <BusinessBenefits 
-          businessBenefits={site.businessBenefits} 
+          businessBenefits={benefitsData} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('businessBenefits.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
         />;
       case 'menu':
+        const menuData = sectionData as MenuType || site.menu;
         return <Menu 
-          menu={(site as any).menu} 
+          menu={menuData} 
           editable={site.editable}
           onMenuUpdate={site.onEdit ? (updatedMenu) => {
-            site.onEdit!('menu', JSON.stringify(updatedMenu));
+            site.onEdit!(editBasePath, JSON.stringify(updatedMenu));
           } : undefined}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('menu.', '')}`, value) : undefined}
           backgroundClass={backgroundClass}
           isPreview={site.isPreview}
         />;
       case 'testimonials':
+        const testimonialsData = sectionData as TestimonialsType || site.testimonials;
         return <Testimonials 
-          testimonials={site.testimonials} 
+          testimonials={testimonialsData} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('testimonials.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
         />;
       case 'videos':
+        const videosData = sectionData as VideosType || site.videos;
         return <Videos 
-          videos={site.videos} 
+          videos={videosData} 
           isPreview={site.isPreview} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('videos.', '')}`, value) : undefined}
         />;
       case 'payment':
+        const paymentData = sectionData as PaymentType || site.payment;
         return <Payment 
-          payment={(site as any).payment} 
+          payment={paymentData} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('payment.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
         />;
       case 'upcomingEvents':
+        const eventsData = sectionData as UpcomingEventsType || site.upcomingEvents;
         return <UpcomingEvents 
-          upcomingEvents={site.upcomingEvents} 
+          upcomingEvents={eventsData} 
           contact={site.contact} 
           businessInfo={site.businessInfo} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('upcomingEvents.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
         />;
       case 'contact':
+        const contactData = sectionData as ContactType || site.contact;
         return <Contact 
-          contact={site.contact} 
+          contact={contactData} 
           businessInfo={site.businessInfo} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('contact.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
           siteUrl={site.seo?.canonicalUrl}
         />;
@@ -262,7 +432,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
 
   // Wrap section in a div with custom styles if needed
   const renderSectionWithStyles = (
-    sectionConfig: { id: SectionKey; enabled: boolean; backgroundColor?: string; textColor?: string; fontFamily?: string },
+    sectionConfig: { sectionId: string; sectionType: SectionKey; enabled: boolean; backgroundColor?: string; textColor?: string; fontFamily?: string },
     index: number
   ) => {
     const { style, hasWrapper } = getSectionStyle(
@@ -271,19 +441,19 @@ export default function LocalBusinessLandingPage(site: SiteData) {
       sectionConfig.fontFamily,
       index
     );
-    const content = renderSection(sectionConfig.id, index, sectionConfig.backgroundColor);
+    const content = renderSection(sectionConfig.sectionId, sectionConfig.sectionType, index, sectionConfig.backgroundColor);
     
     if (hasWrapper && style) {
       // Custom styles - wrap in a div with the styles
       return (
-        <div key={sectionConfig.id} style={style}>
+        <div key={sectionConfig.sectionId} style={style}>
           {content}
         </div>
       );
     }
     
     // No custom styles, render as normal
-    return <React.Fragment key={sectionConfig.id}>{content}</React.Fragment>;
+    return <React.Fragment key={sectionConfig.sectionId}>{content}</React.Fragment>;
   };
 
   return (
@@ -292,8 +462,11 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         businessName={site.businessInfo?.businessName || site.businessName || 'Local Business'} 
         logoUrl={site.logoUrl} 
         header={site.header} 
-        payment={(site as any).payment} 
-        layout={site.layout} 
+        payment={site.payment} 
+        layout={site.layout}
+        pages={pages}
+        currentPageSlug={currentPageSlug}
+        isMultipage={isMultipage}
         isPreview={site.isPreview}
         editable={site.editable}
         onEdit={site.onEdit}
@@ -312,6 +485,9 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         logoUrl={site.logoUrl} 
         footer={site.footer} 
         layout={site.layout}
+        pages={pages}
+        currentPageSlug={currentPageSlug}
+        isMultipage={isMultipage}
         editable={site.editable}
         onEdit={site.onEdit}
         isPreview={site.isPreview}

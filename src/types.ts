@@ -47,6 +47,7 @@ export type Hero = {
   };
   // Multiple CTA buttons (takes precedence over single cta)
   ctaButtons?: HeroCtaButton[];
+  buttonsColumns?: 1 | 2 | 3; // Number of columns for button grid on desktop (auto-detected if not set)
   ctaAlign?: 'left' | 'center' | 'right'; // CTA button alignment in fullwidth overlay
   phone?: string;
   colors?: { headline?: string; subheadline?: string; ctaText?: string; ctaBackground?: string };
@@ -434,8 +435,40 @@ export type Payment = {
 
 // Optional layout configuration allowing section ordering and visibility
 export type SectionKey = 'hero' | 'about' | 'services' | 'benefits' | 'menu' | 'testimonials' | 'upcomingEvents' | 'contact' | 'videos' | 'payment' | 'partners';
+
+// Section reference within a page - sectionId can be a SectionKey or a custom instance ID like "hero_abc123"
+export type PageSection = {
+  sectionId: string; // e.g., "hero", "about", "services_abc123"
+  enabled?: boolean;
+  navLabel?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  fontFamily?: string;
+};
+
+// Page configuration for multipage sites
+export type Page = {
+  id: string; // Unique page ID
+  name: string; // Display name for navigation
+  slug: string; // URL slug (empty string for home page)
+  heroEnabled?: boolean; // Whether this page shows its hero section (default: true)
+  sections: PageSection[];
+};
+
+// Legacy section format (for backwards compatibility)
+export type LegacySection = SectionKey | { id: SectionKey; enabled?: boolean; navLabel?: string; backgroundColor?: string; textColor?: string; fontFamily?: string };
+
 export type Layout = {
-  sections: Array<SectionKey | { id: SectionKey; enabled?: boolean; navLabel?: string; backgroundColor?: string; textColor?: string; fontFamily?: string }>;
+  // Legacy sections array (kept for backwards compatibility)
+  sections: Array<LegacySection>;
+  // New pages array for multipage mode (if present, takes precedence)
+  pages?: Page[];
+};
+
+// Additional section instances storage (for sections beyond the original ones)
+// Keys are like "hero_abc123", "services_xyz789"
+export type SectionInstances = {
+  [key: string]: Hero | About | Services | BusinessBenefits | Menu | Testimonials | UpcomingEvents | Contact | Videos | Payment;
 };
 
 export type BusinessInfo = {
@@ -478,6 +511,8 @@ export type SiteData = {
   payment?: Payment;
   layout?: Layout;
   colorPalette?: ColorPalette;
+  // Additional section instances for multipage sites (e.g., "hero_abc123": {...})
+  sectionInstances?: SectionInstances;
 };
 
 
