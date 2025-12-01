@@ -589,6 +589,19 @@ export default function EditableText({
     }
   }, [internal, multiline, placeholder]);
 
+  // Ensure content is synced when switching to editable mode or when internal value changes
+  // This handles the case where the callback ref doesn't fire on language switch
+  useEffect(() => {
+    if (!ref.current || !effectiveEditable) return;
+    if (!isEditingRef.current) {
+      if (multiline) {
+        ref.current.innerHTML = internal ? internal.replace(/\n/g, '<br>') : (placeholder || '');
+      } else {
+        ref.current.textContent = internal || placeholder || '';
+      }
+    }
+  }, [effectiveEditable, internal, multiline, placeholder]);
+
   if (!effectiveEditable) {
     // For multiline text, convert newlines to <br /> tags
     if (multiline && displayValue) {

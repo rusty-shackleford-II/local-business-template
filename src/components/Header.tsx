@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect, useRef } from 'react';
+import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LanguageToggle from './LanguageToggle';
 import { useI18nContext } from './I18nProvider';
-import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette, Page } from '../types';
+import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette, Page, PageSection } from '../types';
 
 type Props = {
   businessName?: string;
@@ -26,10 +26,53 @@ type Props = {
   colorPalette?: ColorPalette;
 };
 
+// Navigation link with optional sections for dropdown
+type NavLink = {
+  id: string;
+  label: string;
+  slug?: string;
+  enabled: boolean;
+  isSection: boolean;
+  isPage: boolean;
+  isActive: boolean;
+  sections?: Array<{
+    id: string;
+    label: string;
+    sectionId: string;
+  }>;
+};
+
 const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, colorPalette }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [expandedMobileNav, setExpandedMobileNav] = useState<string | null>(null);
+  const hoverTimeoutRef = useRef<number | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeoutRef.current) {
+        window.clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, []);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    
+    if (openDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
   
   // Calculate logo size and header height
   const logoSize = header?.logoSize || 1.0;
@@ -147,9 +190,83 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       }
     }
   };
+  
+  // Handle navigation to a section within a specific page (for dropdown items)
+  const handleSectionNavigation = (pageSlug: string, sectionId: string) => {
+    console.log('🔗 [Nav] handleSectionNavigation:', pageSlug, sectionId);
+    setIsMenuOpen(false);
+    setOpenDropdown(null);
+    setExpandedMobileNav(null);
+    
+    if (typeof window === 'undefined') return;
+    
+    // Extract the DOM element ID from sectionId
+    // sectionId might be "about" or "about_abc123" for custom instances
+    // The DOM element will have id matching the base section type
+    const baseSectionType = sectionId.split('_')[0];
+    // Map section types to actual DOM IDs (hero uses "home" as its ID)
+    const domId = baseSectionType === 'hero' ? 'home' : baseSectionType;
+    
+    // Check if we're already on the target page
+    const isOnTargetPage = currentPageSlug === pageSlug || 
+      (pageSlug === '' && (!currentPageSlug || currentPageSlug === 'home'));
+    
+    const scrollToSection = () => {
+      const element = document.getElementById(domId);
+      console.log('🔗 [Nav] Looking for element:', domId, 'found:', !!element);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    
+    if (isOnTargetPage) {
+      // Already on the page, just scroll to section
+      scrollToSection();
+    } else {
+      // Navigate to page first, then scroll to section after page renders
+      // Set hash to trigger page change
+      window.location.hash = pageSlug || '';
+      
+      // Use requestAnimationFrame + timeout to wait for React to re-render
+      // This gives the new page content time to mount
+      const attemptScroll = (attempts: number) => {
+        const element = document.getElementById(domId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (attempts < 10) {
+          // Retry up to 10 times (1 second total)
+          setTimeout(() => attemptScroll(attempts + 1), 100);
+        }
+      };
+      
+      // Start checking after first paint
+      requestAnimationFrame(() => {
+        setTimeout(() => attemptScroll(0), 50);
+      });
+    }
+  };
+  
+  // Dropdown hover handlers
+  const handleDropdownMouseEnter = (linkId: string) => {
+    if (hoverTimeoutRef.current) {
+      window.clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+    setOpenDropdown(linkId);
+  };
+  
+  const handleDropdownMouseLeave = () => {
+    if (hoverTimeoutRef.current) {
+      window.clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = window.setTimeout(() => {
+      setOpenDropdown(null);
+      hoverTimeoutRef.current = null;
+    }, 150);
+  };
 
   // Generate navigation links based on pages (multipage) or sections (single-page)
-  const getNavigationLinks = () => {
+  const getNavigationLinks = (): NavLink[] => {
     const sectionLabels: Record<SectionKey, string> = {
       hero: t('nav.home', 'Home'),
       about: t('nav.about', 'About'),
@@ -163,18 +280,38 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       payment: t('nav.shop', 'Shop'),
       partners: 'Partners' // Hidden section - only accessible via HiDev logo
     };
+    
+    // Helper to get section label from sectionId
+    const getSectionLabel = (section: PageSection): string => {
+      if (section.navLabel) return section.navLabel;
+      // Extract base section type from sectionId (e.g., "services_abc123" -> "services")
+      const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+      return sectionLabels[baseSectionType] || section.sectionId;
+    };
 
-    // Multipage mode: show pages as nav items
+    // Multipage mode: show pages as nav items with sections in dropdown
     if (isMultipage && pages && pages.length > 1) {
-      return pages.map(page => ({
-        id: page.id,
-        label: page.name,
-        slug: page.slug,
-        enabled: true,
-        isSection: false,
-        isPage: true,
-        isActive: currentPageSlug === page.slug || (page.slug === '' && (!currentPageSlug || currentPageSlug === 'home'))
-      }));
+      return pages.map(page => {
+        // Get enabled sections for this page (excluding hero which is typically not navigable)
+        const pageSections = page.sections
+          .filter(section => section.enabled !== false && !section.sectionId.startsWith('hero'))
+          .map(section => ({
+            id: `${page.slug || 'home'}-${section.sectionId}`,
+            label: getSectionLabel(section),
+            sectionId: section.sectionId
+          }));
+        
+        return {
+          id: page.id,
+          label: page.name,
+          slug: page.slug,
+          enabled: true,
+          isSection: false,
+          isPage: true,
+          isActive: currentPageSlug === page.slug || (page.slug === '' && (!currentPageSlug || currentPageSlug === 'home')),
+          sections: pageSections.length > 0 ? pageSections : undefined
+        };
+      });
     }
 
     // Single-page mode: show sections as nav items
@@ -322,20 +459,50 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           </div>
 
           {/* Desktop Navigation - Right Aligned */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2" ref={dropdownRef}>
             <nav className="hidden md:flex space-x-8 mr-4">
               {navigationLinks.map((link) => (
-                <button
+                <div 
                   key={link.id}
-                  onClick={() => handleNavigation(link.isPage ? link.slug || link.id : link.id, link.isSection, link.isPage)}
-                  className={`nav-link font-medium transition-colors ${link.isActive ? 'border-b-2' : ''}`}
-                  style={{ 
-                    color: header?.colors?.navText || '#374151',
-                    borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
-                  }}
+                  className="relative"
+                  onMouseEnter={() => link.sections && link.sections.length > 0 ? handleDropdownMouseEnter(link.id) : undefined}
+                  onMouseLeave={() => link.sections && link.sections.length > 0 ? handleDropdownMouseLeave() : undefined}
                 >
-                  {link.label}
-                </button>
+                  <button
+                    onClick={() => handleNavigation(link.isPage ? link.slug || link.id : link.id, link.isSection, link.isPage)}
+                    className={`nav-link font-medium transition-colors flex items-center gap-1 ${link.isActive ? 'border-b-2' : ''}`}
+                    style={{ 
+                      color: header?.colors?.navText || '#374151',
+                      borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
+                    }}
+                  >
+                    {link.label}
+                    {link.sections && link.sections.length > 0 && (
+                      <ChevronDownIcon 
+                        className={`h-4 w-4 transition-transform duration-200 ${openDropdown === link.id ? 'rotate-180' : ''}`} 
+                      />
+                    )}
+                  </button>
+                  
+                  {/* Dropdown menu for sections */}
+                  {link.sections && link.sections.length > 0 && openDropdown === link.id && (
+                    <div 
+                      className="absolute top-full left-0 mt-1 min-w-48 py-2 rounded-lg shadow-lg border border-gray-100 z-50 animate-fade-in"
+                      style={{ backgroundColor: header?.colors?.background || '#ffffff' }}
+                    >
+                      {link.sections.map((section) => (
+                        <button
+                          key={section.id}
+                          onClick={() => handleSectionNavigation(link.slug || '', section.sectionId)}
+                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
+                          style={{ color: header?.colors?.navText || '#374151' }}
+                        >
+                          {section.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
               {payment?.addHeaderCta && !navigationLinks.some(link => link.id === 'payment') && (
                 <button
@@ -376,19 +543,50 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             className="md:hidden absolute top-full left-0 right-0 border-b border-gray-200 shadow-lg z-50 animate-fade-in"
             style={{ backgroundColor: header?.colors?.background || '#ffffff' }}
           >
-            <nav className="px-4 py-4 space-y-4">
+            <nav className="px-4 py-4 space-y-2">
               {navigationLinks.map((link) => (
-                <button
-                  key={link.id}
-                  onClick={() => handleNavigation(link.isPage ? link.slug || link.id : link.id, link.isSection, link.isPage)}
-                  className={`mobile-nav-link block w-full text-left font-medium py-2 ${link.isActive ? 'border-l-4 pl-3' : ''}`}
-                  style={{ 
-                    color: header?.colors?.navText || '#374151',
-                    borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
-                  }}
-                >
-                  {link.label}
-                </button>
+                <div key={link.id}>
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleNavigation(link.isPage ? link.slug || link.id : link.id, link.isSection, link.isPage)}
+                      className={`mobile-nav-link flex-1 text-left font-medium py-2 ${link.isActive ? 'border-l-4 pl-3' : ''}`}
+                      style={{ 
+                        color: header?.colors?.navText || '#374151',
+                        borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
+                      }}
+                    >
+                      {link.label}
+                    </button>
+                    {link.sections && link.sections.length > 0 && (
+                      <button
+                        onClick={() => setExpandedMobileNav(expandedMobileNav === link.id ? null : link.id)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        aria-label={`Expand ${link.label} sections`}
+                      >
+                        <ChevronDownIcon 
+                          className={`h-5 w-5 transition-transform duration-200 ${expandedMobileNav === link.id ? 'rotate-180' : ''}`}
+                          style={{ color: header?.colors?.navText || '#374151' }}
+                        />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Expandable sections for mobile */}
+                  {link.sections && link.sections.length > 0 && expandedMobileNav === link.id && (
+                    <div className="pl-6 py-2 space-y-1 border-l-2 border-gray-200 ml-3 animate-fade-in">
+                      {link.sections.map((section) => (
+                        <button
+                          key={section.id}
+                          onClick={() => handleSectionNavigation(link.slug || '', section.sectionId)}
+                          className="block w-full text-left py-2 text-sm transition-colors hover:opacity-75"
+                          style={{ color: header?.colors?.navText || '#6b7280' }}
+                        >
+                          {section.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
               {payment?.addHeaderCta && !navigationLinks.some(link => link.id === 'payment') && (
                 <button
