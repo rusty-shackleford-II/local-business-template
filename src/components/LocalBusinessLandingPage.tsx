@@ -192,19 +192,24 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     }
   }, [site.colorPalette]);
 
-  // Dynamically load Google Fonts used by sections
+  // Dynamically load Google Fonts used by sections and text elements
   useEffect(() => {
     // Collect all fonts used across all pages
     const fontsToLoad = new Set<string>();
     
+    // Helper function to add font to load set
+    const addFontIfGoogle = (fontFamily: string | undefined) => {
+      if (fontFamily) {
+        const googleFontName = GOOGLE_FONTS_MAP[fontFamily];
+        if (googleFontName) {
+          fontsToLoad.add(googleFontName);
+        }
+      }
+    };
+    
     for (const page of pages) {
       for (const section of page.sections) {
-        if (section.fontFamily) {
-          const googleFontName = GOOGLE_FONTS_MAP[section.fontFamily];
-          if (googleFontName) {
-            fontsToLoad.add(googleFontName);
-          }
-        }
+        addFontIfGoogle(section.fontFamily);
       }
     }
     
@@ -212,12 +217,15 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     if (site.layout?.sections && Array.isArray(site.layout.sections)) {
       for (const section of site.layout.sections) {
         if (typeof section === 'object' && section.fontFamily) {
-          const googleFontName = GOOGLE_FONTS_MAP[section.fontFamily];
-          if (googleFontName) {
-            fontsToLoad.add(googleFontName);
-          }
+          addFontIfGoogle(section.fontFamily);
         }
       }
+    }
+    
+    // Check hero headline and subheadline fonts
+    if (site.hero) {
+      addFontIfGoogle(site.hero.headlineFont);
+      addFontIfGoogle(site.hero.subheadlineFont);
     }
     
     // If there are Google Fonts to load, inject the link tag
@@ -254,7 +262,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         linkElement.href = newHref;
       }
     }
-  }, [pages, site.layout?.sections]);
+  }, [pages, site.layout?.sections, site.hero]);
   
   // Get sections for current page
   const currentSections = currentPage?.sections || [];

@@ -33,10 +33,12 @@ export type Hero = {
   headline: string;
   headlineTextSize?: number;
   headlineAlign?: 'left' | 'center' | 'right'; // Text alignment for headline
+  headlineFont?: string; // Font family for headline
   subheadline?: string;
   subheadlineTextSize?: number;
   subheadlineBold?: boolean | string; // Make subheadline text bold (stored as string in JSON)
   subheadlineAlign?: 'left' | 'center' | 'right'; // Text alignment for subheadline
+  subheadlineFont?: string; // Font family for subheadline
   // Legacy single CTA (for backwards compatibility)
   cta?: { 
     label: string;

@@ -3,6 +3,31 @@
 import React, { useRef, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
+// Font family presets - Google Fonts are loaded dynamically by the template
+const fontPresets = [
+  { value: '', label: 'Default', isSystem: true },
+  // Google Fonts - Sans Serif
+  { value: 'Inter, sans-serif', label: 'Inter', isSystem: false },
+  { value: 'Roboto, sans-serif', label: 'Roboto', isSystem: false },
+  { value: 'Open Sans, sans-serif', label: 'Open Sans', isSystem: false },
+  { value: 'Lato, sans-serif', label: 'Lato', isSystem: false },
+  { value: 'Montserrat, sans-serif', label: 'Montserrat', isSystem: false },
+  { value: 'Poppins, sans-serif', label: 'Poppins', isSystem: false },
+  { value: 'Raleway, sans-serif', label: 'Raleway', isSystem: false },
+  { value: 'Oswald, sans-serif', label: 'Oswald', isSystem: false },
+  { value: 'Nunito, sans-serif', label: 'Nunito', isSystem: false },
+  { value: 'Source Sans Pro, sans-serif', label: 'Source Sans Pro', isSystem: false },
+  // Google Fonts - Serif
+  { value: 'Playfair Display, serif', label: 'Playfair Display', isSystem: false },
+  { value: 'Merriweather, serif', label: 'Merriweather', isSystem: false },
+  // System Fonts (always available)
+  { value: 'Georgia, serif', label: 'Georgia', isSystem: true },
+  { value: 'Times New Roman, serif', label: 'Times New Roman', isSystem: true },
+  { value: 'Arial, sans-serif', label: 'Arial', isSystem: true },
+  { value: 'Verdana, sans-serif', label: 'Verdana', isSystem: true },
+  { value: 'Courier New, monospace', label: 'Courier New', isSystem: true },
+];
+
 type TextSizePopupProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -29,6 +54,10 @@ type TextSizePopupProps = {
   textAlign?: 'left' | 'center' | 'right';
   onTextAlignChange?: (align: 'left' | 'center' | 'right') => void;
   showAlignmentToggle?: boolean;
+  // Font family support
+  fontFamily?: string;
+  onFontFamilyChange?: (font: string) => void;
+  showFontPicker?: boolean;
 };
 
 export default function TextSizePopup({
@@ -54,6 +83,9 @@ export default function TextSizePopup({
   textAlign = 'center',
   onTextAlignChange,
   showAlignmentToggle = false,
+  fontFamily = '',
+  onFontFamilyChange,
+  showFontPicker = false,
 }: TextSizePopupProps) {
   const popupRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -443,6 +475,43 @@ export default function TextSizePopup({
                 </svg>
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Font Family Picker - only show if enabled */}
+        {showFontPicker && onFontFamilyChange && (
+          <div className="pt-2 border-t border-gray-200">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Font Family
+            </label>
+            <select
+              value={fontFamily || ''}
+              onChange={(e) => {
+                if (onInteractStart) onInteractStart();
+                onFontFamilyChange(e.target.value);
+                if (onInteractEnd) onInteractEnd();
+              }}
+              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{ fontFamily: fontFamily || 'inherit' }}
+            >
+              {fontPresets.map((preset) => (
+                <option
+                  key={preset.value || 'default'}
+                  value={preset.value}
+                  style={{ fontFamily: preset.value || 'inherit' }}
+                >
+                  {preset.label}
+                </option>
+              ))}
+            </select>
+            {fontFamily && (
+              <p 
+                className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded"
+                style={{ fontFamily }}
+              >
+                Preview: The quick brown fox jumps over the lazy dog
+              </p>
+            )}
           </div>
         )}
 

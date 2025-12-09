@@ -652,6 +652,12 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 onTextColorChange={onEdit ? (color: string) => onEdit('hero.colors.headline', color) : undefined}
                 showColorPicker={true}
                 presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                textAlign={hero?.headlineAlign || 'left'}
+                onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.headlineAlign', align) : undefined}
+                showAlignmentToggle={true}
+                fontFamily={hero?.headlineFont}
+                onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.headlineFont', font) : undefined}
+                showFontPicker={true}
               />
               <EditableText
                 as="p"
@@ -677,6 +683,12 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 textBold={hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true'}
                 onTextBoldChange={onEdit ? (bold: boolean) => onEdit('hero.subheadlineBold', bold.toString()) : undefined}
                 showBoldToggle={true}
+                textAlign={hero?.subheadlineAlign || 'left'}
+                onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.subheadlineAlign', align) : undefined}
+                showAlignmentToggle={true}
+                fontFamily={hero?.subheadlineFont}
+                onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
+                showFontPicker={true}
               />
                 
                 {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
@@ -1064,6 +1076,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     textAlign={hero?.headlineAlign || 'center'}
                     onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.headlineAlign', align) : undefined}
                     showAlignmentToggle={true}
+                    fontFamily={hero?.headlineFont}
+                    onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.headlineFont', font) : undefined}
+                    showFontPicker={true}
                   />
                   <EditableText
                     as="p"
@@ -1095,6 +1110,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     textAlign={hero?.subheadlineAlign || 'center'}
                     onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.subheadlineAlign', align) : undefined}
                     showAlignmentToggle={true}
+                    fontFamily={hero?.subheadlineFont}
+                    onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
+                    showFontPicker={true}
                   />
                   
                   {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
@@ -1185,6 +1203,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     textAlign={hero?.headlineAlign || 'center'}
                     onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.headlineAlign', align) : undefined}
                     showAlignmentToggle={true}
+                    fontFamily={hero?.headlineFont}
+                    onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.headlineFont', font) : undefined}
+                    showFontPicker={true}
                   />
                   <EditableText
                     as="p"
@@ -1217,6 +1238,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     textAlign={hero?.subheadlineAlign || 'center'}
                     onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.subheadlineAlign', align) : undefined}
                     showAlignmentToggle={true}
+                    fontFamily={hero?.subheadlineFont}
+                    onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
+                    showFontPicker={true}
                   />
                   
                   {/* CTA Buttons Grid - responsive with drag reorder on desktop */}

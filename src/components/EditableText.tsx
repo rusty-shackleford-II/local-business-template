@@ -55,6 +55,10 @@ type EditableTextProps = {
   textAlign?: 'left' | 'center' | 'right';
   onTextAlignChange?: (align: 'left' | 'center' | 'right') => void;
   showAlignmentToggle?: boolean;
+  // Font family support
+  fontFamily?: string;
+  onFontFamilyChange?: (font: string) => void;
+  showFontPicker?: boolean;
   // Standard HTML attributes
   style?: React.CSSProperties;
   id?: string;
@@ -98,6 +102,9 @@ export default function EditableText({
   textAlign = 'center',
   onTextAlignChange,
   showAlignmentToggle = false,
+  fontFamily,
+  onFontFamilyChange,
+  showFontPicker = false,
   style,
   id,
   'data-testid': dataTestId,
@@ -520,6 +527,7 @@ export default function EditableText({
       ...responsiveFontSize,
       transition: 'font-size 0.2s ease-out', // Smooth size transitions
       ...preserveFontWeight, // Preserve font-weight for contentEditable
+      ...(fontFamily ? { fontFamily } : {}), // Apply font family if specified
       ...style, // Style prop takes precedence over everything
     },
     id,
@@ -679,6 +687,9 @@ export default function EditableText({
           textAlign={textAlign}
           onTextAlignChange={onTextAlignChange}
           showAlignmentToggle={showAlignmentToggle}
+          fontFamily={fontFamily}
+          onFontFamilyChange={onFontFamilyChange}
+          showFontPicker={showFontPicker}
           onInteractStart={() => { suppressBlurCommitRef.current = true; }}
           onInteractEnd={() => { suppressBlurCommitRef.current = false; }}
         />

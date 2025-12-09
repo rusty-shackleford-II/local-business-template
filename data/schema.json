@@ -192,6 +192,7 @@
           ]
         },
         "headlineAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "headlineFont": { "type": "string", "description": "Font family for headline text" },
         "subheadline": { "type": "string" },
         "subheadlineTextSize": {
           "oneOf": [
@@ -201,6 +202,7 @@
         },
         "subheadlineBold": { "oneOf": [{ "type": "boolean" }, { "type": "string" }], "description": "Make subheadline bold (stored as string in JSON)" },
         "subheadlineAlign": { "type": "string", "enum": ["left", "center", "right"], "default": "left" },
+        "subheadlineFont": { "type": "string", "description": "Font family for subheadline text" },
         "cta": {
           "type": "object",
           "additionalProperties": false,
