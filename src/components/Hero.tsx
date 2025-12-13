@@ -114,9 +114,10 @@ type Props = {
   onEdit?: (path: string, value: string) => void;
   onHeroImageClick?: () => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
-const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, colorPalette }) => {
+const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, colorPalette, sectionId = 'home' }) => {
   const [videoLoading, setVideoLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const [hoveredButtonId, setHoveredButtonId] = useState<string | null>(null);
@@ -626,7 +627,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           </Head>
         )}
         
-        <section id="home" className={`relative ${backgroundClass} ${isPreview ? '' : 'body-padding'} overflow-hidden`}>
+        <section id={sectionId} className={`relative ${backgroundClass} ${isPreview ? '' : 'body-padding'} overflow-hidden`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
@@ -888,7 +889,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         </Head>
       )}
       
-      <section id="home" className={`relative ${isPreview ? '' : 'body-padding'} overflow-hidden`}>
+      <section id={sectionId} className={`relative ${isPreview ? '' : 'body-padding'} overflow-hidden`}>
         {/* Full-width media background */}
         <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
           {/* Media layer */}

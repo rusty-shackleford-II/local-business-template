@@ -8,6 +8,7 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
 const BusinessBenefitsComponent: React.FC<Props> = ({ 
@@ -15,7 +16,8 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
   backgroundClass = 'bg-white', 
   editable, 
   onEdit, 
-  colorPalette 
+  colorPalette,
+  sectionId = 'benefits'
 }) => {
 
   const businessBenefits = businessBenefitsProp ?? {
@@ -31,7 +33,7 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
   };
 
   return (
-    <section id="benefits" className={`py-16 lg:py-24 ${backgroundClass}`}>
+    <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Business Benefits Section */}
         <div className="bg-white rounded-2xl shadow-lg p-8 lg:p-12">

@@ -15,9 +15,10 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
-const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', editable, onEdit, colorPalette }) => {
+const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', editable, onEdit, colorPalette, sectionId = 'payment' }) => {
   const title = payment?.title || 'Buy Now';
   const description = payment?.description || 'Purchase our product or service securely.';
   const buttonLabel = payment?.buttonLabel || 'Proceed to Checkout';
@@ -232,7 +233,7 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
   // Render Shopify embed if provider is shopify_embed and embed code exists
   if (provider === 'shopify_embed' && payment?.shopifyEmbedCode) {
     mainComponent = (
-      <section id="payment" className={`py-16 lg:py-24 ${backgroundClass}`}>
+      <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mobile-left mb-8">
             <EditableText
@@ -282,7 +283,7 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
   } else {
     // Default to payment link rendering
     mainComponent = (
-      <section id="payment" className={`py-16 lg:py-24 ${backgroundClass}`}>
+      <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mobile-left">
             <EditableText

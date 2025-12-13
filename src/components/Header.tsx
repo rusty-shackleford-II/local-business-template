@@ -200,12 +200,10 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
     
     if (typeof window === 'undefined') return;
     
-    // Extract the DOM element ID from sectionId
-    // sectionId might be "about" or "about_abc123" for custom instances
-    // The DOM element will have id matching the base section type
-    const baseSectionType = sectionId.split('_')[0];
-    // Map section types to actual DOM IDs (hero uses "home" as its ID)
-    const domId = baseSectionType === 'hero' ? 'home' : baseSectionType;
+    // Determine the DOM element ID
+    // For custom instances (e.g., "about_abc123"), use the full sectionId
+    // For base sections, use the sectionId directly (hero->home mapping handled by component defaults)
+    const domId = sectionId;
     
     // Check if we're already on the target page
     const isOnTargetPage = currentPageSlug === pageSlug || 
@@ -224,22 +222,18 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       scrollToSection();
     } else {
       // Navigate to page first, then scroll to section after page renders
-      // Set hash to trigger page change
       window.location.hash = pageSlug || '';
       
-      // Use requestAnimationFrame + timeout to wait for React to re-render
-      // This gives the new page content time to mount
+      // Wait for page to render, then scroll
       const attemptScroll = (attempts: number) => {
         const element = document.getElementById(domId);
         if (element) {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } else if (attempts < 10) {
-          // Retry up to 10 times (1 second total)
           setTimeout(() => attemptScroll(attempts + 1), 100);
         }
       };
       
-      // Start checking after first paint
       requestAnimationFrame(() => {
         setTimeout(() => attemptScroll(0), 50);
       });
@@ -492,6 +486,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                     >
                       {link.sections.map((section) => (
                         <button
+                          type="button"
                           key={section.id}
                           onClick={() => handleSectionNavigation(link.slug || '', section.sectionId)}
                           className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
@@ -576,6 +571,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                     <div className="pl-6 py-2 space-y-1 border-l-2 border-gray-200 ml-3 animate-fade-in">
                       {link.sections.map((section) => (
                         <button
+                          type="button"
                           key={section.id}
                           onClick={() => handleSectionNavigation(link.slug || '', section.sectionId)}
                           className="block w-full text-left py-2 text-sm transition-colors hover:opacity-75"

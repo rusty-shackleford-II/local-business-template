@@ -22,9 +22,10 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
-const UpcomingEventsSection: React.FC<Props> = ({ upcomingEvents: upcomingEventsProp, contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette }) => {
+const UpcomingEventsSection: React.FC<Props> = ({ upcomingEvents: upcomingEventsProp, contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, sectionId = 'upcomingEvents' }) => {
   const swiperRef = useRef<SwiperType | null>(null);
   const [selectedEventInstance, setSelectedEventInstance] = useState<EventInstance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -178,7 +179,7 @@ Thank you!`;
   };
 
   return (
-    <section id="upcomingEvents" className={`py-16 lg:py-24 ${backgroundClass}`}>
+    <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mobile-left mb-16">

@@ -41,6 +41,7 @@ type Props = {
   onEdit?: (path: string, value: string | { open: string; close: string }) => void;
   colorPalette?: ColorPalette;
   siteUrl?: string;
+  sectionId?: string;
 };
 
 const formatBusinessHours = (businessHours?: ContactCfg['businessHours'] | BusinessInfo['businessHours'], t?: (key: string, defaultValue?: string) => string) => {
@@ -108,7 +109,7 @@ const generateMapEmbedUrl = (address: string): string => {
   return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodedAddress}&t=&z=14&ie=UTF8&iwloc=B&output=embed`;
 };
 
-const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, siteUrl }) => {
+const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, siteUrl, sectionId = 'contact' }) => {
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -236,7 +237,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
 
 
   return (
-    <section id="contact" className={`pt-8 lg:pt-12 pb-16 lg:pb-24 ${backgroundClass}`}>
+    <section id={sectionId} className={`pt-8 lg:pt-12 pb-16 lg:pb-24 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mobile-left mb-16">

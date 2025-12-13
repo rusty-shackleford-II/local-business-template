@@ -8,6 +8,7 @@ type Props = {
   backgroundClass?: string;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
+  sectionId?: string;
 };
 
 type VideoPlayerProps = {
@@ -190,7 +191,7 @@ function VideoPlayer({ video, index, editable }: VideoPlayerProps) {
   );
 }
 
-export default function Videos({ videos, isPreview, backgroundClass = 'bg-white', editable, onEdit }: Props) {
+export default function Videos({ videos, isPreview, backgroundClass = 'bg-white', editable, onEdit, sectionId = 'videos' }: Props) {
   if (!videos || !videos.items || videos.items.length === 0) return null;
 
   // Filter out videos without URLs (unless in editable mode, where we show placeholders)
@@ -201,7 +202,7 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
   if (validVideos.length === 0) return null;
 
   return (
-    <section id="videos" className={`py-12 ${backgroundClass}`}>
+    <section id={sectionId} className={`py-12 ${backgroundClass}`}>
       <div className="max-w-5xl mx-auto px-4">
         {(videos.title || videos.subtitle || editable) && (
           <div className="text-center mobile-left mb-12">

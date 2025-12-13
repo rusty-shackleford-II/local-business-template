@@ -29,9 +29,10 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
-const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-white', editable, onEdit, colorPalette }) => {
+const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-white', editable, onEdit, colorPalette, sectionId = 'testimonials' }) => {
   const swiperRef = useRef<SwiperType | null>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
@@ -162,7 +163,7 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
   };
 
   return (
-    <section id="testimonials" className={`py-16 lg:py-24 ${backgroundClass}`}>
+    <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mobile-left mb-16">

@@ -332,6 +332,10 @@ export default function LocalBusinessLandingPage(site: SiteData) {
       ? `sectionInstances.${sectionId}` 
       : sectionType;
     
+    // Only pass sectionId for custom instances (e.g., "about_abc123")
+    // Base sections use their component defaults for backwards compatibility
+    const customSectionId = isCustomInstance(sectionId) ? sectionId : undefined;
+    
     switch (sectionType) {
       case 'hero':
         const heroData = sectionData as HeroType || site.hero;
@@ -344,6 +348,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('hero.', '')}`, value) : undefined}
           onHeroImageClick={site.onHeroImageClick}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'about':
         const aboutData = sectionData as AboutType || site.about;
@@ -353,6 +358,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('about.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'services':
         const servicesData = sectionData as ServicesType || site.services;
@@ -362,6 +368,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('services.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'benefits':
         const benefitsData = sectionData as BusinessBenefitsType || site.businessBenefits;
@@ -371,6 +378,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('businessBenefits.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'menu':
         const menuData = sectionData as MenuType || site.menu;
@@ -383,6 +391,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('menu.', '')}`, value) : undefined}
           backgroundClass={backgroundClass}
           isPreview={site.isPreview}
+          sectionId={customSectionId}
         />;
       case 'testimonials':
         const testimonialsData = sectionData as TestimonialsType || site.testimonials;
@@ -392,6 +401,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('testimonials.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'videos':
         const videosData = sectionData as VideosType || site.videos;
@@ -401,6 +411,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           backgroundClass={backgroundClass}
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('videos.', '')}`, value) : undefined}
+          sectionId={customSectionId}
         />;
       case 'payment':
         const paymentData = sectionData as PaymentType || site.payment;
@@ -410,6 +421,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('payment.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'upcomingEvents':
         const eventsData = sectionData as UpcomingEventsType || site.upcomingEvents;
@@ -421,6 +433,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('upcomingEvents.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
+          sectionId={customSectionId}
         />;
       case 'contact':
         const contactData = sectionData as ContactType || site.contact;
@@ -432,6 +445,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('contact.', '')}`, value) : undefined}
           colorPalette={site.colorPalette}
           siteUrl={site.seo?.canonicalUrl}
+          sectionId={customSectionId}
         />;
       default:
         return null;

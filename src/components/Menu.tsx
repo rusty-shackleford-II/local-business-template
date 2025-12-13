@@ -51,6 +51,7 @@ type Props = {
   onEdit?: (path: string, value: string) => void;
   backgroundClass?: string;
   isPreview?: boolean;
+  sectionId?: string;
 };
 
 // Hoisted components to avoid remounts on parent re-renders
@@ -377,7 +378,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
 
 CategoryCarousel.displayName = 'CategoryCarousel';
 
-const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit, backgroundClass = 'bg-gray-50', isPreview = false }) => {
+const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit, backgroundClass = 'bg-gray-50', isPreview = false, sectionId = 'menu' }) => {
   const [activeTab, setActiveTab] = useState(0);
   
   // Fetch HTML content from file if it exists, otherwise fall back to JSON
@@ -473,7 +474,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
   }
 
   return (
-    <section id="menu" className={`py-12 sm:py-16 ${backgroundClass}`}>
+    <section id={sectionId} className={`py-12 sm:py-16 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mobile-left mb-8 sm:mb-12">

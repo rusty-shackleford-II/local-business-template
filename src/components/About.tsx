@@ -70,9 +70,10 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
-const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable, onEdit, colorPalette }) => {
+const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable, onEdit, colorPalette, sectionId = 'about' }) => {
   // Gallery state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalImageIndex, setModalImageIndex] = useState(0);
@@ -238,7 +239,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
 
   return (
     <>
-      <section id="about" className={`py-16 lg:py-24 ${backgroundClass}`}>
+      <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mobile-left mb-16">

@@ -9,9 +9,10 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   colorPalette?: ColorPalette;
+  sectionId?: string;
 };
 
-const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette }) => {
+const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, sectionId = 'services' }) => {
 
   const services = servicesProp ?? {
     title: "Our Services",
@@ -42,7 +43,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
   };
 
   return (
-    <section id="services" className={`py-16 lg:py-24 ${backgroundClass}`}>
+    <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mobile-left mb-16">
