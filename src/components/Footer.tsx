@@ -87,34 +87,56 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       return;
     }
     
+    // Get header offset from CSS variable or fallback
+    const getHeaderOffset = (): number => {
+      const dynamicHeaderHeight = document.documentElement.style.getPropertyValue('--dynamic-header-height');
+      if (dynamicHeaderHeight) {
+        const remValue = parseFloat(dynamicHeaderHeight.replace('rem', ''));
+        return remValue * 16; // Convert rem to px
+      }
+      return window.innerWidth < 768 ? 80 : 96;
+    };
+    
     // Handle section navigation (scroll)
     const element = document.getElementById(id);
     
     if (element) {
-      // Find scrollable ancestor (for preview mode where content is in a scrollable div)
-      let scrollableParent: HTMLElement | null = element.parentElement;
-      while (scrollableParent) {
-        const style = window.getComputedStyle(scrollableParent);
-        const overflowY = style.overflowY;
-        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && 
-                             scrollableParent.scrollHeight > scrollableParent.clientHeight;
-        if (isScrollable) break;
-        scrollableParent = scrollableParent.parentElement;
-      }
-      
-      if (scrollableParent) {
-        // Calculate position relative to the scrollable container
-        const elementRect = element.getBoundingClientRect();
-        const containerRect = scrollableParent.getBoundingClientRect();
-        const offset = elementRect.top - containerRect.top + scrollableParent.scrollTop;
+      if (isPreview) {
+        // Preview mode: find scrollable ancestor (content is in a scrollable div)
+        let scrollableParent: HTMLElement | null = element.parentElement;
+        while (scrollableParent) {
+          const style = window.getComputedStyle(scrollableParent);
+          const overflowY = style.overflowY;
+          const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && 
+                               scrollableParent.scrollHeight > scrollableParent.clientHeight;
+          if (isScrollable) break;
+          scrollableParent = scrollableParent.parentElement;
+        }
         
-        scrollableParent.scrollTo({
-          top: offset,
+        if (scrollableParent) {
+          // Calculate position relative to the scrollable container
+          const elementRect = element.getBoundingClientRect();
+          const containerRect = scrollableParent.getBoundingClientRect();
+          const headerOffset = getHeaderOffset();
+          const offset = elementRect.top - containerRect.top + scrollableParent.scrollTop - headerOffset;
+          
+          scrollableParent.scrollTo({
+            top: offset,
+            behavior: 'smooth'
+          });
+        } else {
+          // Fallback to scrollIntoView
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else {
+        // Production mode: use window scrolling with proper offset calculation
+        const headerOffset = getHeaderOffset();
+        const elementPosition = element.offsetTop - headerOffset;
+        
+        window.scrollTo({
+          top: elementPosition,
           behavior: 'smooth'
         });
-      } else {
-        // Fallback to scrollIntoView
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     } else if (!isPreview) {
       // Only navigate to a different page if NOT in preview mode

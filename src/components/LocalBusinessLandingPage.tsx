@@ -32,6 +32,9 @@ export type SiteData = SiteDataType & {
   // Multipage props
   currentPageSlug?: string; // For preview mode - parent controls current page
   onPageChange?: (slug: string) => void; // Callback when page changes
+  // Benefits inline editing
+  onDeleteBenefit?: (index: number) => void;
+  onAddBenefit?: (afterIndex?: number) => void;
 };
 
 // Type for any section data
@@ -372,11 +375,17 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         />;
       case 'benefits':
         const benefitsData = sectionData as BusinessBenefitsType || site.businessBenefits;
+        // For benefits, the data key is 'businessBenefits' not 'benefits', so we need special handling
+        const benefitsEditBasePath = isCustomInstance(sectionId) 
+          ? `sectionInstances.${sectionId}` 
+          : 'businessBenefits';
         return <BusinessBenefits 
           businessBenefits={benefitsData} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('businessBenefits.', '')}`, value) : undefined}
+          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${benefitsEditBasePath}.${path.replace('businessBenefits.', '')}`, value) : undefined}
+          onDeleteBenefit={site.onDeleteBenefit}
+          onAddBenefit={site.onAddBenefit}
           colorPalette={site.colorPalette}
           sectionId={customSectionId}
         />;

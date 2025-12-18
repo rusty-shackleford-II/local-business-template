@@ -223,22 +223,38 @@ export default function Home() {
           </>
         )}
         
-        {/* Icons */}
+        {/* Icons - Google requires at least 48x48px favicon with correct MIME type */}
         {(site as any)?.seo?.searchResultsIcon && 
          (((site as any).seo.searchResultsIcon.startsWith('http') || (site as any).seo.searchResultsIcon.startsWith('/'))) &&
          !((site as any).seo.searchResultsIcon.startsWith('ERROR')) ? (
           <>
-            <link rel="icon" href={(site as any).seo.searchResultsIcon} type="image/png" />
-            <link rel="apple-touch-icon" href={(site as any).seo.searchResultsIcon} />
+            {/* Primary favicon with correct MIME type based on extension */}
+            <link 
+              rel="icon" 
+              href={(site as any).seo.searchResultsIcon} 
+              type={(site as any).seo.searchResultsIcon.endsWith('.webp') ? 'image/webp' : 
+                    (site as any).seo.searchResultsIcon.endsWith('.png') ? 'image/png' : 
+                    (site as any).seo.searchResultsIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png'}
+              sizes="512x512"
+            />
+            {/* Shortcut icon for broader compatibility */}
+            <link 
+              rel="shortcut icon" 
+              href={(site as any).seo.searchResultsIcon}
+              type={(site as any).seo.searchResultsIcon.endsWith('.webp') ? 'image/webp' : 
+                    (site as any).seo.searchResultsIcon.endsWith('.png') ? 'image/png' : 
+                    (site as any).seo.searchResultsIcon.endsWith('.svg') ? 'image/svg+xml' : 'image/png'}
+            />
+            <link rel="apple-touch-icon" href={(site as any).seo.searchResultsIcon} sizes="180x180" />
           </>
         ) : (
           <>
             <link rel="icon" href="/favicon.png" type="image/png" sizes="32x32" />
             <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
             <link rel="apple-touch-icon" href="/favicon.png" />
+            <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
           </>
         )}
-        <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
         <link rel="manifest" href="/manifest.json" />
         
         {/* JSON-LD Structured Data for Search Engines */}
