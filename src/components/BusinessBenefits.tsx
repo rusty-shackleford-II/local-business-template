@@ -25,6 +25,8 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [showAddAtEnd, setShowAddAtEnd] = useState(false);
+  // Track newly added benefit indices so they stay visible even when empty
+  const [newlyAddedIndices, setNewlyAddedIndices] = useState<Set<number>>(new Set());
 
   const businessBenefits = businessBenefitsProp ?? {
     title: "Why Choose Our Services",
@@ -38,11 +40,15 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
     ]
   };
 
-  // Get the actual items array (filtering empty ones for display)
+  // Get the actual items array
   const allItems = Array.isArray(businessBenefits.items) ? businessBenefits.items : [];
+  
+  // Filter for display: show non-empty benefits OR newly added ones (so they can be edited)
   const displayItems = allItems
     .map((benefit, originalIndex) => ({ benefit, originalIndex }))
-    .filter(({ benefit }) => benefit.title?.trim() || benefit.description?.trim());
+    .filter(({ benefit, originalIndex }) => 
+      benefit.title?.trim() || benefit.description?.trim() || newlyAddedIndices.has(originalIndex)
+    );
 
   // Track the latest edited values for each benefit (before React re-renders)
   const editedValuesRef = useRef<Map<number, { title?: string; description?: string }>>(new Map());
@@ -93,12 +99,32 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
       if (!finalTitle?.trim() && !finalDescription?.trim()) {
         editedValuesRef.current.delete(originalIndex);
         blurTimeoutRef.current.delete(originalIndex);
+        // Remove from newly added indices
+        setNewlyAddedIndices(prev => {
+          const next = new Set(prev);
+          next.delete(originalIndex);
+          return next;
+        });
         onDeleteBenefit(originalIndex);
       }
     }, 200);
 
     blurTimeoutRef.current.set(originalIndex, timeout);
   }, [allItems, onDeleteBenefit]);
+
+  // Wrapper to add benefit and track it as newly added
+  const handleAddBenefit = useCallback(() => {
+    if (!onAddBenefit) return;
+    
+    // The new benefit will be added at the end
+    const newIndex = allItems.length;
+    
+    // Track this index as newly added so it shows even when empty
+    setNewlyAddedIndices(prev => new Set(prev).add(newIndex));
+    
+    // Call the parent's add handler
+    onAddBenefit();
+  }, [onAddBenefit, allItems.length]);
 
   return (
     <section id={sectionId} className={`py-16 lg:py-24 ${backgroundClass}`}>
@@ -129,93 +155,80 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
                 onMouseEnter={() => editable && setHoveredIndex(displayIndex)}
                 onMouseLeave={() => editable && setHoveredIndex(null)}
               >
-                {/* Hover outline for editable mode */}
-                {editable && hoveredIndex === displayIndex && (
-                  <div className="absolute -inset-2 border-2 border-dashed border-blue-400 rounded-lg pointer-events-none z-10" />
-                )}
-                
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <div 
-                      className="flex items-center justify-center w-8 h-8 rounded-full"
-                      style={{ 
-                        backgroundColor: `${colorPalette?.primary || '#10B981'}20`,
-                      }}
-                    >
-                      <span 
-                        className="font-semibold text-sm"
+                  {/* Hover outline for editable mode */}
+                  {editable && hoveredIndex === displayIndex && (
+                    <div className="absolute -inset-2 border-2 border-dashed border-blue-400 rounded-lg pointer-events-none z-10" />
+                  )}
+                  
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0">
+                      <div 
+                        className="flex items-center justify-center w-8 h-8 rounded-full"
                         style={{ 
-                          color: colorPalette?.primary || '#10B981'
+                          backgroundColor: `${colorPalette?.primary || '#10B981'}20`,
                         }}
                       >
-                        {displayIndex + 1}
-                      </span>
+                        <span 
+                          className="font-semibold text-sm"
+                          style={{ 
+                            color: colorPalette?.primary || '#10B981'
+                          }}
+                        >
+                          {displayIndex + 1}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <EditableText
+                        as="h4"
+                        className="text-gray-900 font-semibold mb-1"
+                        value={benefit.title}
+                        path={`businessBenefits.items.${originalIndex}.title`}
+                        editable={editable}
+                        onEdit={handleEdit}
+                        onBlur={() => handleBenefitBlur(originalIndex)}
+                        placeholder={newlyAddedIndices.has(originalIndex) ? "Enter title..." : ""}
+                        textSize={businessBenefits.itemTitleTextSize || 1.0}
+                        onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.itemTitleTextSize`, size.toString()) : undefined}
+                        textSizeLabel="Benefit Title Size (All Items)"
+                        textSizePresets={[0.875, 1.0, 1.125, 1.25]}
+                        textSizeNormal={1.0}
+                        textSizeMin={0.75}
+                        textSizeMax={1.75}
+                      />
+                      <EditableText
+                        as="p"
+                        className="text-gray-700 leading-relaxed"
+                        value={benefit.description}
+                        path={`businessBenefits.items.${originalIndex}.description`}
+                        editable={editable}
+                        onEdit={handleEdit}
+                        onBlur={() => handleBenefitBlur(originalIndex)}
+                        placeholder={newlyAddedIndices.has(originalIndex) ? "Enter description..." : ""}
+                        multiline
+                        textSize={businessBenefits.itemDescriptionTextSize || 1.0}
+                        onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.itemDescriptionTextSize`, size.toString()) : undefined}
+                        textSizeLabel="Benefit Description Size (All Items)"
+                        textSizePresets={[0.875, 1.0, 1.125, 1.25]}
+                        textSizeNormal={1.0}
+                        textSizeMin={0.75}
+                        textSizeMax={1.75}
+                      />
                     </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <EditableText
-                      as="h4"
-                      className="text-gray-900 font-semibold mb-1"
-                      value={benefit.title}
-                      path={`businessBenefits.items.${originalIndex}.title`}
-                      editable={editable}
-                      onEdit={handleEdit}
-                      onBlur={() => handleBenefitBlur(originalIndex)}
-                      placeholder="Benefit title"
-                      textSize={businessBenefits.itemTitleTextSize || 1.0}
-                      onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.itemTitleTextSize`, size.toString()) : undefined}
-                      textSizeLabel="Benefit Title Size (All Items)"
-                      textSizePresets={[0.875, 1.0, 1.125, 1.25]}
-                      textSizeNormal={1.0}
-                      textSizeMin={0.75}
-                      textSizeMax={1.75}
-                    />
-                    <EditableText
-                      as="p"
-                      className="text-gray-700 leading-relaxed"
-                      value={benefit.description}
-                      path={`businessBenefits.items.${originalIndex}.description`}
-                      editable={editable}
-                      onEdit={handleEdit}
-                      onBlur={() => handleBenefitBlur(originalIndex)}
-                      placeholder="Benefit description"
-                      multiline
-                      textSize={businessBenefits.itemDescriptionTextSize || 1.0}
-                      onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.itemDescriptionTextSize`, size.toString()) : undefined}
-                      textSizeLabel="Benefit Description Size (All Items)"
-                      textSizePresets={[0.875, 1.0, 1.125, 1.25]}
-                      textSizeNormal={1.0}
-                      textSizeMin={0.75}
-                      textSizeMax={1.75}
-                    />
-                  </div>
                 </div>
-
-                {/* Add button - appears on hover between items */}
-                {editable && onAddBenefit && hoveredIndex === displayIndex && (
-                  <button
-                    onClick={() => onAddBenefit(originalIndex)}
-                    className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex items-center justify-center w-7 h-7 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100"
-                    title="Add benefit below"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                )}
-              </div>
             ))}
           </div>
 
-          {/* Add new benefit button at the end */}
-          {editable && onAddBenefit && (
+          {/* Add new benefit button at the end - max 6 benefits allowed */}
+          {editable && onAddBenefit && displayItems.length < 6 && (
             <div 
               className="mt-8 relative"
               onMouseEnter={() => setShowAddAtEnd(true)}
               onMouseLeave={() => setShowAddAtEnd(false)}
             >
               <button
-                onClick={() => onAddBenefit()}
+                onClick={handleAddBenefit}
                 className={`w-full py-4 border-2 border-dashed rounded-xl transition-all duration-200 flex items-center justify-center gap-2 ${
                   showAddAtEnd 
                     ? 'border-blue-400 bg-blue-50 text-blue-600' 
