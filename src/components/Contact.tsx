@@ -191,6 +191,23 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Bot trap: real messages always have spaces. Silently "succeed" without sending.
+    const messageValue = formData['message'] || '';
+    if (!messageValue.includes(' ')) {
+      // Fake success - bot thinks it worked but nothing is sent
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
+      setIsSubmitted(true);
+      const resetData = formFields.reduce((acc, field) => {
+        acc[field.name] = '';
+        return acc;
+      }, {} as Record<string, string>);
+      setFormData(resetData);
+      setConsentChecked(false);
+      setIsSubmitting(false);
+      return;
+    }
+    
     try {
       const { solution } = await botpoison.challenge();
       
