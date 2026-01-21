@@ -163,12 +163,6 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
     return colors;
   }, [colorPalette, defaultCtaBg]);
   
-  // Apply preset color to whichever field is focused
-  const applyPresetColor = useCallback((color: string) => {
-    const field = focusedColorField === 'background' ? 'backgroundColor' : 'textColor';
-    updateButton(field, color);
-  }, [focusedColorField, updateButton]);
-  
   // Handle button property changes
   // For legacy buttons, migrate to ctaButtons format on first edit
   const updateButton = useCallback((field: string, value: any) => {
@@ -188,6 +182,12 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
       onEdit(path, value);
     }
   }, [buttonIndex, onEdit, isLegacyButton, button]);
+  
+  // Apply preset color to whichever field is focused
+  const applyPresetColor = useCallback((color: string) => {
+    const field = focusedColorField === 'background' ? 'backgroundColor' : 'textColor';
+    updateButton(field, color);
+  }, [focusedColorField, updateButton]);
   
   // Stop click from closing modal
   const stopClick = (e: React.MouseEvent) => {

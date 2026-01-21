@@ -247,13 +247,6 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
     if (colorPalette) {
       if (colorPalette.primary) colors.push({ color: colorPalette.primary, label: 'Primary' });
       if (colorPalette.secondary) colors.push({ color: colorPalette.secondary, label: 'Secondary' });
-      if (colorPalette.accent) colors.push({ color: colorPalette.accent, label: 'Accent' });
-      if (colorPalette.background && colorPalette.background !== '#ffffff') {
-        colors.push({ color: colorPalette.background, label: 'Background' });
-      }
-      if (colorPalette.text && colorPalette.text !== '#000000') {
-        colors.push({ color: colorPalette.text, label: 'Text' });
-      }
     }
     
     return colors;

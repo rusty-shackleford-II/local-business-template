@@ -99,7 +99,7 @@ function normalizePositions(positions: ButtonGridPosition[]): ButtonGridPosition
   }));
   
   // Step 2: Compress row gaps
-  const usedRows = [...new Set(normalized.map(p => p.row))].sort((a, b) => a - b);
+  const usedRows = Array.from(new Set(normalized.map(p => p.row))).sort((a, b) => a - b);
   const rowMap = new Map(usedRows.map((oldRow, newRow) => [oldRow, newRow]));
   
   normalized = normalized.map(p => ({
@@ -108,7 +108,7 @@ function normalizePositions(positions: ButtonGridPosition[]): ButtonGridPosition
   }));
   
   // Step 3: Compress column gaps
-  const usedCols = [...new Set(normalized.map(p => p.col))].sort((a, b) => a - b);
+  const usedCols = Array.from(new Set(normalized.map(p => p.col))).sort((a, b) => a - b);
   const colMap = new Map(usedCols.map((oldCol, newCol) => [oldCol, newCol]));
   
   normalized = normalized.map(p => ({

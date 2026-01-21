@@ -128,7 +128,7 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
   
   // Mark image as loaded
   const handleImageLoad = useCallback((index: number) => {
-    setLoadedImages(prev => new Set([...prev, index]));
+    setLoadedImages(prev => new Set([...Array.from(prev), index]));
     setFailedImages(prev => {
       const next = new Set(prev);
       next.delete(index);
@@ -138,8 +138,8 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
   
   // Mark image as failed
   const handleImageError = useCallback((index: number) => {
-    setFailedImages(prev => new Set([...prev, index]));
-    setLoadedImages(prev => new Set([...prev, index])); // Stop loading animation
+    setFailedImages(prev => new Set([...Array.from(prev), index]));
+    setLoadedImages(prev => new Set([...Array.from(prev), index])); // Stop loading animation
   }, []);
   
   // Handle add image - triggers parent's cropper flow
