@@ -1,11 +1,22 @@
-import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowRightIcon } from '@heroicons/react/24/outline';
+import React, { useMemo, useState, useEffect, useRef, useCallback, type MouseEvent as ReactMouseEvent } from 'react';
+import { ArrowRightIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import Head from 'next/head';
 import { stripPhoneNumber } from '../lib/phoneUtils';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
-import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton } from '../types';
+import ButtonGridEditor, { getEffectiveGridLayout, legacyToGridLayout } from './ButtonGridEditor';
+import HeroImageEditor from './HeroImageEditor';
+import { 
+  FaInstagram, 
+  FaFacebookF, 
+  FaLinkedinIn, 
+  FaTiktok,
+  FaYelp,
+  FaGoogle
+} from 'react-icons/fa';
+import { FaXTwitter } from 'react-icons/fa6';
+import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton, SocialLinksConfig, ButtonGridLayout } from '../types';
 
 // Video utility functions (copied from Videos component)
 function extractIframeSrc(input: string): string {
@@ -113,24 +124,172 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   onHeroImageClick?: () => void;
+  onHeroImageAddClick?: () => void; // For adding images to the slideshow array (with cropper)
   colorPalette?: ColorPalette;
   sectionId?: string;
+  socialLinks?: SocialLinksConfig;
 };
 
-const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, colorPalette, sectionId = 'home' }) => {
+// Social Links Row component for Hero section
+const HeroSocialLinks: React.FC<{ 
+  socialLinks?: SocialLinksConfig; 
+  align?: 'left' | 'center' | 'right';
+  isFullwidthOverlay?: boolean;
+  compact?: boolean; // Smaller icons for standard layout
+  className?: string;
+}> = ({ socialLinks, align = 'left', isFullwidthOverlay = false, compact = false, className = '' }) => {
+  const links = socialLinks?.links;
+  
+  // Check if we should show social links in hero
+  if (!socialLinks?.showInHero || !links) return null;
+  
+  // Check if there are any social links to display
+  const hasLinks = Object.values(links).some(url => url && url.trim());
+  if (!hasLinks) return null;
+  
+  const justifyClass = isFullwidthOverlay 
+    ? 'justify-center' 
+    : align === 'center' 
+      ? 'justify-center' 
+      : align === 'right' 
+        ? 'justify-end' 
+        : 'justify-start';
+  
+  // Size classes based on compact mode
+  const sizeClass = compact 
+    ? 'w-8 h-8' 
+    : 'w-10 h-10';
+  
+  const iconSize = compact ? 'h-3.5 w-3.5' : 'h-4 w-4';
+  const gapClass = compact ? 'gap-2' : 'gap-3';
+  const marginClass = compact ? 'mt-4' : 'mt-6';
+  
+  const iconClass = isFullwidthOverlay 
+    ? `${sizeClass} bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm` 
+    : `${sizeClass} bg-gray-100 hover:bg-gray-200 text-gray-700`;
+  
+  return (
+    <div className={`flex flex-wrap ${gapClass} ${marginClass} ${justifyClass} ${className}`}>
+      {links.facebook && (
+        <a
+          href={links.facebook}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="Facebook"
+        >
+          <FaFacebookF className={iconSize} />
+        </a>
+      )}
+      {links.twitter && (
+        <a
+          href={links.twitter}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="X (Twitter)"
+        >
+          <FaXTwitter className={iconSize} />
+        </a>
+      )}
+      {links.instagram && (
+        <a
+          href={links.instagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="Instagram"
+        >
+          <FaInstagram className={iconSize} />
+        </a>
+      )}
+      {links.linkedin && (
+        <a
+          href={links.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="LinkedIn"
+        >
+          <FaLinkedinIn className={iconSize} />
+        </a>
+      )}
+      {links.youtube && (
+        <a
+          href={links.youtube}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="YouTube"
+        >
+          <svg className={iconSize} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+        </a>
+      )}
+      {links.tiktok && (
+        <a
+          href={links.tiktok}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="TikTok"
+        >
+          <FaTiktok className={iconSize} />
+        </a>
+      )}
+      {links.yelp && (
+        <a
+          href={links.yelp}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="Yelp"
+        >
+          <FaYelp className={iconSize} />
+        </a>
+      )}
+      {links.googleBusinessProfile && (
+        <a
+          href={links.googleBusinessProfile}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          aria-label="Google Business"
+        >
+          <FaGoogle className={iconSize} />
+        </a>
+      )}
+    </div>
+  );
+};
+
+const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, onHeroImageAddClick, colorPalette, sectionId = 'home', socialLinks }) => {
   const [videoLoading, setVideoLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
-  const [hoveredButtonId, setHoveredButtonId] = useState<string | null>(null);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
+  const [showImageEditor, setShowImageEditor] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
-  // Button drag state
-  const [draggedButtonIndex, setDraggedButtonIndex] = useState<number | null>(null);
-  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
-  const buttonsContainerRef = useRef<HTMLDivElement>(null);
+  // Overlay resize state
+  const [isResizing, setIsResizing] = useState<string | null>(null); // 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null
+  const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
+  const [resizeStartSize, setResizeStartSize] = useState({ width: 0, height: 0 });
+  const [resizeStartBottomPadding, setResizeStartBottomPadding] = useState(0);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  
+  // Button group position drag state (for any layout that supports repositioning)
+  const [isDraggingButtons, setIsDraggingButtons] = useState(false);
+  const [buttonsDragStartPos, setButtonsDragStartPos] = useState({ x: 0, y: 0 });
+  const buttonsFloatingRef = useRef<HTMLDivElement>(null);
+  
+  // Social links position drag state (for fullwidth layout)
+  const [isDraggingSocialLinks, setIsDraggingSocialLinks] = useState(false);
+  const [socialLinksDragStartPos, setSocialLinksDragStartPos] = useState({ x: 0, y: 0 });
+  const socialLinksFloatingRef = useRef<HTMLDivElement>(null);
   
   // Get CTA buttons array with backwards compatibility
   // If ctaButtons array exists, use it; otherwise, convert single cta to array format
@@ -176,89 +335,61 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   // Auto-detect based on button count if not explicitly set
   const buttonsColumns = useMemo(() => {
     if (hero?.buttonsColumns) return hero.buttonsColumns;
-    // Auto-detect: 1 button = 1 col, 2 buttons = 2 cols, 3+ buttons = 3 cols max
+    // Auto-detect: 1 button = 1 col, 2 buttons = 2 cols, 3-4 buttons = 3 or 4 cols
     const count = ctaButtons.length;
     if (count <= 1) return 1;
     if (count === 2) return 2;
-    return Math.min(count, 3) as 1 | 2 | 3;
+    if (count === 3) return 3;
+    return 4 as 1 | 2 | 3 | 4;
   }, [hero?.buttonsColumns, ctaButtons.length]);
   
-  // Button drag handlers for reordering
-  const handleButtonDragStart = useCallback((e: React.DragEvent, index: number) => {
-    if (!editable || !hero?.ctaButtons) return;
-    setDraggedButtonIndex(index);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', index.toString());
-    // Add visual feedback
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '0.5';
-  }, [editable, hero?.ctaButtons]);
-
-  const handleButtonDragEnd = useCallback((e: React.DragEvent) => {
-    const target = e.currentTarget as HTMLElement;
-    target.style.opacity = '1';
-    setDraggedButtonIndex(null);
-    setDropTargetIndex(null);
-  }, []);
-
-  const handleButtonDragOver = useCallback((e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (draggedButtonIndex !== null && draggedButtonIndex !== index) {
-      setDropTargetIndex(index);
-    }
-  }, [draggedButtonIndex]);
-
-  const handleButtonDragLeave = useCallback(() => {
-    setDropTargetIndex(null);
-  }, []);
-
-  const handleButtonDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedButtonIndex === null || draggedButtonIndex === dropIndex || !onEdit || !hero?.ctaButtons) {
-      setDraggedButtonIndex(null);
-      setDropTargetIndex(null);
-      return;
-    }
-    
-    // Reorder buttons
-    const newButtons = [...hero.ctaButtons];
-    const [movedButton] = newButtons.splice(draggedButtonIndex, 1);
-    newButtons.splice(dropIndex, 0, movedButton);
-    
-    onEdit('hero.ctaButtons', newButtons as any);
-    setDraggedButtonIndex(null);
-    setDropTargetIndex(null);
-  }, [draggedButtonIndex, hero?.ctaButtons, onEdit]);
+  // Compute effective grid layout (backwards compatible with buttonsColumns)
+  const effectiveGridLayout = useMemo(() => {
+    return getEffectiveGridLayout(ctaButtons, hero?.buttonsGridLayout, buttonsColumns);
+  }, [ctaButtons, hero?.buttonsGridLayout, buttonsColumns]);
   
-  // Update columns based on drop position (auto-detect columns from layout)
-  const handleContainerDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    if (!buttonsContainerRef.current || !onEdit || !hero?.ctaButtons || ctaButtons.length <= 1) return;
-    
-    const container = buttonsContainerRef.current;
-    const rect = container.getBoundingClientRect();
-    const dropX = e.clientX - rect.left;
-    const containerWidth = rect.width;
-    
-    // Determine columns based on where the button was dropped
-    const dropRatio = dropX / containerWidth;
-    let newColumns: 1 | 2 | 3;
-    
-    if (ctaButtons.length === 2) {
-      // For 2 buttons: left third = 1 col, middle = 2 cols, right = 2 cols
-      newColumns = dropRatio < 0.33 ? 1 : 2;
-    } else {
-      // For 3+ buttons: left = 1 col, middle = 2 cols, right = 3 cols
-      if (dropRatio < 0.25) newColumns = 1;
-      else if (dropRatio < 0.6) newColumns = 2;
-      else newColumns = 3;
+  // Handle grid layout changes from the editor
+  const handleGridLayoutChange = useCallback((newLayout: ButtonGridLayout) => {
+    if (onEdit) {
+      onEdit('hero.buttonsGridLayout', newLayout as any);
     }
-    
-    if (newColumns !== buttonsColumns) {
-      onEdit('hero.buttonsColumns', newColumns as any);
+  }, [onEdit]);
+  
+  // Handle button style changes from the editor
+  const handleButtonStylesChange = useCallback((newStyles: import('../types').ButtonStyles) => {
+    if (onEdit) {
+      onEdit('hero.buttonStyles', newStyles as any);
     }
-  }, [buttonsColumns, ctaButtons.length, hero?.ctaButtons, onEdit]);
+  }, [onEdit]);
+  
+  // Handle hero images change from the image editor
+  const handleHeroImagesChange = useCallback((newImages: string[]) => {
+    if (onEdit) {
+      // Filter out any invalid blob URLs before saving
+      const validImages = newImages.filter(url => url && !url.startsWith('blob:'));
+      onEdit('hero.heroImages', validImages as any);
+      // Also update the primary image for backward compatibility
+      if (validImages.length > 0) {
+        onEdit('hero.heroLargeImageUrl', validImages[0]);
+      }
+    }
+  }, [onEdit]);
+  
+  // Handle slideshow interval change
+  const handleSlideshowIntervalChange = useCallback((interval: number) => {
+    if (onEdit) {
+      onEdit('hero.slideshowInterval', interval.toString());
+    }
+  }, [onEdit]);
+  
+  // Helper to check if a URL is valid (not an expired blob URL)
+  const isValidImageUrl = useCallback((url: string): boolean => {
+    if (!url) return false;
+    // Blob URLs are temporary and expire - they should never be stored
+    if (url.startsWith('blob:')) return false;
+    // Valid URLs: idb:// (IndexedDB), https://, http://, or relative paths
+    return url.startsWith('idb://') || url.startsWith('https://') || url.startsWith('http://') || url.startsWith('/');
+  }, []);
   
   // Determine layout style - handle both string and potential type mismatches
   const layoutStyle = hero?.layoutStyle || 'standard';
@@ -298,13 +429,21 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [layoutStyle, isFullwidthOverlay]);
   
-  // Get all hero images (for slideshow support)
+  // Get all hero images (for slideshow support), filtering out invalid/expired URLs
   const heroImages = useMemo(() => {
+    // Filter function to remove expired blob URLs
+    const filterValidUrls = (urls: string[]) => urls.filter(url => 
+      url && !url.startsWith('blob:') // Blob URLs are temporary and expire between sessions
+    );
+    
     if (hero?.heroImages && hero.heroImages.length > 0) {
-      return hero.heroImages;
+      const validImages = filterValidUrls(hero.heroImages);
+      if (validImages.length > 0) {
+        return validImages;
+      }
     }
-    // Backwards compatibility: use single image if no array exists
-    if (hero?.heroLargeImageUrl) {
+    // Backwards compatibility: use single image if no array exists (or all array images were invalid)
+    if (hero?.heroLargeImageUrl && !hero.heroLargeImageUrl.startsWith('blob:')) {
       return [hero.heroLargeImageUrl];
     }
     return [];
@@ -415,7 +554,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   
   // Get button styles based on variant
   const getButtonStyles = (button: HeroCtaButton, isHovered: boolean, index: number) => {
-    const defaultBg = colorPalette?.primary || hero?.colors?.ctaBackground || '#2563eb';
+    // Prioritize explicitly set ctaBackground over palette
+    const defaultBg = hero?.colors?.ctaBackground || colorPalette?.primary || '#2563eb';
     const defaultText = hero?.colors?.ctaText || '#ffffff';
     
     // Use button-specific colors if set, otherwise fall back to defaults
@@ -583,6 +723,199 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
+  // Overlay resize handlers
+  const handleResizeStart = useCallback((e: ReactMouseEvent, direction: string) => {
+    if (!editable || !isFullwidthOverlay || !hero?.overlayBlur) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    setIsResizing(direction);
+    setResizeStartPos({ x: e.clientX, y: e.clientY });
+    // Get current size or defaults
+    const currentWidth = hero?.overlaySize?.width ?? 60;
+    const currentHeight = hero?.overlaySize?.height ?? 50;
+    const currentBottomPadding = hero?.overlaySize?.bottomPadding ?? 0;
+    setResizeStartSize({ width: currentWidth, height: currentHeight });
+    setResizeStartBottomPadding(currentBottomPadding);
+  }, [editable, isFullwidthOverlay, hero?.overlayBlur, hero?.overlaySize]);
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!isResizing || !onEdit) return;
+    
+    // Get the hero container for percentage calculations
+    const heroContainer = containerRef.current?.closest('.relative.w-full') as HTMLElement;
+    if (!heroContainer) return;
+    
+    const containerRect = heroContainer.getBoundingClientRect();
+    const deltaX = e.clientX - resizeStartPos.x;
+    const deltaY = e.clientY - resizeStartPos.y;
+    
+    // Convert pixel delta to percentage for width
+    const percentDeltaX = (deltaX / containerRect.width) * 100;
+    
+    let newWidth = resizeStartSize.width;
+    
+    // Handle width resize directions
+    if (isResizing.includes('e')) {
+      newWidth = resizeStartSize.width + percentDeltaX * 2; // *2 because we resize from center
+    }
+    if (isResizing.includes('w')) {
+      newWidth = resizeStartSize.width - percentDeltaX * 2;
+    }
+    
+    // Clamp width (allow up to 100%)
+    newWidth = Math.max(30, Math.min(100, newWidth));
+    
+    // Handle bottom padding resize (south direction) - uses pixels directly
+    if (isResizing === 's') {
+      const newBottomPadding = Math.max(0, Math.min(300, resizeStartBottomPadding + deltaY));
+      onEdit('hero.overlaySize', { 
+        width: hero?.overlaySize?.width ?? newWidth, 
+        height: hero?.overlaySize?.height ?? 50,
+        bottomPadding: newBottomPadding 
+      } as any);
+    } else {
+      // Width resize only
+      onEdit('hero.overlaySize', { 
+        width: newWidth, 
+        height: hero?.overlaySize?.height ?? 50,
+        bottomPadding: hero?.overlaySize?.bottomPadding ?? 0
+      } as any);
+    }
+  }, [isResizing, resizeStartPos, resizeStartSize, resizeStartBottomPadding, hero?.overlaySize, onEdit]);
+
+  const handleResizeEnd = useCallback(() => {
+    setIsResizing(null);
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [isResizing, handleResizeMove, handleResizeEnd]);
+
+  // Button group position drag handlers (for any layout that supports repositioning)
+  const handleButtonsDragStart = useCallback((e: ReactMouseEvent) => {
+    if (!editable) return;
+    
+    // Don't drag if clicking on actual buttons
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.closest('button')) {
+      return;
+    }
+    
+    e.preventDefault();
+    setIsDraggingButtons(true);
+    setButtonsDragStartPos({ x: e.clientX, y: e.clientY });
+  }, [editable]);
+
+  const handleButtonsDragMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingButtons || !onEdit) return;
+    
+    // Find the appropriate container based on layout type
+    let container: HTMLElement | null = null;
+    
+    if (isFullwidthOverlay) {
+      // For fullwidth, use the hero media container
+      container = buttonsFloatingRef.current?.closest('.relative.w-full') as HTMLElement;
+    } else {
+      // For standard layout, use the text column (parent with 'text-left' class)
+      container = buttonsFloatingRef.current?.closest('.text-left') as HTMLElement 
+        || buttonsFloatingRef.current?.closest('section') as HTMLElement;
+    }
+    
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
+    const deltaX = e.clientX - buttonsDragStartPos.x;
+    const deltaY = e.clientY - buttonsDragStartPos.y;
+    
+    const currentX = hero?.buttonsPosition?.x ?? 50;
+    const currentY = hero?.buttonsPosition?.y ?? (isFullwidthOverlay ? 85 : 70);
+    
+    const percentDeltaX = (deltaX / containerRect.width) * 100;
+    const percentDeltaY = (deltaY / containerRect.height) * 100;
+    
+    const newX = Math.max(10, Math.min(90, currentX + percentDeltaX));
+    const newY = Math.max(10, Math.min(95, currentY + percentDeltaY));
+    
+    onEdit('hero.buttonsPosition', { x: newX, y: newY } as any);
+    setButtonsDragStartPos({ x: e.clientX, y: e.clientY });
+  }, [isDraggingButtons, buttonsDragStartPos, hero?.buttonsPosition, onEdit, isFullwidthOverlay]);
+
+  const handleButtonsDragEnd = useCallback(() => {
+    setIsDraggingButtons(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDraggingButtons) {
+      document.addEventListener('mousemove', handleButtonsDragMove);
+      document.addEventListener('mouseup', handleButtonsDragEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleButtonsDragMove);
+        document.removeEventListener('mouseup', handleButtonsDragEnd);
+      };
+    }
+  }, [isDraggingButtons, handleButtonsDragMove, handleButtonsDragEnd]);
+
+  // Social links position drag handlers (for fullwidth overlay)
+  const handleSocialLinksDragStart = useCallback((e: ReactMouseEvent) => {
+    if (!editable || !isFullwidthOverlay) return;
+    
+    // Don't drag if clicking on actual links
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' || target.closest('a')) {
+      return;
+    }
+    
+    e.preventDefault();
+    setIsDraggingSocialLinks(true);
+    setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
+  }, [editable, isFullwidthOverlay]);
+
+  const handleSocialLinksDragMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingSocialLinks || !onEdit) return;
+    
+    const heroContainer = socialLinksFloatingRef.current?.closest('.relative.w-full') as HTMLElement;
+    if (!heroContainer) return;
+    
+    const containerRect = heroContainer.getBoundingClientRect();
+    const deltaX = e.clientX - socialLinksDragStartPos.x;
+    const deltaY = e.clientY - socialLinksDragStartPos.y;
+    
+    const currentX = hero?.socialLinksPosition?.x ?? 50;
+    const currentY = hero?.socialLinksPosition?.y ?? 92;
+    
+    const percentDeltaX = (deltaX / containerRect.width) * 100;
+    const percentDeltaY = (deltaY / containerRect.height) * 100;
+    
+    const newX = Math.max(10, Math.min(90, currentX + percentDeltaX));
+    const newY = Math.max(10, Math.min(98, currentY + percentDeltaY));
+    
+    onEdit('hero.socialLinksPosition', { x: newX, y: newY } as any);
+    setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
+  }, [isDraggingSocialLinks, socialLinksDragStartPos, hero?.socialLinksPosition, onEdit]);
+
+  const handleSocialLinksDragEnd = useCallback(() => {
+    setIsDraggingSocialLinks(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDraggingSocialLinks) {
+      document.addEventListener('mousemove', handleSocialLinksDragMove);
+      document.addEventListener('mouseup', handleSocialLinksDragEnd);
+      return () => {
+        document.removeEventListener('mousemove', handleSocialLinksDragMove);
+        document.removeEventListener('mouseup', handleSocialLinksDragEnd);
+      };
+    }
+  }, [isDraggingSocialLinks, handleSocialLinksDragMove, handleSocialLinksDragEnd]);
+
   // Preload resources for faster loading
   const preloadHints = useMemo(() => {
     const hints = [];
@@ -631,7 +964,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
-            <div className="order-2 lg:order-1 text-left">
+            <div className="order-2 lg:order-1 text-left relative">
               <div className="animate-fade-in">
               <EditableText
                 as="h1"
@@ -692,67 +1025,79 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 showFontPicker={true}
               />
                 
-                {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
+                {/* CTA Buttons - repositionable container for standard layout */}
                 <div 
-                  ref={buttonsContainerRef}
-                  className={`grid gap-4 ${
-                    isMobile 
-                      ? 'grid-cols-1' 
-                      : buttonsColumns === 1 
-                        ? 'grid-cols-1 max-w-xs' 
-                        : buttonsColumns === 2 
-                          ? 'grid-cols-2 max-w-md' 
-                          : 'grid-cols-3 max-w-xl'
-                  }`}
-                  onDrop={editable && ctaButtons.length > 1 ? handleContainerDrop : undefined}
-                  onDragOver={editable ? (e) => e.preventDefault() : undefined}
+                  ref={buttonsFloatingRef}
+                  className={`relative ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`}
+                  style={{
+                    // For standard layout, use relative positioning by default
+                    // If buttonsPosition is set, use absolute positioning within the text column
+                    ...(hero?.buttonsPosition ? {
+                      position: 'absolute' as const,
+                      left: `${hero.buttonsPosition.x}%`,
+                      top: `${hero.buttonsPosition.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                      zIndex: 20,
+                    } : {})
+                  }}
+                  onMouseDown={handleButtonsDragStart}
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      e.stopPropagation();
+                    }
+                  }}
                 >
-                  {ctaButtons.map((button, index) => (
-                    <div
-                      key={button.id}
-                      draggable={editable && hero?.ctaButtons && ctaButtons.length > 1}
-                      onDragStart={(e) => handleButtonDragStart(e, index)}
-                      onDragEnd={handleButtonDragEnd}
-                      onDragOver={(e) => handleButtonDragOver(e, index)}
-                      onDragLeave={handleButtonDragLeave}
-                      onDrop={(e) => handleButtonDrop(e, index)}
-                      className={`${editable && hero?.ctaButtons && ctaButtons.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${
-                        dropTargetIndex === index ? 'ring-2 ring-blue-400 ring-offset-2 rounded-lg' : ''
-                      } ${draggedButtonIndex === index ? 'opacity-50' : ''}`}
+                  {/* Move handle indicator for editor */}
+                  {editable && !isMobile && (
+                    <div 
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <button
-                        onClick={editable ? undefined : () => onButtonClick(button)}
-                        className={`w-full group inline-flex items-center justify-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
-                        style={{ 
-                          ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                          cursor: editable ? (hero?.ctaButtons && ctaButtons.length > 1 ? 'grab' : 'text') : 'pointer'
-                        }}
-                        onMouseEnter={() => setHoveredButtonId(button.id)}
-                        onMouseLeave={() => setHoveredButtonId(null)}
-                      >
-                        <EditableText
-                          value={button.label}
-                          path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                          editable={editable}
-                          onEdit={onEdit}
-                          placeholder="Button text"
-                          textSize={button.labelTextSize || 1.0}
-                          onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                          textSizeLabel="CTA Button Text Size"
-                        />
-                        {(button.showArrow !== false) && (
-                          <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                        )}
-                      </button>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      Move Buttons
+                      {/* Reset button - only show when position has been customized */}
+                      {hero?.buttonsPosition && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit) {
+                              onEdit('hero.buttonsPosition', null as any);
+                            }
+                          }}
+                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                          title="Reset to default position"
+                        >
+                          Reset
+                        </button>
+                      )}
                     </div>
-                  ))}
+                  )}
+                  
+                  <ButtonGridEditor
+                    buttons={ctaButtons}
+                    gridLayout={effectiveGridLayout}
+                    onLayoutChange={handleGridLayoutChange}
+                    onButtonClick={onButtonClick}
+                    editable={editable}
+                    colorPalette={colorPalette}
+                    defaultCtaBg={hero?.colors?.ctaBackground}
+                    defaultCtaText={hero?.colors?.ctaText}
+                    getButtonStyles={getButtonStyles}
+                    ctaButtons={hero?.ctaButtons}
+                    onEdit={onEdit}
+                    payment={payment}
+                    isFullwidthOverlay={false}
+                    isMobile={isMobile}
+                    buttonStyles={hero?.buttonStyles}
+                    onButtonStylesChange={handleButtonStylesChange}
+                  />
                 </div>
-                {/* Column hint for editor */}
-                {editable && hero?.ctaButtons && ctaButtons.length > 1 && !isMobile && (
-                  <p className="text-xs text-gray-400 mt-2 select-none">
-                    Drag buttons to reorder • Drop at edge to change columns ({buttonsColumns} col{buttonsColumns > 1 ? 's' : ''})
-                  </p>
-                )}
+                
+                {/* Social Links - smaller and left aligned to match button grid */}
+                <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} />
               </div>
             </div>
 
@@ -840,6 +1185,25 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                             />
                           );
                         })}
+                        {/* Edit Image(s) button - top right corner */}
+                        {editable && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowImageEditor(true);
+                            }}
+                            className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-3 py-1.5 bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white text-xs font-medium rounded-lg shadow-lg transition-all duration-200 hover:scale-105 border border-white/20"
+                            title="Edit hero images"
+                          >
+                            <PhotoIcon className="w-4 h-4" />
+                            <span>Edit Image{heroImages.length > 1 ? 's' : ''}</span>
+                            {heroImages.length > 1 && (
+                              <span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">
+                                {heroImages.length}
+                              </span>
+                            )}
+                          </button>
+                        )}
                         {editable && onHeroImageClick && (
                           <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
                             <div className="bg-black/60 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg">
@@ -875,6 +1239,18 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             <div className="absolute bottom-20 left-0 w-96 h-96 bg-gradient-to-tr from-primary-100 to-transparent rounded-full transform -translate-x-32 opacity-20"></div>
           </div>
         </section>
+        
+        {/* Hero Image Editor Modal */}
+        {showImageEditor && editable && (
+          <HeroImageEditor
+            images={heroImages}
+            slideshowInterval={slideshowInterval}
+            onImagesChange={handleHeroImagesChange}
+            onSlideshowIntervalChange={handleSlideshowIntervalChange}
+            onAddImage={onHeroImageAddClick}
+            onClose={() => setShowImageEditor(false)}
+          />
+        )}
       </>
     );
   }
@@ -910,13 +1286,15 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 style={{ 
                   border: 'none', 
                   pointerEvents: 'none',
+                  position: 'absolute',
                   top: '50%',
                   left: '50%',
-                  width: '100vw',
-                  height: '100vh',
                   transform: 'translate(-50%, -50%)',
-                  minWidth: '100%',
-                  minHeight: '100%'
+                  // Object-fit: cover behavior for iframes
+                  // Use vmax (larger of vw/vh) to ensure video covers container regardless of orientation
+                  // This maintains aspect ratio while guaranteeing full coverage with center crop
+                  width: `${100 / (videoAspectRatio / 100)}vmax`,
+                  height: '100vmax',
                 }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                 frameBorder="0"
@@ -1011,6 +1389,26 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           {/* Overlay gradient for better text readability */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/20 to-black/40 z-10"></div>
           
+          {/* Edit Image(s) button - positioned above the overlay gradient (z-30) */}
+          {editable && hero?.mediaType !== 'video' && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowImageEditor(true);
+              }}
+              className="absolute top-4 right-4 z-30 flex items-center gap-1.5 px-3 py-1.5 bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white text-xs font-medium rounded-lg shadow-lg transition-all duration-200 hover:scale-105 border border-white/20"
+              title="Edit hero images"
+            >
+              <PhotoIcon className="w-4 h-4" />
+              <span>Edit Image{heroImages.length > 1 ? 's' : ''}</span>
+              {heroImages.length > 1 && (
+                <span className="bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-full ml-0.5">
+                  {heroImages.length}
+                </span>
+              )}
+            </button>
+          )}
+          
           {/* Text overlay content - constrained positioning area */}
           <div 
             className="absolute inset-0 z-20 px-4 sm:px-6 lg:px-8"
@@ -1032,8 +1430,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   justifyContent: 'center',
                   alignItems: 'center',
                   minHeight: '100%',
-                  width: '56rem',
-                  maxWidth: 'calc(100% - 2rem)',
+                  // When blur overlay is used, allow full width; otherwise constrain to 56rem
+                  width: hero?.overlayBlur ? '100%' : '56rem',
+                  maxWidth: hero?.overlayBlur ? '100%' : 'calc(100% - 2rem)',
                   margin: '0 auto',
                   // For custom positioning on desktop (non-mobile)
                   ...((!isMobile && hero?.overlayPosition) ? {
@@ -1050,7 +1449,44 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 }}
               >
               {hero?.overlayBlur ? (
-                <div className="relative bg-black/50 rounded-2xl p-8 md:p-12">
+                <div 
+                  ref={overlayRef}
+                  className="relative bg-black/50 backdrop-blur-sm rounded-2xl p-8 md:p-12"
+                  style={{
+                    width: hero?.overlaySize?.width ? `${hero.overlaySize.width}%` : 'auto',
+                    minWidth: isMobile ? '90%' : '400px',
+                    maxWidth: '100%',
+                    paddingBottom: hero?.overlaySize?.bottomPadding ? `${(hero.overlaySize.bottomPadding) + 48}px` : undefined, // 48px is base padding (p-12)
+                  }}
+                >
+                  {/* Recenter button - subtle control in top right */}
+                  {editable && !isMobile && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onEdit) {
+                          onEdit('hero.overlayPosition', { x: 50, y: 50 } as any);
+                        }
+                      }}
+                      className="absolute top-2 right-2 px-2 py-1 rounded-md bg-white/10 hover:bg-white/25 backdrop-blur-sm border border-white/20 flex items-center gap-1 transition-all duration-200 group z-10"
+                      title="Center overlay in hero"
+                    >
+                      {/* Crosshairs/center icon */}
+                      <svg 
+                        className="w-3 h-3 text-white/70 group-hover:text-white transition-colors" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="12" r="3" strokeWidth="2" />
+                        <path strokeLinecap="round" strokeWidth="2" d="M12 2v4M12 18v4M2 12h4M18 12h4" />
+                      </svg>
+                      <span className="text-[10px] font-medium text-white/70 group-hover:text-white transition-colors uppercase tracking-wide">
+                        Recenter
+                      </span>
+                    </button>
+                  )}
                   <EditableText
                     as="h1"
                     className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6 text-white"
@@ -1083,7 +1519,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   />
                   <EditableText
                     as="p"
-                    className={`text-lg md:text-xl lg:text-2xl mb-8 leading-relaxed text-white/90 ${(hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true') ? 'font-bold' : ''}`}
+                    className={`text-lg md:text-xl lg:text-2xl leading-relaxed text-white/90 ${(hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true') ? 'font-bold' : ''}`}
                     style={{ 
                       color: hero?.colors?.subheadline,
                       textAlign: hero?.subheadlineAlign || 'center'
@@ -1116,64 +1552,29 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showFontPicker={true}
                   />
                   
-                  {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
-                  <div 
-                    className={`grid gap-4 w-full ${
-                      isMobile 
-                        ? 'grid-cols-1' 
-                        : buttonsColumns === 1 
-                          ? 'grid-cols-1 max-w-xs mx-auto' 
-                          : buttonsColumns === 2 
-                            ? 'grid-cols-2 max-w-lg mx-auto' 
-                            : 'grid-cols-3 max-w-2xl mx-auto'
-                    }`}
-                    style={{ justifyItems: hero?.ctaAlign === 'left' ? 'start' : hero?.ctaAlign === 'right' ? 'end' : 'center' }}
-                    onDrop={editable && ctaButtons.length > 1 ? handleContainerDrop : undefined}
-                    onDragOver={editable ? (e) => e.preventDefault() : undefined}
-                  >
-                    {ctaButtons.map((button, index) => (
-                      <div
-                        key={button.id}
-                        draggable={editable && hero?.ctaButtons && ctaButtons.length > 1}
-                        onDragStart={(e) => handleButtonDragStart(e, index)}
-                        onDragEnd={handleButtonDragEnd}
-                        onDragOver={(e) => handleButtonDragOver(e, index)}
-                        onDragLeave={handleButtonDragLeave}
-                        onDrop={(e) => handleButtonDrop(e, index)}
-                        className={`${editable && hero?.ctaButtons && ctaButtons.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${
-                          dropTargetIndex === index ? 'ring-2 ring-blue-400 ring-offset-2 rounded-lg' : ''
-                        } ${draggedButtonIndex === index ? 'opacity-50' : ''} w-full`}
-                      >
-                        <button
-                          onClick={editable ? undefined : () => onButtonClick(button)}
-                          className={`w-full group inline-flex items-center justify-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
-                          style={{ 
-                            ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                            cursor: editable ? (hero?.ctaButtons && ctaButtons.length > 1 ? 'grab' : 'text') : 'pointer'
-                          }}
-                          onMouseEnter={() => setHoveredButtonId(button.id)}
-                          onMouseLeave={() => setHoveredButtonId(null)}
-                        >
-                          <EditableText
-                            value={button.label}
-                            path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                            editable={editable}
-                            onEdit={onEdit}
-                            placeholder="Button text"
-                            textSize={button.labelTextSize || 1.0}
-                            onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                            textSizeLabel="CTA Button Text Size"
-                            textAlign={hero?.ctaAlign || 'center'}
-                            onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
-                            showAlignmentToggle={index === 0}
-                          />
-                          {(button.showArrow !== false) && (
-                            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  {/* Resize handles - only visible in edit mode */}
+                  {editable && (
+                    <>
+                      {/* Left edge */}
+                      <div 
+                        className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-12 bg-blue-500/80 hover:bg-blue-400 rounded-full cursor-ew-resize transition-colors"
+                        onMouseDown={(e) => handleResizeStart(e, 'w')}
+                        title="Drag to resize width"
+                      />
+                      {/* Right edge */}
+                      <div 
+                        className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-3 h-12 bg-blue-500/80 hover:bg-blue-400 rounded-full cursor-ew-resize transition-colors"
+                        onMouseDown={(e) => handleResizeStart(e, 'e')}
+                        title="Drag to resize width"
+                      />
+                      {/* Bottom edge - expands space below text */}
+                      <div 
+                        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 h-3 w-12 bg-green-500/80 hover:bg-green-400 rounded-full cursor-ns-resize transition-colors"
+                        onMouseDown={(e) => handleResizeStart(e, 's')}
+                        title="Drag down to add space below text"
+                      />
+                    </>
+                  )}
                 </div>
               ) : (
                 <>
@@ -1243,73 +1644,167 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
                     showFontPicker={true}
                   />
-                  
-                  {/* CTA Buttons Grid - responsive with drag reorder on desktop */}
-                  <div 
-                    className={`grid gap-4 w-full ${
-                      isMobile 
-                        ? 'grid-cols-1' 
-                        : buttonsColumns === 1 
-                          ? 'grid-cols-1 max-w-xs mx-auto' 
-                          : buttonsColumns === 2 
-                            ? 'grid-cols-2 max-w-lg mx-auto' 
-                            : 'grid-cols-3 max-w-2xl mx-auto'
-                    }`}
-                    style={{ justifyItems: hero?.ctaAlign === 'left' ? 'start' : hero?.ctaAlign === 'right' ? 'end' : 'center' }}
-                    onDrop={editable && ctaButtons.length > 1 ? handleContainerDrop : undefined}
-                    onDragOver={editable ? (e) => e.preventDefault() : undefined}
-                  >
-                    {ctaButtons.map((button, index) => (
-                      <div
-                        key={button.id}
-                        draggable={editable && hero?.ctaButtons && ctaButtons.length > 1}
-                        onDragStart={(e) => handleButtonDragStart(e, index)}
-                        onDragEnd={handleButtonDragEnd}
-                        onDragOver={(e) => handleButtonDragOver(e, index)}
-                        onDragLeave={handleButtonDragLeave}
-                        onDrop={(e) => handleButtonDrop(e, index)}
-                        className={`${editable && hero?.ctaButtons && ctaButtons.length > 1 ? 'cursor-grab active:cursor-grabbing' : ''} ${
-                          dropTargetIndex === index ? 'ring-2 ring-blue-400 ring-offset-2 rounded-lg' : ''
-                        } ${draggedButtonIndex === index ? 'opacity-50' : ''} w-full`}
-                      >
-                        <button
-                          onClick={editable ? undefined : () => onButtonClick(button)}
-                          className={`w-full group inline-flex items-center justify-center px-8 py-4 font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-2xl hover:shadow-3xl button-press ${index === 0 ? 'cta-pulse' : ''}`}
-                          style={{ 
-                            ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                            cursor: editable ? (hero?.ctaButtons && ctaButtons.length > 1 ? 'grab' : 'text') : 'pointer'
-                          }}
-                          onMouseEnter={() => setHoveredButtonId(button.id)}
-                          onMouseLeave={() => setHoveredButtonId(null)}
-                        >
-                          <EditableText
-                            value={button.label}
-                            path={hero?.ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                            editable={editable}
-                            onEdit={onEdit}
-                            placeholder="Button text"
-                            textSize={button.labelTextSize || 1.0}
-                            onTextSizeChange={onEdit ? (size: number) => onEdit(hero?.ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                            textSizeLabel="CTA Button Text Size"
-                            textAlign={hero?.ctaAlign || 'center'}
-                            onTextAlignChange={index === 0 && onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.ctaAlign', align) : undefined}
-                            showAlignmentToggle={index === 0}
-                          />
-                          {(button.showArrow !== false) && (
-                            <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
-                          )}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+                  {/* Buttons are rendered in the floating container below for all fullwidth layouts */}
                 </>
               )}
               </div>
+              
+              {/* Floating Social Links - positioned separately (when NOT using blur overlay) */}
+              {!hero?.overlayBlur && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                <div 
+                  ref={socialLinksFloatingRef}
+                  className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
+                  style={{
+                    left: hero?.socialLinksPosition?.x !== undefined ? `${hero.socialLinksPosition.x}%` : '50%',
+                    top: hero?.socialLinksPosition?.y !== undefined ? `${hero.socialLinksPosition.y}%` : '92%',
+                    transform: 'translate(-50%, -50%)',
+                    ...(isMobile ? { left: '50%', top: 'auto', bottom: '1rem', transform: 'translateX(-50%)' } : {})
+                  }}
+                  onMouseDown={handleSocialLinksDragStart}
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {/* Move handle indicator for editor */}
+                  {editable && !isMobile && (
+                    <div 
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      Move Social Links
+                    </div>
+                  )}
+                  
+                  <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
+                </div>
+              )}
+              
+              {/* Floating CTA Buttons - positioned separately, always shown for all fullwidth layouts */}
+              <div 
+                ref={buttonsFloatingRef}
+                className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`}
+                style={{
+                  left: hero?.buttonsPosition?.x !== undefined ? `${hero.buttonsPosition.x}%` : '50%',
+                  top: hero?.buttonsPosition?.y !== undefined ? `${hero.buttonsPosition.y}%` : '85%',
+                  transform: 'translate(-50%, -50%)',
+                  ...(isMobile ? { left: '50%', top: 'auto', bottom: '2rem', transform: 'translateX(-50%)' } : {})
+                }}
+                onMouseDown={handleButtonsDragStart}
+                onClick={(e) => {
+                  // Only stop propagation if clicking on the container itself (not on buttons/grid)
+                  // This prevents the style editor from opening when clicking the drag area edges
+                  if (e.target === e.currentTarget) {
+                    e.stopPropagation();
+                  }
+                }}
+              >
+                {/* Move handle indicator for editor */}
+                {editable && !isMobile && (
+                  <div 
+                    className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
+                    onClick={(e) => e.stopPropagation()} // Prevent click from opening style editor
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                    Move Buttons
+                    {/* Reset button - only show when position has been customized */}
+                    {hero?.buttonsPosition && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onEdit) {
+                            onEdit('hero.buttonsPosition', null as any);
+                          }
+                        }}
+                        className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                        title="Reset to default position"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                )}
+                
+                {/* CTA Buttons Grid - visual drag-and-drop editor */}
+                <ButtonGridEditor
+                  buttons={ctaButtons}
+                  gridLayout={effectiveGridLayout}
+                  onLayoutChange={handleGridLayoutChange}
+                  onButtonClick={onButtonClick}
+                  editable={editable}
+                  colorPalette={colorPalette}
+                  defaultCtaBg={hero?.colors?.ctaBackground}
+                  defaultCtaText={hero?.colors?.ctaText}
+                  getButtonStyles={getButtonStyles}
+                  ctaButtons={hero?.ctaButtons}
+                  onEdit={onEdit}
+                  payment={payment}
+                  isFullwidthOverlay={true}
+                  isMobile={isMobile}
+                  buttonStyles={hero?.buttonStyles}
+                  onButtonStylesChange={handleButtonStylesChange}
+                />
+              </div>
+              
+              {/* Floating Social Links - positioned separately from buttons (only when using blur overlay) */}
+              {hero?.overlayBlur && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                <div 
+                  ref={socialLinksFloatingRef}
+                  className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
+                  style={{
+                    left: hero?.socialLinksPosition?.x !== undefined ? `${hero.socialLinksPosition.x}%` : '50%',
+                    top: hero?.socialLinksPosition?.y !== undefined ? `${hero.socialLinksPosition.y}%` : '92%',
+                    transform: 'translate(-50%, -50%)',
+                    ...(isMobile ? { left: '50%', top: 'auto', bottom: '1rem', transform: 'translateX(-50%)' } : {})
+                  }}
+                  onMouseDown={handleSocialLinksDragStart}
+                  onClick={(e) => {
+                    // Only stop propagation if clicking on the container itself (not on links)
+                    if (e.target === e.currentTarget) {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {/* Move handle indicator for editor */}
+                  {editable && !isMobile && (
+                    <div 
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      Move Social Links
+                    </div>
+                  )}
+                  
+                  <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
+                </div>
+              )}
           </div>
         </div>
       </section>
+      
+      {/* Hero Image Editor Modal */}
+      {showImageEditor && editable && (
+        <HeroImageEditor
+          images={heroImages}
+          slideshowInterval={slideshowInterval}
+          onImagesChange={handleHeroImagesChange}
+          onSlideshowIntervalChange={handleSlideshowIntervalChange}
+          onAddImage={onHeroImageAddClick}
+          onClose={() => setShowImageEditor(false)}
+        />
+      )}
     </>
   );
 };
 
-export default Hero; 
+export default Hero;

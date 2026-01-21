@@ -1,15 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LegalTextModal from './LegalTextModal';
+import TextSizePopup from './TextSizePopup';
 import { useI18nContext } from './I18nProvider';
 import type { Footer as FooterCfg, Layout, SectionKey, Page } from '../types';
 
 // Use public folder assets instead of src/assets to avoid build issues
 const logo = '/logo.png';
 const hidevLogo = '/hidev_logo.png';
+const hidevLogoWhite = '/hidev_logo_white.png';
+
+// Calculate if a hex color is dark (luminance < 0.5)
+function isColorDark(hexColor: string): boolean {
+  // Handle empty/invalid colors - default to light (use dark logo)
+  if (!hexColor || hexColor === 'transparent') return false;
+  
+  // Remove # if present
+  const hex = hexColor.replace('#', '');
+  
+  // Handle shorthand hex (e.g., #fff)
+  const fullHex = hex.length === 3 
+    ? hex.split('').map(c => c + c).join('')
+    : hex;
+  
+  // Parse RGB values
+  const r = parseInt(fullHex.substring(0, 2), 16);
+  const g = parseInt(fullHex.substring(2, 4), 16);
+  const b = parseInt(fullHex.substring(4, 6), 16);
+  
+  // Check for invalid parsing
+  if (isNaN(r) || isNaN(g) || isNaN(b)) return false;
+  
+  // Calculate relative luminance using sRGB formula
+  // https://www.w3.org/TR/WCAG20/#relativeluminancedef
+  const sRGB = [r, g, b].map(val => {
+    const s = val / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  
+  const luminance = 0.2126 * sRGB[0] + 0.7152 * sRGB[1] + 0.0722 * sRGB[2];
+  
+  // Return true if luminance is less than 0.5 (dark background)
+  return luminance < 0.5;
+}
 
 type Props = { 
   businessName?: string; 
@@ -28,6 +64,8 @@ type Props = {
 const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, pages, currentPageSlug, isMultipage, editable, onEdit, isPreview }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [hidevLogoPopupOpen, setHidevLogoPopupOpen] = useState(false);
+  const hidevLogoRef = useRef<HTMLDivElement>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -50,8 +88,11 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   const showPrivacyPolicy = footer?.showPrivacyPolicy === true || footer?.showPrivacyPolicy === 'true';
   const showTermsAndConditions = footer?.showTermsAndConditions === true || footer?.showTermsAndConditions === 'true';
   
-  // Calculate logo size
+  // Calculate logo size and nav link size
   const logoSize = footer?.logoSize || 1.0;
+  const navLinkSize = footer?.navLinkSize || 1.0;
+  // HiDev logo size: 1.0 = default/max (2.5rem), can only go smaller
+  const hidevLogoSize = footer?.hidevLogoSize || 1.0;
   
   // Base logo heights for different screen sizes (in rem)
   const baseLogoHeights = {
@@ -66,6 +107,15 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
     md: baseLogoHeights.md * logoSize,
     lg: baseLogoHeights.lg * logoSize
   };
+  
+  // HiDev logo base height is 2.5rem, calculate actual height
+  const hidevLogoHeight = 2.5 * hidevLogoSize;
+  const hidevLogoMaxWidth = 100 * hidevLogoSize;
+  
+  // Determine which Hi Dev logo to use based on footer background darkness
+  const footerBgColor = footer?.colors?.background || '#ffffff';
+  const useWhiteHidevLogo = isColorDark(footerBgColor);
+  const activeHidevLogo = useWhiteHidevLogo ? hidevLogoWhite : hidevLogo;
 
   // Handle navigation - supports both section scrolling and page switching
   const handleNavigation = (id: string, isPage: boolean = false, slug?: string) => {
@@ -233,11 +283,11 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
               max-width: 280px;
             }
           }
-          /* HiDev logo fixed sizing - not affected by business logo scaling */
-          .hidev-logo-fixed {
-            height: 2.5rem !important;
+          /* HiDev logo sizing - controlled by hidevLogoSize setting */
+          .hidev-logo-scaled {
+            height: var(--hidev-logo-height, 2.5rem) !important;
             width: auto !important;
-            max-width: 100px !important;
+            max-width: var(--hidev-logo-max-width, 100px) !important;
           }
         `
       }} />
@@ -247,7 +297,9 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           backgroundColor: footer?.colors?.background || '#ffffff',
           '--logo-height-sm': `${logoHeights.sm}rem`,
           '--logo-height-md': `${logoHeights.md}rem`,
-          '--logo-height-lg': `${logoHeights.lg}rem`
+          '--logo-height-lg': `${logoHeights.lg}rem`,
+          '--hidev-logo-height': `${hidevLogoHeight}rem`,
+          '--hidev-logo-max-width': `${hidevLogoMaxWidth}px`
         } as React.CSSProperties & { [key: string]: string }}
       >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
@@ -303,6 +355,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                 key={link.id}
                 onClick={() => handleNavigation(link.id, link.isPage, link.slug)}
                 className={`footer-link text-gray-600 font-medium ${link.isActive ? 'underline' : ''}`}
+                style={{ fontSize: `${navLinkSize}rem` }}
               >
                 {link.key}
               </button>
@@ -310,19 +363,38 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           </nav>
 
           {/* Hi Dev Logo Right */}
-          <div className="flex-shrink-0">
-            <Link
-              href="/partners/"
-              className="block logo-hover"
-            >
-              <Image
-                src={hidevLogo}
-                alt="Hi Dev Mobile"
-                height={40}
-                width={100}
-                className="hidev-logo-fixed logo-hover transition-all duration-300 ease-in-out"
-              />
-            </Link>
+          <div className="flex-shrink-0" ref={hidevLogoRef}>
+            {editable ? (
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setHidevLogoPopupOpen(true);
+                }}
+                className="cursor-pointer outline-none ring-0 hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60 rounded"
+              >
+                <Image
+                  src={activeHidevLogo}
+                  alt="Hi Dev Mobile"
+                  height={40}
+                  width={100}
+                  className="hidev-logo-scaled logo-hover transition-all duration-300 ease-in-out"
+                />
+              </div>
+            ) : (
+              <Link
+                href="/partners/"
+                className="block logo-hover"
+              >
+                <Image
+                  src={activeHidevLogo}
+                  alt="Hi Dev Mobile"
+                  height={40}
+                  width={100}
+                  className="hidev-logo-scaled logo-hover transition-all duration-300 ease-in-out"
+                />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -382,6 +454,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                 key={link.id}
                 onClick={() => handleNavigation(link.id, link.isPage, link.slug)}
                 className={`footer-link text-gray-600 font-medium ${link.isActive ? 'underline' : ''}`}
+                style={{ fontSize: `${navLinkSize}rem` }}
               >
                 {link.key}
               </button>
@@ -390,18 +463,37 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
 
           {/* Hi Dev Logo Bottom */}
           <div className="flex justify-center pt-2">
-            <Link
-              href="/partners/"
-              className="block logo-hover"
-            >
-              <Image
-                src={hidevLogo}
-                alt="Hi Dev Mobile"
-                height={40}
-                width={100}
-                className="hidev-logo-fixed logo-hover transition-all duration-300 ease-in-out"
-              />
-            </Link>
+            {editable ? (
+              <div
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setHidevLogoPopupOpen(true);
+                }}
+                className="cursor-pointer outline-none ring-0 hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60 rounded"
+              >
+                <Image
+                  src={activeHidevLogo}
+                  alt="Hi Dev Mobile"
+                  height={40}
+                  width={100}
+                  className="hidev-logo-scaled logo-hover transition-all duration-300 ease-in-out"
+                />
+              </div>
+            ) : (
+              <Link
+                href="/partners/"
+                className="block logo-hover"
+              >
+                <Image
+                  src={activeHidevLogo}
+                  alt="Hi Dev Mobile"
+                  height={40}
+                  width={100}
+                  className="hidev-logo-scaled logo-hover transition-all duration-300 ease-in-out"
+                />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -471,6 +563,26 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         editable={editable}
         onEdit={onEdit ? (value: string) => onEdit('footer.termsAndConditionsText', value) : undefined}
       />
+      
+      {/* Hi Dev Logo Size Popup */}
+      {editable && (
+        <TextSizePopup
+          isOpen={hidevLogoPopupOpen}
+          onClose={() => setHidevLogoPopupOpen(false)}
+          textSize={hidevLogoSize}
+          onTextSizeChange={(size) => {
+            if (onEdit) {
+              onEdit('footer.hidevLogoSize', size.toString());
+            }
+          }}
+          targetElement={hidevLogoRef.current}
+          label="Hi Dev Logo Size"
+          presetSizes={[0.5, 0.7, 0.85, 1.0]}
+          normalSize={1.0}
+          minSize={0.4}
+          maxSize={1.0}
+        />
+      )}
     </footer>
     </>
   );

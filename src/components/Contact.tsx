@@ -25,7 +25,7 @@ import {
 import axios from 'axios';
 import Botpoison from '@botpoison/browser';
 import { formatPhoneNumber, stripPhoneNumber } from '../lib/phoneUtils';
-import type { Contact as ContactCfg, BusinessInfo, ColorPalette, License } from '../types';
+import type { Contact as ContactCfg, BusinessInfo, ColorPalette, License, SocialLinksConfig } from '../types';
 
 const FORMSPARK_ACTION_URL = 'https://submit-form.com/n1Wkyb8df';
 
@@ -42,6 +42,7 @@ type Props = {
   colorPalette?: ColorPalette;
   siteUrl?: string;
   sectionId?: string;
+  socialLinks?: SocialLinksConfig;
 };
 
 const formatBusinessHours = (businessHours?: ContactCfg['businessHours'] | BusinessInfo['businessHours'], t?: (key: string, defaultValue?: string) => string) => {
@@ -109,7 +110,7 @@ const generateMapEmbedUrl = (address: string): string => {
   return `https://maps.google.com/maps?width=100%25&height=600&hl=en&q=${encodedAddress}&t=&z=14&ie=UTF8&iwloc=B&output=embed`;
 };
 
-const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, siteUrl, sectionId = 'contact' }) => {
+const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, siteUrl, sectionId = 'contact', socialLinks }) => {
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -671,189 +672,199 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                 </div>
 
                 {/* Dynamic Social Media Links */}
-                {contact?.social && Object.values(contact.social).some(url => url && url.trim()) && (
-                  <div className="border-t border-gray-300 pt-6 px-4 sm:px-0 mb-4">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                      {t('contact.followUs', 'Follow Us')}
-                    </h4>
-                    <div className="flex flex-wrap gap-3">
-                      {contact.social.facebook && (
-                        <a
-                          href={contact.social.facebook}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
-                          aria-label="Follow us on Facebook"
-                        >
-                          <FaFacebookF className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.twitter && (
-                        <a
-                          href={contact.social.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
-                          aria-label="Follow us on X (Twitter)"
-                        >
-                          <FaXTwitter className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.instagram && (
-                        <a
-                          href={contact.social.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-pink-600 flex items-center justify-center"
-                          aria-label="Follow us on Instagram"
-                        >
-                          <FaInstagram className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.linkedin && (
-                        <a
-                          href={contact.social.linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-700 flex items-center justify-center"
-                          aria-label="Connect with us on LinkedIn"
-                        >
-                          <FaLinkedinIn className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.youtube && (
-                        <a
-                          href={contact.social.youtube}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
-                          aria-label="Follow us on YouTube"
-                        >
-                          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                          </svg>
-                        </a>
-                      )}
-                      {contact.social.tiktok && (
-                        <a
-                          href={contact.social.tiktok}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
-                          aria-label="Follow us on TikTok"
-                        >
-                          <FaTiktok className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.yelp && (
-                        <a
-                          href={contact.social.yelp}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
-                          aria-label="Review us on Yelp"
-                        >
-                          <FaYelp className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.googleBusinessProfile && (
-                        <a
-                          href={contact.social.googleBusinessProfile}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
-                          aria-label="View our Google Business Profile"
-                        >
-                          <FaGoogle className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.other && (
-                        <a
-                          href={contact.social.other}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center"
-                          aria-label="Visit our other social link"
-                        >
-                          <FaStar className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.doordash && (
-                        <a
-                          href={contact.social.doordash}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-500 flex items-center justify-center"
-                          aria-label="Order from us on DoorDash"
-                        >
-                          <SiDoordash className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.ubereats && (
-                        <a
-                          href={contact.social.ubereats}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-600 flex items-center justify-center"
-                          aria-label="Order from us on Uber Eats"
-                        >
-                          <SiUbereats className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.grubhub && (
-                        <a
-                          href={contact.social.grubhub}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 p-1 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-orange-600 flex items-center justify-center"
-                          aria-label="Order from us on Grubhub"
-                        >
-                          <SiGrubhub className="h-8 w-8" />
-                        </a>
-                      )}
-                      {contact.social.postmates && (
-                        <a
-                          href={contact.social.postmates}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
-                          aria-label="Order from us on Postmates"
-                        >
-                          <SiPostmates className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.instacart && (
-                        <a
-                          href={contact.social.instacart}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-500 flex items-center justify-center"
-                          aria-label="Order from us on Instacart"
-                        >
-                          <SiInstacart className="h-5 w-5" />
-                        </a>
-                      )}
-                      {contact.social.toast && (
-                        <a
-                          href={contact.social.toast}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-12 h-12 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
-                          aria-label="Order from us on Toast"
-                        >
-                          <Image 
-                            src="/toast-logo.png" 
-                            alt="Toast" 
-                            width={32}
-                            height={32}
-                            loading="lazy"
-                            className="object-contain"
-                          />
-                        </a>
-                      )}
+                {(() => {
+                  // Use centralized socialLinks if available and showInContact is true (default)
+                  // Fall back to contact.social for backward compatibility
+                  const showInContact = socialLinks?.showInContact ?? true;
+                  const social = socialLinks?.links || contact?.social;
+                  const hasSocialLinks = social && Object.values(social).some(url => url && url.trim());
+                  
+                  if (!showInContact || !hasSocialLinks) return null;
+                  
+                  return (
+                    <div className="border-t border-gray-300 pt-6 px-4 sm:px-0 mb-4">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                        {t('contact.followUs', 'Follow Us')}
+                      </h4>
+                      <div className="flex flex-wrap gap-3">
+                        {social.facebook && (
+                          <a
+                            href={social.facebook}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
+                            aria-label="Follow us on Facebook"
+                          >
+                            <FaFacebookF className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.twitter && (
+                          <a
+                            href={social.twitter}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            aria-label="Follow us on X (Twitter)"
+                          >
+                            <FaXTwitter className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.instagram && (
+                          <a
+                            href={social.instagram}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-pink-600 flex items-center justify-center"
+                            aria-label="Follow us on Instagram"
+                          >
+                            <FaInstagram className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.linkedin && (
+                          <a
+                            href={social.linkedin}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-700 flex items-center justify-center"
+                            aria-label="Connect with us on LinkedIn"
+                          >
+                            <FaLinkedinIn className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.youtube && (
+                          <a
+                            href={social.youtube}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
+                            aria-label="Follow us on YouTube"
+                          >
+                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                            </svg>
+                          </a>
+                        )}
+                        {social.tiktok && (
+                          <a
+                            href={social.tiktok}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            aria-label="Follow us on TikTok"
+                          >
+                            <FaTiktok className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.yelp && (
+                          <a
+                            href={social.yelp}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
+                            aria-label="Review us on Yelp"
+                          >
+                            <FaYelp className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.googleBusinessProfile && (
+                          <a
+                            href={social.googleBusinessProfile}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
+                            aria-label="View our Google Business Profile"
+                          >
+                            <FaGoogle className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.other && (
+                          <a
+                            href={social.other}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center"
+                            aria-label="Visit our other social link"
+                          >
+                            <FaStar className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.doordash && (
+                          <a
+                            href={social.doordash}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-500 flex items-center justify-center"
+                            aria-label="Order from us on DoorDash"
+                          >
+                            <SiDoordash className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.ubereats && (
+                          <a
+                            href={social.ubereats}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-600 flex items-center justify-center"
+                            aria-label="Order from us on Uber Eats"
+                          >
+                            <SiUbereats className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.grubhub && (
+                          <a
+                            href={social.grubhub}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 p-1 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-orange-600 flex items-center justify-center"
+                            aria-label="Order from us on Grubhub"
+                          >
+                            <SiGrubhub className="h-8 w-8" />
+                          </a>
+                        )}
+                        {social.postmates && (
+                          <a
+                            href={social.postmates}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            aria-label="Order from us on Postmates"
+                          >
+                            <SiPostmates className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.instacart && (
+                          <a
+                            href={social.instacart}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-500 flex items-center justify-center"
+                            aria-label="Order from us on Instacart"
+                          >
+                            <SiInstacart className="h-5 w-5" />
+                          </a>
+                        )}
+                        {social.toast && (
+                          <a
+                            href={social.toast}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-12 h-12 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                            aria-label="Order from us on Toast"
+                          >
+                            <Image 
+                              src="/toast-logo.png" 
+                              alt="Toast" 
+                              width={32}
+                              height={32}
+                              loading="lazy"
+                              className="object-contain"
+                            />
+                          </a>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
 

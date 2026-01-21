@@ -10,6 +10,7 @@ export type Header = {
   logoSize?: number; // Logo size multiplier (0.5 to 3.0, default 1.0)
   expandableHeader?: boolean; // Whether header should expand when logo gets too large
   textSize?: number; // Text size multiplier (0.5 to 2.0, default 1.0)
+  navLinkSize?: number; // Nav link text size multiplier (0.75 to 1.5, default 1.0)
 };
 
 // Hero CTA button type for multiple buttons support
@@ -24,6 +25,27 @@ export type HeroCtaButton = {
   backgroundColor?: string; // Override button background color
   textColor?: string; // Override button text color
   showArrow?: boolean; // Whether to show arrow icon (default: true for first button)
+};
+
+// Button grid layout for visual drag-and-drop positioning
+export type ButtonGridPosition = {
+  buttonId: string;  // Reference to the button's id
+  row: number;       // Row index (0-based)
+  col: number;       // Column index (0-based)
+};
+
+export type ButtonGridLayout = {
+  positions: ButtonGridPosition[];  // Array of button positions in the grid
+};
+
+// Global button styling options for the hero CTA buttons
+export type ButtonStyles = {
+  paddingX?: number;      // Horizontal padding in px (default: 32)
+  paddingY?: number;      // Vertical padding in px (default: 16)
+  borderRadius?: number;  // Border radius in px (default: 8)
+  fontFamily?: string;    // Font family (default: inherit)
+  fontSize?: number;      // Font size in px (default: 16)
+  fontWeight?: number;    // Font weight (default: 600)
 };
 
 export type Hero = {
@@ -49,7 +71,10 @@ export type Hero = {
   };
   // Multiple CTA buttons (takes precedence over single cta)
   ctaButtons?: HeroCtaButton[];
-  buttonsColumns?: 1 | 2 | 3; // Number of columns for button grid on desktop (auto-detected if not set)
+  buttonsColumns?: 1 | 2 | 3 | 4; // Number of columns for button grid on desktop (auto-detected if not set)
+  // Visual grid layout for buttons - if set, takes precedence over buttonsColumns for positioning
+  buttonsGridLayout?: ButtonGridLayout;
+  buttonStyles?: ButtonStyles; // Global styling for all CTA buttons
   ctaAlign?: 'left' | 'center' | 'right'; // CTA button alignment in fullwidth overlay
   phone?: string;
   colors?: { headline?: string; subheadline?: string; ctaText?: string; ctaBackground?: string };
@@ -67,6 +92,11 @@ export type Hero = {
   layoutStyle?: 'standard' | 'fullwidth-overlay'; // Default: 'standard'
   overlayBlur?: boolean; // Enable dark translucent background box for overlay text
   overlayPosition?: { x: number; y: number }; // Position of overlay text (x, y as percentages 0-100)
+  overlaySize?: { width: number; height: number; bottomPadding?: number }; // Size of overlay box (percentages 20-100), bottomPadding in pixels for extra space below text
+  // Button group positioning for fullwidth overlay (outside blur container)
+  buttonsPosition?: { x: number; y: number }; // Position of buttons group (x, y as percentages 0-100)
+  // Social links positioning for fullwidth overlay
+  socialLinksPosition?: { x: number; y: number }; // Position of social links (x, y as percentages 0-100)
 };
 
 export type AboutStatistic = {
@@ -107,6 +137,8 @@ export type ServiceItem = {
   alt?: string;
   // Optional thumbnail URL for cropped version (backwards compatible)
   thumbnailUrl?: string;
+  // Optional hyperlink that opens in new tab when service image/card is clicked
+  linkUrl?: string;
 };
 
 export type Services = {
@@ -297,6 +329,13 @@ export type SocialMedia = {
   toast?: string;
 };
 
+// Centralized social links configuration
+export type SocialLinksConfig = {
+  links?: SocialMedia;
+  showInHero?: boolean;
+  showInContact?: boolean;
+};
+
 export type BusinessHours = {
   Monday?: string | { open: string; close: string };
   Tuesday?: string | { open: string; close: string };
@@ -354,6 +393,8 @@ export type Footer = {
   copyrightTextSize?: number;
   logoSize?: number; // Logo size multiplier (0.5 to 3.0, default 1.0)
   textSize?: number; // Business name text size multiplier (0.5 to 2.0, default 1.0)
+  navLinkSize?: number; // Nav link text size multiplier (0.75 to 1.5, default 1.0)
+  hidevLogoSize?: number; // Hi Dev logo size multiplier (0.4 to 1.0, default 1.0 = max size)
   showPrivacyPolicy?: boolean | string; // Toggle privacy policy link visibility (stored as string in editor)
   privacyPolicyText?: string; // Privacy policy content (supports text/HTML)
   showTermsAndConditions?: boolean | string; // Toggle terms and conditions link visibility (stored as string in editor)
@@ -513,6 +554,8 @@ export type SiteData = {
   payment?: Payment;
   layout?: Layout;
   colorPalette?: ColorPalette;
+  // Centralized social links configuration
+  socialLinks?: SocialLinksConfig;
   // Additional section instances for multipage sites (e.g., "hero_abc123": {...})
   sectionInstances?: SectionInstances;
 };

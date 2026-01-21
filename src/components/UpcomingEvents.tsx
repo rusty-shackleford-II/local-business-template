@@ -31,6 +31,17 @@ const UpcomingEventsSection: React.FC<Props> = ({ upcomingEvents: upcomingEvents
   const [isModalOpen, setIsModalOpen] = useState(false);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Update Swiper when events change to recalculate slide widths
+  useEffect(() => {
+    if (swiperRef.current) {
+      // Small delay to allow DOM to update first
+      const timer = setTimeout(() => {
+        swiperRef.current?.update();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [upcomingEventsProp?.items?.length, upcomingEventsProp?.items]);
 
   // Handle upcomingEvents data with proper fallback logic
   const upcomingEvents = upcomingEventsProp || {

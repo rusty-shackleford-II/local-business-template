@@ -29,6 +29,7 @@ export type SiteData = SiteDataType & {
   // Image upload handlers
   onLogoClick?: () => void;
   onHeroImageClick?: () => void;
+  onServiceImageClick?: (service: import('../types').ServiceItem, index: number) => void;
   // Multipage props
   currentPageSlug?: string; // For preview mode - parent controls current page
   onPageChange?: (slug: string) => void; // Callback when page changes
@@ -352,6 +353,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           onHeroImageClick={site.onHeroImageClick}
           colorPalette={site.colorPalette}
           sectionId={customSectionId}
+          socialLinks={site.socialLinks}
         />;
       case 'about':
         const aboutData = sectionData as AboutType || site.about;
@@ -370,6 +372,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           backgroundClass={backgroundClass}
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('services.', '')}`, value) : undefined}
+          onServiceImageClick={site.onServiceImageClick}
           colorPalette={site.colorPalette}
           sectionId={customSectionId}
         />;
@@ -451,10 +454,18 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           businessInfo={site.businessInfo} 
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('contact.', '')}`, value) : undefined}
+          onEdit={site.onEdit ? (path, value) => {
+            // businessInfo paths should go directly to top-level, not nested under contact
+            if (path.startsWith('businessInfo.')) {
+              site.onEdit!(path, value);
+            } else {
+              site.onEdit!(`${editBasePath}.${path.replace('contact.', '')}`, value);
+            }
+          } : undefined}
           colorPalette={site.colorPalette}
           siteUrl={site.seo?.canonicalUrl}
           sectionId={customSectionId}
+          socialLinks={site.socialLinks}
         />;
       default:
         return null;

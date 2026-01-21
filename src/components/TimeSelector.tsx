@@ -46,16 +46,13 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   // Track if a change was made to prevent blur from closing prematurely
   const changeInProgressRef = useRef(false);
 
   const displayValue = value ? convertTo12Hour(value) : placeholder;
 
-  // DEBUG
-  console.log('[TimeSelector] render', { value, editable, isEditing, displayValue });
-
   const handleClick = () => {
-    console.log('[TimeSelector] handleClick', { editable });
     if (editable) {
       setIsEditing(true);
     }
@@ -63,31 +60,44 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 
   const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTime = e.target.value;
-    console.log('[TimeSelector] handleTimeChange FIRED', { newTime, previousValue: value });
     changeInProgressRef.current = true;
     onChange(newTime);
     // Small delay to ensure state update completes before unmounting
     setTimeout(() => {
-      console.log('[TimeSelector] closing after change');
       setIsEditing(false);
       changeInProgressRef.current = false;
-    }, 50);
+    }, 100);
   };
 
-  const handleBlur = () => {
-    console.log('[TimeSelector] handleBlur FIRED', { changeInProgress: changeInProgressRef.current });
-    // Delay blur handling to allow time picker selection to register
-    // This prevents the input from closing before a selection is made
-    setTimeout(() => {
-      console.log('[TimeSelector] blur timeout, changeInProgress:', changeInProgressRef.current);
-      if (!changeInProgressRef.current) {
+  // Handle click outside to close - more reliable than blur for native time pickers
+  useEffect(() => {
+    if (!isEditing) return;
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      // Don't close if change is in progress
+      if (changeInProgressRef.current) return;
+      
+      // Check if click is outside the container
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsEditing(false);
       }
-    }, 200);
-  };
+    };
+    
+    // Use a small delay to prevent immediate closing when the picker opens
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isEditing]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
+      setIsEditing(false);
+    } else if (e.key === 'Enter') {
       setIsEditing(false);
     }
   };
@@ -95,7 +105,12 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.showPicker?.();
+      // Try to show the native picker
+      try {
+        inputRef.current.showPicker?.();
+      } catch {
+        // showPicker may throw in some browsers/contexts - ignore
+      }
     }
   }, [isEditing]);
 
@@ -105,15 +120,16 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 
   if (isEditing) {
     return (
-      <input
-        ref={inputRef}
-        type="time"
-        value={value || "12:00"}
-        onChange={handleTimeChange}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className={`${className} px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
-      />
+      <div ref={containerRef} className="inline-block">
+        <input
+          ref={inputRef}
+          type="time"
+          value={value || "12:00"}
+          onChange={handleTimeChange}
+          onKeyDown={handleKeyDown}
+          className={`${className} px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
+        />
+      </div>
     );
   }
 

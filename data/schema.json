@@ -377,7 +377,8 @@
               },
               "imageUrl": { "type": "string", "format": "uri-reference" },
               "alt": { "type": "string" },
-              "thumbnailUrl": { "type": "string", "format": "uri-reference" }
+              "thumbnailUrl": { "type": "string", "format": "uri-reference" },
+              "linkUrl": { "type": "string", "format": "uri", "description": "Optional hyperlink that opens in new tab when clicked" }
             },
             "required": ["id", "title", "description"]
           }

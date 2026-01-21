@@ -1,18 +1,19 @@
 import React from 'react';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
-import type { Services, ColorPalette } from '../types';
+import type { Services, ColorPalette, ServiceItem } from '../types';
 
 type Props = { 
   services?: Services;
   backgroundClass?: string;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
+  onServiceImageClick?: (service: ServiceItem, index: number) => void;
   colorPalette?: ColorPalette;
   sectionId?: string;
 };
 
-const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = 'bg-gray-50', editable, onEdit, colorPalette, sectionId = 'services' }) => {
+const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = 'bg-gray-50', editable, onEdit, onServiceImageClick, colorPalette, sectionId = 'services' }) => {
 
   const services = servicesProp ?? {
     title: "Our Services",
@@ -82,71 +83,110 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
           />
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {(Array.isArray(services.items) ? services.items : []).map((service) => (
-            <div
-              key={service.id}
-              className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group"
-            >
-              {/* Service Image */}
-              <div className="relative aspect-[4/3] overflow-hidden">
-                {service.imageUrl ? (
-                  <IdbImage 
-                    src={service.imageUrl}
-                    alt={service.alt || service.title}
-                    fill
-                    loading="lazy"
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-                    <div className="text-primary-600 text-4xl font-bold">
-                      {service.title.substring(0, 2).toUpperCase()}
+        {/* Services Grid - flex with center justify for incomplete rows */}
+        <div className="flex flex-wrap justify-center gap-8">
+          {(Array.isArray(services.items) ? services.items : []).map((service, index) => {
+            const hasLink = !editable && service.linkUrl;
+            const CardWrapper = hasLink ? 'a' : 'div';
+            const cardProps = hasLink ? {
+              href: service.linkUrl,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+            } : {};
+            
+            return (
+              <CardWrapper
+                key={service.id}
+                {...cardProps}
+                className={`w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.334rem)] bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group ${hasLink ? 'cursor-pointer' : ''}`}
+              >
+                {/* Service Image */}
+                <div 
+                  className={`relative aspect-[4/3] overflow-hidden ${editable && onServiceImageClick ? 'cursor-pointer' : ''}`}
+                  onClick={editable && onServiceImageClick ? (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onServiceImageClick(service, index);
+                  } : undefined}
+                >
+                  {service.imageUrl ? (
+                    <IdbImage 
+                      src={service.imageUrl}
+                      alt={service.alt || service.title}
+                      fill
+                      loading="lazy"
+                      className={`object-cover group-hover:scale-105 transition-transform duration-300 ${editable && onServiceImageClick ? 'group-hover:opacity-75' : ''}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+                      <div className="text-primary-600 text-4xl font-bold">
+                        {service.title.substring(0, 2).toUpperCase()}
+                      </div>
                     </div>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-              </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                  
+                  {/* Edit overlay for clicking on image in edit mode */}
+                  {editable && onServiceImageClick && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      <div className="bg-black/60 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-lg flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Edit Image & Link
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Link indicator badge (non-edit mode) */}
+                  {!editable && service.linkUrl && (
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg z-10">
+                      <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
 
-              {/* Service Content */}
-              <div className="p-6">
-                <EditableText
-                  as="h3"
-                  className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-200"
-                  value={service.title}
-                  path={`services.items.${services.items.indexOf(service)}.title`}
-                  editable={editable}
-                  onEdit={onEdit}
-                  placeholder="Service title"
-                  textSize={services.titleTextSize || 1.25} // Uniform size for ALL service titles
-                  onTextSizeChange={onEdit ? (size: number) => onEdit(`services.titleTextSize`, size.toString()) : undefined}
-                  textSizeLabel="Service Title Size (All Cards)"
-                  textSizePresets={[1.0, 1.25, 1.5, 1.75]} // Medium headline presets
-                  textSizeNormal={1.25} // 20px - sister site medium headline size
-                  textSizeMin={0.875}
-                  textSizeMax={2.25}
-                />
-                <EditableText
-                  as="p"
-                  className="text-gray-600 leading-relaxed"
-                  value={service.description}
-                  path={`services.items.${services.items.indexOf(service)}.description`}
-                  editable={editable}
-                  onEdit={onEdit}
-                  placeholder="Service description"
-                  multiline
-                  textSize={services.descriptionTextSize || 1.0} // Uniform size for ALL service descriptions
-                  onTextSizeChange={onEdit ? (size: number) => onEdit(`services.descriptionTextSize`, size.toString()) : undefined}
-                  textSizeLabel="Service Description Size (All Cards)"
-                  textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
-                  textSizeNormal={1.0} // 16px - standard body text
-                  textSizeMin={0.75}
-                  textSizeMax={1.75}
-                />
-              </div>
-            </div>
-          ))}
+                {/* Service Content */}
+                <div className="p-6">
+                  <EditableText
+                    as="h3"
+                    className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-200"
+                    value={service.title}
+                    path={`services.items.${index}.title`}
+                    editable={editable}
+                    onEdit={onEdit}
+                    placeholder="Service title"
+                    textSize={services.titleTextSize || 1.25} // Uniform size for ALL service titles
+                    onTextSizeChange={onEdit ? (size: number) => onEdit(`services.titleTextSize`, size.toString()) : undefined}
+                    textSizeLabel="Service Title Size (All Cards)"
+                    textSizePresets={[1.0, 1.25, 1.5, 1.75]} // Medium headline presets
+                    textSizeNormal={1.25} // 20px - sister site medium headline size
+                    textSizeMin={0.875}
+                    textSizeMax={2.25}
+                  />
+                  <EditableText
+                    as="p"
+                    className="text-gray-600 leading-relaxed"
+                    value={service.description}
+                    path={`services.items.${index}.description`}
+                    editable={editable}
+                    onEdit={onEdit}
+                    placeholder="Service description"
+                    multiline
+                    textSize={services.descriptionTextSize || 1.0} // Uniform size for ALL service descriptions
+                    onTextSizeChange={onEdit ? (size: number) => onEdit(`services.descriptionTextSize`, size.toString()) : undefined}
+                    textSizeLabel="Service Description Size (All Cards)"
+                    textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
+                    textSizeNormal={1.0} // 16px - standard body text
+                    textSizeMin={0.75}
+                    textSizeMax={1.75}
+                  />
+                </div>
+              </CardWrapper>
+            );
+          })}
         </div>
       </div>
     </section>

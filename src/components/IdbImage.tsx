@@ -14,6 +14,7 @@ interface IdbImageProps {
   priority?: boolean;
   style?: React.CSSProperties;
   onLoad?: () => void;
+  onError?: () => void;
 }
 
 /**
@@ -31,7 +32,8 @@ const IdbImage: React.FC<IdbImageProps> = ({
   loading,
   priority,
   style,
-  onLoad
+  onLoad,
+  onError: onErrorProp
 }) => {
   // Validate src is a string
   const isValidSrc = typeof src === 'string' && src.length > 0;
@@ -94,6 +96,13 @@ const IdbImage: React.FC<IdbImageProps> = ({
     };
   }, [src]);
 
+  // Call onError when hasError becomes true (from idb load failure)
+  useEffect(() => {
+    if (hasError && onErrorProp) {
+      onErrorProp();
+    }
+  }, [hasError, onErrorProp]);
+
   // Show loading placeholder while converting idb:// URL
   if (isLoading) {
     return (
@@ -137,7 +146,10 @@ const IdbImage: React.FC<IdbImageProps> = ({
           height, 
           ...style 
         }}
-        onError={() => setHasError(true)}
+        onError={() => {
+          setHasError(true);
+          onErrorProp?.();
+        }}
         onLoad={onLoad}
         loading={loading}
       />
@@ -157,7 +169,10 @@ const IdbImage: React.FC<IdbImageProps> = ({
       loading={loading}
       priority={priority}
       style={style}
-      onError={() => setHasError(true)}
+      onError={() => {
+        setHasError(true);
+        onErrorProp?.();
+      }}
       onLoad={onLoad}
     />
   );

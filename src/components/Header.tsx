@@ -77,6 +77,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
   // Calculate logo size and header height
   const logoSize = header?.logoSize || 1.0;
   const textSize = header?.textSize || 1.0;
+  const navLinkSize = header?.navLinkSize || 1.0;
   const expandableHeader = header?.expandableHeader ?? true;
   
   // Base logo heights for different screen sizes (in rem)
@@ -533,7 +534,8 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                     className={`nav-link font-medium transition-colors flex items-center gap-1 ${link.isActive ? 'border-b-2' : ''}`}
                     style={{ 
                       color: header?.colors?.navText || '#374151',
-                      borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
+                      borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent',
+                      fontSize: `${navLinkSize}rem`
                     }}
                   >
                     {link.label}
@@ -555,8 +557,11 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                           type="button"
                           key={section.id}
                           onClick={() => handleSectionNavigation(link.slug || '', section.sectionId)}
-                          className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
-                          style={{ color: header?.colors?.navText || '#374151' }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
+                          style={{ 
+                            color: header?.colors?.navText || '#374151',
+                            fontSize: `${navLinkSize * 0.875}rem`
+                          }}
                         >
                           {section.label}
                         </button>
@@ -613,7 +618,8 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                       className={`mobile-nav-link flex-1 text-left font-medium py-2 ${link.isActive ? 'border-l-4 pl-3' : ''}`}
                       style={{ 
                         color: header?.colors?.navText || '#374151',
-                        borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent'
+                        borderColor: link.isActive ? (colorPalette?.primary || header?.colors?.navText || '#374151') : 'transparent',
+                        fontSize: `${navLinkSize}rem`
                       }}
                     >
                       {link.label}
@@ -640,8 +646,11 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                           type="button"
                           key={section.id}
                           onClick={() => handleSectionNavigation(link.slug || '', section.sectionId)}
-                          className="block w-full text-left py-2 text-sm transition-colors hover:opacity-75"
-                          style={{ color: header?.colors?.navText || '#6b7280' }}
+                          className="block w-full text-left py-2 transition-colors hover:opacity-75"
+                          style={{ 
+                            color: header?.colors?.navText || '#6b7280',
+                            fontSize: `${navLinkSize * 0.875}rem`
+                          }}
                         >
                           {section.label}
                         </button>
@@ -655,7 +664,8 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                   onClick={() => handleNavigation('payment', true, false)}
                   className="mobile-nav-link block w-full text-left font-medium py-2"
                   style={{ 
-                    color: header?.colors?.navText || '#374151'
+                    color: header?.colors?.navText || '#374151',
+                    fontSize: `${navLinkSize}rem`
                   }}
                 >
                   {payment.headerCtaLabel || 'Buy Now'}
