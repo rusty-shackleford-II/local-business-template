@@ -106,6 +106,40 @@
       "href": "",
       "phoneNumber": ""
     },
+    "ctaButtons": [
+      {
+        "id": "btn-1",
+        "label": "Book Appointment",
+        "actionType": "contact",
+        "variant": "primary",
+        "showArrow": true
+      },
+      {
+        "id": "btn-2",
+        "label": "Call Us Now",
+        "actionType": "phone",
+        "phoneNumber": "+16503425363",
+        "variant": "secondary",
+        "showArrow": false
+      },
+      {
+        "id": "btn-3",
+        "label": "View Menu",
+        "actionType": "external",
+        "href": "#menu",
+        "variant": "outline",
+        "showArrow": false
+      },
+      {
+        "id": "btn-4",
+        "label": "Get Directions",
+        "actionType": "external",
+        "href": "#contact",
+        "variant": "outline",
+        "showArrow": false
+      }
+    ],
+    "buttonsColumns": 2,
     "phone": "+16503425363",
     "colors": {
       "headline": "#ffffff",
@@ -116,24 +150,24 @@
     "mediaType": "photo",
     "video": {
       "provider": "vimeo",
-      "url": "<iframe title=\"vimeo-player\" src=\"https://player.vimeo.com/video/394353671?h=d1cebace6d\" width=\"640\" height=\"360\" frameborder=\"0\" referrerpolicy=\"strict-origin-when-cross-origin\" allow=\"autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share\"   allowfullscreen></iframe>",
+      "url": "https://vimeo.com/manage/videos/1156236394",
       "autoplay": true,
       "controls": false,
       "loop": true,
       "muted": true
     },
-    "subheadlineTextSize": "1.675",
-    "headlineTextSize": "4.75",
+    "subheadlineTextSize": "1.25",
+    "headlineTextSize": "3.75",
     "heroImages": [
       "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero-image-0_2025-10-03T02-35-52.jpg",
       "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero-image-1_2025-10-03T02-35-53.jpg"
     ],
     "layoutStyle": "fullwidth-overlay",
     "overlayBlur": false,
-    "subheadlineBold": "true",
-    "subheadlineAlign": "left",
-    "headlineAlign": "left",
-    "ctaAlign": "left"
+    "subheadlineBold": false,
+    "subheadlineAlign": "center",
+    "headlineAlign": "center",
+    "ctaAlign": "center"
   },
   "about": {
     "title": "About Wash Cafe",

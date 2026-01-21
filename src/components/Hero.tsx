@@ -276,6 +276,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   
   // Video container dimensions for cover behavior calculation
   const [videoContainerDims, setVideoContainerDims] = useState({ width: 0, height: 0 });
+  const [actualVideoAspect, setActualVideoAspect] = useState<number | null>(null);
   const videoContainerRef = useRef<HTMLDivElement>(null);
   
   // Overlay resize state
@@ -415,7 +416,10 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, []);
   
   // Track video container dimensions for cover behavior calculation
+  // Re-run when video mode is active to ensure we measure after the container is rendered
   useEffect(() => {
+    if (hero?.mediaType !== 'video') return;
+    
     const container = videoContainerRef.current;
     if (!container) return;
     
@@ -424,15 +428,46 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       setVideoContainerDims({ width: rect.width, height: rect.height });
     };
     
-    // Initial measurement
-    updateDimensions();
+    // Initial measurement after a brief delay to ensure layout is complete
+    const timeoutId = setTimeout(updateDimensions, 100);
     
     // Use ResizeObserver for responsive updates
     const resizeObserver = new ResizeObserver(updateDimensions);
     resizeObserver.observe(container);
     
-    return () => resizeObserver.disconnect();
-  }, []);
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+    };
+  }, [hero?.mediaType]);
+  
+  // Fetch actual video dimensions from oEmbed API
+  useEffect(() => {
+    if (hero?.mediaType !== 'video' || !hero?.video?.url) return;
+    
+    const url = hero.video.url;
+    let oembedUrl = '';
+    
+    if (url.includes('vimeo.com')) {
+      oembedUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
+    } else if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    }
+    
+    if (!oembedUrl) return;
+    
+    fetch(oembedUrl)
+      .then(res => res.json())
+      .then(data => {
+        if (data.width && data.height) {
+          setActualVideoAspect(data.width / data.height);
+        }
+      })
+      .catch(() => {
+        // Fallback to 16:9 if API fails
+        setActualVideoAspect(16 / 9);
+      });
+  }, [hero?.mediaType, hero?.video?.url]);
   
   // Fallback: Clear image loading state after a timeout to prevent infinite loading
   useEffect(() => {
@@ -636,14 +671,11 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     } else if (hero.video.provider === 'vimeo') {
       embedSrc = toVimeoEmbed(input, opts);
     } else if (input.includes('vimeo.com')) {
-      console.log('Auto-detected Vimeo, using Vimeo embed');
       embedSrc = toVimeoEmbed(input, opts);
     } else if (input.includes('youtube.com') || input.includes('youtu.be')) {
-      console.log('Auto-detected YouTube, using YouTube embed');
       embedSrc = toYouTubeEmbed(input, opts);
     } else {
       // Fallback to YouTube if provider is not recognized
-      console.warn('Unknown video provider, defaulting to YouTube embed');
       embedSrc = toYouTubeEmbed(input, opts);
     }
     
@@ -651,42 +683,35 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [hero?.mediaType, hero?.video]);
 
   // Calculate video iframe dimensions for "object-fit: cover" behavior
-  // The iframe needs to be MUCH larger than the container so that when 
-  // YouTube/Vimeo internally letterboxes the video, the visible video 
-  // portion still fills our container completely
+  // Uses actual video aspect ratio from oEmbed API, falls back to 16:9
   const videoCoverDimensions = useMemo(() => {
-    // videoAspectRatio is (height/width * 100), e.g., 56.25 for 16:9
-    const aspectRatioHW = videoAspectRatio / 100; // height/width, e.g., 0.5625
-    const aspectRatioWH = 1 / aspectRatioHW; // width/height, e.g., 1.7778
-    
-    // Use measured container if available for precise sizing
     if (videoContainerDims.width > 0 && videoContainerDims.height > 0) {
-      const { width: containerWidth, height: containerHeight } = videoContainerDims;
+      const { width: cw, height: ch } = videoContainerDims;
+      const containerAspect = cw / ch;
+      const vidAspect = actualVideoAspect || 16 / 9; // Use actual or fallback
       
-      // For cover behavior: scale = max(containerWidth, containerHeight * aspectRatioWH)
-      // This ensures the video fills both dimensions
-      const scale = Math.max(containerWidth, containerHeight * aspectRatioWH);
-      
-      return {
-        width: `${scale}px`,
-        height: `${scale * aspectRatioHW}px`,
-      };
+      // Standard object-fit: cover calculation
+      if (containerAspect > vidAspect) {
+        // Container is wider than video - fill width, scale height
+        return { width: `${cw}px`, height: `${cw / vidAspect}px` };
+      } else {
+        // Container is taller than video - fill height, scale width
+        return { width: `${ch * vidAspect}px`, height: `${ch}px` };
+      }
     }
-    
-    // Fallback: Pure CSS approach using vmax (larger of vw/vh)
-    // This guarantees coverage on any screen orientation while maintaining aspect ratio
-    // For a 16:9 video: width = 177.78vmax, height = 100vmax
-    return { 
-      width: `${aspectRatioWH * 100}vmax`,
-      height: '100vmax' 
-    };
-  }, [videoContainerDims, videoAspectRatio]);
+    return { width: '177.78vh', height: '100vh' };
+  }, [videoContainerDims, actualVideoAspect]);
 
   // Reset loading states when media type or source changes
   useEffect(() => {
     if (hero?.mediaType === 'video') {
       setVideoLoading(true);
       setImageLoading(false);
+      
+      // Fallback: Force video to show after 3 seconds even if onLoad doesn't fire
+      // (Some embeds don't trigger onLoad reliably)
+      const fallbackTimer = setTimeout(() => setVideoLoading(false), 3000);
+      return () => clearTimeout(fallbackTimer);
     } else {
       setVideoLoading(false);
       setImageLoading(true);
@@ -1323,7 +1348,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       
       <section id={sectionId} className={`relative ${isPreview ? '' : 'body-padding'} overflow-hidden`}>
         {/* Full-width media background */}
-        <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
+        {/* Mobile height is dynamic based on content; desktop uses fixed heights */}
+        <div className="relative w-full min-h-[500px] md:h-[700px] lg:h-[800px] overflow-hidden flex flex-col md:block">
           {/* Media layer */}
           {hero?.mediaType === 'video' && videoEmbedSrc ? (
             <div ref={videoContainerRef} className="absolute inset-0">
@@ -1338,7 +1364,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               
               <iframe
                 src={videoEmbedSrc}
-                className={`absolute transition-opacity duration-300 ${videoLoading ? 'opacity-0' : 'opacity-100'}`}
+                className={`video-cover-iframe absolute transition-opacity duration-300 ${videoLoading ? 'opacity-0' : 'opacity-100'}`}
                 style={{ 
                   border: 'none', 
                   pointerEvents: 'none',
@@ -1347,10 +1373,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
                   // Object-fit: cover behavior for iframes
-                  // Calculated dimensions ensure the video fills the container with center crop
-                  // even though YouTube/Vimeo players letterbox internally
-                  // The iframe is sized larger than the container, with the video's aspect ratio,
-                  // so the internal video player's content fills our container completely
+                  // We compare container aspect ratio to video aspect ratio (assumed 16:9)
+                  // and scale the iframe so the video overflows and covers completely.
+                  // videoCoverDimensions is calculated based on measured container size.
                   width: videoCoverDimensions.width,
                   height: videoCoverDimensions.height,
                 }}
@@ -1468,26 +1493,32 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           )}
           
           {/* Text overlay content - constrained positioning area */}
+          {/* On mobile: static positioning with flexbox for proper button layout */}
+          {/* On desktop: absolute positioning with custom drag support */}
           <div 
-            className="absolute inset-0 z-20 px-4 sm:px-6 lg:px-8"
-            style={{
+            className={`z-20 px-4 sm:px-6 lg:px-8 ${
+              isMobile 
+                ? 'relative flex flex-col flex-1 pt-20 pb-0' 
+                : 'absolute inset-0'
+            }`}
+            style={isMobile ? {} : {
               paddingTop: '2rem',
               paddingBottom: '2rem'
             }}
           >
               <div 
                 ref={containerRef}
-                className={`relative text-center ${editable && isFullwidthOverlay ? 'cursor-move' : ''} ${isDragging ? 'select-none opacity-80' : ''}`}
-                onMouseDown={handleMouseDown}
+                className={`relative text-center ${editable && isFullwidthOverlay && !isMobile ? 'cursor-move' : ''} ${isDragging ? 'select-none opacity-80' : ''}`}
+                onMouseDown={isMobile ? undefined : handleMouseDown}
                 style={{
                   // Center content in the available space
-                  // On mobile and when no custom position is set, center the content
-                  // The parent container now has padding-top for the header, so we center within the remaining space
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
+                  // On mobile, start from top; on desktop, center vertically
+                  justifyContent: isMobile ? 'flex-start' : 'center',
                   alignItems: 'center',
-                  minHeight: '100%',
+                  // On mobile, let content flow naturally; on desktop, fill container
+                  minHeight: isMobile ? 'auto' : '100%',
                   // When blur overlay is used, allow full width; otherwise constrain to 56rem
                   width: hero?.overlayBlur ? '100%' : '56rem',
                   maxWidth: hero?.overlayBlur ? '100%' : 'calc(100% - 2rem)',
@@ -1500,9 +1531,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     transform: 'translate(-50%, -50%)',
                     margin: '0',
                   } : {}),
-                  outlineWidth: editable && isFullwidthOverlay ? '2px' : '0',
-                  outlineStyle: editable && isFullwidthOverlay ? 'dashed' : 'none',
-                  outlineColor: editable && isFullwidthOverlay && !isDragging ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
+                  outlineWidth: editable && isFullwidthOverlay && !isMobile ? '2px' : '0',
+                  outlineStyle: editable && isFullwidthOverlay && !isMobile ? 'dashed' : 'none',
+                  outlineColor: editable && isFullwidthOverlay && !isDragging && !isMobile ? 'rgba(59, 130, 246, 0.5)' : 'transparent',
                   outlineOffset: '8px',
                 }}
               >
@@ -1708,7 +1739,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               </div>
               
               {/* Floating Social Links - positioned separately (when NOT using blur overlay) */}
-              {!hero?.overlayBlur && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+              {/* On mobile, social links appear after buttons in the flow */}
+              {!hero?.overlayBlur && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && !isMobile && (
                 <div 
                   ref={socialLinksFloatingRef}
                   className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
@@ -1716,7 +1748,6 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     left: hero?.socialLinksPosition?.x !== undefined ? `${hero.socialLinksPosition.x}%` : '50%',
                     top: hero?.socialLinksPosition?.y !== undefined ? `${hero.socialLinksPosition.y}%` : '92%',
                     transform: 'translate(-50%, -50%)',
-                    ...(isMobile ? { left: '50%', top: 'auto', bottom: '1rem', transform: 'translateX(-50%)' } : {})
                   }}
                   onMouseDown={handleSocialLinksDragStart}
                   onClick={(e) => {
@@ -1726,7 +1757,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   }}
                 >
                   {/* Move handle indicator for editor */}
-                  {editable && !isMobile && (
+                  {editable && (
                     <div 
                       className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
@@ -1743,16 +1774,21 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               )}
               
               {/* Floating CTA Buttons - positioned separately, always shown for all fullwidth layouts */}
+              {/* On mobile: static positioning at bottom with proper padding */}
+              {/* On desktop: absolute positioning with drag support */}
               <div 
                 ref={buttonsFloatingRef}
-                className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`}
-                style={{
+                className={`z-30 ${
+                  isMobile 
+                    ? 'w-full mt-auto pb-6 pt-4' 
+                    : `absolute ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`
+                }`}
+                style={isMobile ? {} : {
                   left: hero?.buttonsPosition?.x !== undefined ? `${hero.buttonsPosition.x}%` : '50%',
                   top: hero?.buttonsPosition?.y !== undefined ? `${hero.buttonsPosition.y}%` : '85%',
                   transform: 'translate(-50%, -50%)',
-                  ...(isMobile ? { left: '50%', top: 'auto', bottom: '2rem', transform: 'translateX(-50%)' } : {})
                 }}
-                onMouseDown={handleButtonsDragStart}
+                onMouseDown={isMobile ? undefined : handleButtonsDragStart}
                 onClick={(e) => {
                   // Only stop propagation if clicking on the container itself (not on buttons/grid)
                   // This prevents the style editor from opening when clicking the drag area edges
@@ -1809,10 +1845,18 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   buttonStyles={hero?.buttonStyles}
                   onButtonStylesChange={handleButtonStylesChange}
                 />
+                
+                {/* Mobile social links - rendered after buttons in the flow */}
+                {isMobile && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                  <div className="mt-4 flex justify-center">
+                    <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
+                  </div>
+                )}
               </div>
               
-              {/* Floating Social Links - positioned separately from buttons (only when using blur overlay) */}
-              {hero?.overlayBlur && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+              {/* Floating Social Links - positioned separately from buttons (only when using blur overlay, desktop only) */}
+              {/* On mobile, social links are rendered inside the button container above */}
+              {hero?.overlayBlur && !isMobile && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
                 <div 
                   ref={socialLinksFloatingRef}
                   className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
@@ -1820,7 +1864,6 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     left: hero?.socialLinksPosition?.x !== undefined ? `${hero.socialLinksPosition.x}%` : '50%',
                     top: hero?.socialLinksPosition?.y !== undefined ? `${hero.socialLinksPosition.y}%` : '92%',
                     transform: 'translate(-50%, -50%)',
-                    ...(isMobile ? { left: '50%', top: 'auto', bottom: '1rem', transform: 'translateX(-50%)' } : {})
                   }}
                   onMouseDown={handleSocialLinksDragStart}
                   onClick={(e) => {
@@ -1831,7 +1874,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   }}
                 >
                   {/* Move handle indicator for editor */}
-                  {editable && !isMobile && (
+                  {editable && (
                     <div 
                       className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}

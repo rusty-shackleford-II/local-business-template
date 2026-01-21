@@ -380,11 +380,18 @@ html {
   }
   
   /* Prevent any images or media from causing horizontal overflow */
+  /* Exception: .video-cover-iframe needs to overflow for cover behavior */
   img,
   video,
-  iframe {
+  iframe:not(.video-cover-iframe) {
     max-width: 100%;
     height: auto;
+  }
+  
+  /* Hero video iframe - allow overflow for cover behavior */
+  .video-cover-iframe {
+    max-width: none !important;
+    max-height: none !important;
   }
   
   /* Ensure padding doesn't cause overflow */

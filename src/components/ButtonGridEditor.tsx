@@ -751,9 +751,19 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   // ──────────────────────────────────────────────────────────────────────────
   
   if (isMobile) {
+    // Mobile-specific button sizing
+    // For fullwidth overlay, buttons need to be wider and more prominent
+    const mobileButtonPadding = isFullwidthOverlay 
+      ? { paddingTop: '14px', paddingBottom: '14px', paddingLeft: '24px', paddingRight: '24px' }
+      : { paddingTop: '12px', paddingBottom: '12px', paddingLeft: '20px', paddingRight: '20px' };
+    
+    const mobileFontSize = isFullwidthOverlay
+      ? (buttonStyles.fontSize ? `${buttonStyles.fontSize}px` : '16px')
+      : (buttonStyles.fontSize ? `${Math.max(14, buttonStyles.fontSize * 0.9)}px` : '14px');
+    
     return (
-      <div className="relative">
-        <div className="flex flex-col gap-4 w-full">
+      <div className={`relative ${isFullwidthOverlay ? 'w-full px-4' : ''}`}>
+        <div className={`flex flex-col gap-3 ${isFullwidthOverlay ? 'w-full' : 'w-full'}`}>
           {buttons.map((button, index) => (
             <div
               key={button.id}
@@ -766,10 +776,12 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             >
               <button
                 onClick={editable ? undefined : () => onButtonClick?.(button)}
-                className="w-full group inline-flex items-center justify-center font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press"
+                className="w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press"
                 style={{
                   ...getButtonStyles(button, hoveredButtonId === button.id, index),
                   ...customButtonStyle,
+                  ...mobileButtonPadding,
+                  fontSize: mobileFontSize,
                   cursor: editable ? 'pointer' : 'pointer',
                 }}
                 onMouseEnter={() => setHoveredButtonId(button.id)}
@@ -784,10 +796,10 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
                   textSize={button.labelTextSize || 1.0}
                   onTextSizeChange={onEdit ? (size: number) => onEdit(ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
                   textSizeLabel="CTA Button Text Size"
-                  style={buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : undefined}
+                  style={{ fontSize: mobileFontSize }}
                 />
                 {button.showArrow !== false && (
-                  <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRightIcon className="ml-2 h-5 w-5 flex-shrink-0" />
                 )}
               </button>
             </div>

@@ -83,6 +83,7 @@ export type Hero = {
   video?: {
     provider: 'youtube' | 'vimeo';
     url: string;
+    aspectRatio?: string; // e.g., "16:9", "1:1", "9:16" - used for cover behavior
     autoplay?: boolean;
     controls?: boolean;
     loop?: boolean;
@@ -420,6 +421,7 @@ export type VideoItem = {
   subtitleTextSize?: number;
   provider: 'youtube' | 'vimeo';
   url: string; // Accepts full iframe embed code or URL; component extracts src as needed
+  aspectRatio?: string; // e.g., "16:9", "1:1", "9:16" - used for cover behavior
   autoplay?: boolean;
   controls?: boolean;
   loop?: boolean;
