@@ -751,19 +751,32 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   // ──────────────────────────────────────────────────────────────────────────
   
   if (isMobile) {
-    // Mobile-specific button sizing
-    // For fullwidth overlay, buttons need to be wider and more prominent
+    // Mobile-specific button styling
+    // Ignore desktop width/height settings, use mobile-appropriate sizing
     const mobileButtonPadding = isFullwidthOverlay 
-      ? { paddingTop: '14px', paddingBottom: '14px', paddingLeft: '24px', paddingRight: '24px' }
-      : { paddingTop: '12px', paddingBottom: '12px', paddingLeft: '20px', paddingRight: '20px' };
+      ? { padding: '14px 24px' }
+      : { padding: '12px 20px' };
     
     const mobileFontSize = isFullwidthOverlay
-      ? (buttonStyles.fontSize ? `${buttonStyles.fontSize}px` : '16px')
-      : (buttonStyles.fontSize ? `${Math.max(14, buttonStyles.fontSize * 0.9)}px` : '14px');
+      ? (buttonStyles.fontSize ? `${Math.min(buttonStyles.fontSize, 18)}px` : '16px')
+      : (buttonStyles.fontSize ? `${Math.min(Math.max(14, buttonStyles.fontSize * 0.85), 16)}px` : '14px');
+    
+    // Mobile button style - only use font/radius from desktop, NOT width/height
+    const mobileButtonStyle: React.CSSProperties = {
+      borderRadius: `${buttonStyles.borderRadius ?? 8}px`,
+      fontFamily: buttonStyles.fontFamily || 'inherit',
+      fontSize: mobileFontSize,
+      fontWeight: buttonStyles.fontWeight ?? 600,
+      // Override any width/height constraints - let buttons be full width
+      minWidth: 'unset',
+      width: '100%',
+      height: 'auto',
+      ...mobileButtonPadding,
+    };
     
     return (
-      <div className={`relative ${isFullwidthOverlay ? 'w-full px-4' : ''}`}>
-        <div className={`flex flex-col gap-3 ${isFullwidthOverlay ? 'w-full' : 'w-full'}`}>
+      <div className={`relative ${isFullwidthOverlay ? 'w-full' : ''}`}>
+        <div className="flex flex-col gap-3 w-full">
           {buttons.map((button, index) => (
             <div
               key={button.id}
@@ -779,9 +792,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
                 className="w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press"
                 style={{
                   ...getButtonStyles(button, hoveredButtonId === button.id, index),
-                  ...customButtonStyle,
-                  ...mobileButtonPadding,
-                  fontSize: mobileFontSize,
+                  ...mobileButtonStyle,
                   cursor: editable ? 'pointer' : 'pointer',
                 }}
                 onMouseEnter={() => setHoveredButtonId(button.id)}
