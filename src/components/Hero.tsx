@@ -274,6 +274,10 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const [showImageEditor, setShowImageEditor] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  // Video container dimensions for cover behavior calculation
+  const [videoContainerDims, setVideoContainerDims] = useState({ width: 0, height: 0 });
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  
   // Overlay resize state
   const [isResizing, setIsResizing] = useState<string | null>(null); // 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null
   const [resizeStartPos, setResizeStartPos] = useState({ x: 0, y: 0 });
@@ -408,6 +412,26 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     window.addEventListener('resize', checkMobile);
     
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Track video container dimensions for cover behavior calculation
+  useEffect(() => {
+    const container = videoContainerRef.current;
+    if (!container) return;
+    
+    const updateDimensions = () => {
+      const rect = container.getBoundingClientRect();
+      setVideoContainerDims({ width: rect.width, height: rect.height });
+    };
+    
+    // Initial measurement
+    updateDimensions();
+    
+    // Use ResizeObserver for responsive updates
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(container);
+    
+    return () => resizeObserver.disconnect();
   }, []);
   
   // Fallback: Clear image loading state after a timeout to prevent infinite loading
@@ -625,6 +649,29 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     
     return { videoEmbedSrc: embedSrc, videoAspectRatio: aspectRatio };
   }, [hero?.mediaType, hero?.video]);
+
+  // Calculate video iframe dimensions for "object-fit: cover" behavior
+  // The iframe needs to be sized so that when the video player letterboxes internally,
+  // the actual video content still fills our container
+  const videoCoverDimensions = useMemo(() => {
+    if (videoContainerDims.width === 0 || videoContainerDims.height === 0) {
+      // Fallback to viewport-based sizing before measurement
+      return { width: '200vmax', height: '200vmax' };
+    }
+    
+    const { width: containerWidth, height: containerHeight } = videoContainerDims;
+    // videoAspectRatio is (height/width * 100), e.g., 56.25 for 16:9
+    const aspectRatioHW = videoAspectRatio / 100; // height/width, e.g., 0.5625
+    
+    // For cover behavior: scale = max(containerWidth, containerHeight / aspectRatioHW)
+    // This ensures the video fills both dimensions
+    const scale = Math.max(containerWidth, containerHeight / aspectRatioHW);
+    
+    return {
+      width: `${scale}px`,
+      height: `${scale * aspectRatioHW}px`,
+    };
+  }, [videoContainerDims, videoAspectRatio]);
 
   // Reset loading states when media type or source changes
   useEffect(() => {
@@ -1270,7 +1317,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         <div className="relative w-full h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
           {/* Media layer */}
           {hero?.mediaType === 'video' && videoEmbedSrc ? (
-            <div className="absolute inset-0">
+            <div ref={videoContainerRef} className="absolute inset-0">
               {videoLoading && (
                 <div className="absolute inset-0 bg-gray-900 animate-pulse flex items-center justify-center">
                   <div className="text-center">
@@ -1291,10 +1338,10 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   left: '50%',
                   transform: 'translate(-50%, -50%)',
                   // Object-fit: cover behavior for iframes
-                  // Use vmax (larger of vw/vh) to ensure video covers container regardless of orientation
-                  // This maintains aspect ratio while guaranteeing full coverage with center crop
-                  width: `${100 / (videoAspectRatio / 100)}vmax`,
-                  height: '100vmax',
+                  // Calculated dimensions ensure the video fills the container with center crop
+                  // even though YouTube/Vimeo players letterbox internally
+                  width: videoCoverDimensions.width,
+                  height: videoCoverDimensions.height,
                 }}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen; web-share"
                 frameBorder="0"
