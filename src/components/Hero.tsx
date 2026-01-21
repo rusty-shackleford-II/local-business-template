@@ -651,25 +651,34 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [hero?.mediaType, hero?.video]);
 
   // Calculate video iframe dimensions for "object-fit: cover" behavior
-  // The iframe needs to be sized so that when the video player letterboxes internally,
-  // the actual video content still fills our container
+  // The iframe needs to be MUCH larger than the container so that when 
+  // YouTube/Vimeo internally letterboxes the video, the visible video 
+  // portion still fills our container completely
   const videoCoverDimensions = useMemo(() => {
-    if (videoContainerDims.width === 0 || videoContainerDims.height === 0) {
-      // Fallback to viewport-based sizing before measurement
-      return { width: '200vmax', height: '200vmax' };
-    }
-    
-    const { width: containerWidth, height: containerHeight } = videoContainerDims;
     // videoAspectRatio is (height/width * 100), e.g., 56.25 for 16:9
     const aspectRatioHW = videoAspectRatio / 100; // height/width, e.g., 0.5625
+    const aspectRatioWH = 1 / aspectRatioHW; // width/height, e.g., 1.7778
     
-    // For cover behavior: scale = max(containerWidth, containerHeight / aspectRatioHW)
-    // This ensures the video fills both dimensions
-    const scale = Math.max(containerWidth, containerHeight / aspectRatioHW);
+    // Use measured container if available for precise sizing
+    if (videoContainerDims.width > 0 && videoContainerDims.height > 0) {
+      const { width: containerWidth, height: containerHeight } = videoContainerDims;
+      
+      // For cover behavior: scale = max(containerWidth, containerHeight * aspectRatioWH)
+      // This ensures the video fills both dimensions
+      const scale = Math.max(containerWidth, containerHeight * aspectRatioWH);
+      
+      return {
+        width: `${scale}px`,
+        height: `${scale * aspectRatioHW}px`,
+      };
+    }
     
-    return {
-      width: `${scale}px`,
-      height: `${scale * aspectRatioHW}px`,
+    // Fallback: Pure CSS approach using vmax (larger of vw/vh)
+    // This guarantees coverage on any screen orientation while maintaining aspect ratio
+    // For a 16:9 video: width = 177.78vmax, height = 100vmax
+    return { 
+      width: `${aspectRatioWH * 100}vmax`,
+      height: '100vmax' 
     };
   }, [videoContainerDims, videoAspectRatio]);
 
@@ -1340,6 +1349,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   // Object-fit: cover behavior for iframes
                   // Calculated dimensions ensure the video fills the container with center crop
                   // even though YouTube/Vimeo players letterbox internally
+                  // The iframe is sized larger than the container, with the video's aspect ratio,
+                  // so the internal video player's content fills our container completely
                   width: videoCoverDimensions.width,
                   height: videoCoverDimensions.height,
                 }}
