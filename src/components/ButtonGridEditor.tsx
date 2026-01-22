@@ -670,7 +670,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
         >
           <button
             onClick={editable ? undefined : () => onButtonClick?.(button)}
-            className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton && !editable ? 'button-soft-pulse' : ''}`}
+            className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton ? 'button-soft-pulse' : ''}`}
             style={{
               ...getButtonStyles(button, hoveredButtonId === button.id, buttonIndex),
               ...customButtonStyle,
@@ -821,7 +821,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             >
               <button
                 onClick={editable ? undefined : () => onButtonClick?.(button)}
-                className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton && !editable ? 'button-soft-pulse' : ''}`}
+                className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton ? 'button-soft-pulse' : ''}`}
                 style={{
                   ...getButtonStyles(button, hoveredButtonId === button.id, index),
                   ...mobileButtonStyle,

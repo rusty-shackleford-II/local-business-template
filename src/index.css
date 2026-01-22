@@ -58,15 +58,25 @@
 
   /* Soft pulse animation for single hero buttons */
   .button-soft-pulse {
-    animation: soft-pulse 2.5s ease-in-out infinite;
+    animation: soft-pulse 2s ease-in-out infinite !important;
+    /* Override transition to not interfere with animation */
+    transition: none !important;
+  }
+
+  /* Re-enable hover effects for pulsing button */
+  .button-soft-pulse:hover {
+    transform: scale(1.05) !important;
+    animation-play-state: paused;
   }
 
   @keyframes soft-pulse {
     0%, 100% {
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+      transform: scale(1);
     }
     50% {
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.35), 0 12px 20px -8px rgba(0, 0, 0, 0.25);
+      transform: scale(1.03);
     }
   }
 
