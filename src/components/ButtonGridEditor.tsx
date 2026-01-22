@@ -484,26 +484,58 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   // BUTTON RENDERER
   // ──────────────────────────────────────────────────────────────────────────
   
-  // Compute custom button styles - use explicit dimensions so font size doesn't affect button size
-  // This matches the sample button in the style editor exactly
+  // Check if buttonStyles has any explicit customization (for legacy mode detection)
+  const hasCustomStyles = buttonStyles && (
+    buttonStyles.paddingX !== undefined ||
+    buttonStyles.paddingY !== undefined ||
+    buttonStyles.borderRadius !== undefined ||
+    buttonStyles.fontSize !== undefined ||
+    buttonStyles.fontWeight !== undefined ||
+    buttonStyles.fontFamily !== undefined
+  );
+  
+  // Compute custom button styles
+  // Legacy mode: use natural padding-based sizing
+  // New mode: use explicit dimensions (for button style editor compatibility)
   const paddingX = buttonStyles.paddingX ?? 32;
   const paddingY = buttonStyles.paddingY ?? 16;
-  const customButtonStyle: React.CSSProperties = useMemo(() => ({
-    // Explicit dimensions based on padding (matches sample button in editor)
-    // Base text area assumption: ~100px wide, ~20px tall for "Sample Button"
-    minWidth: `${paddingX * 2 + 100}px`,
-    height: `${paddingY * 2 + 20}px`,
-    // No padding - dimensions already account for visual padding space
-    padding: 0,
-    borderRadius: `${buttonStyles.borderRadius ?? 8}px`,
-    fontFamily: buttonStyles.fontFamily || 'inherit',
-    fontSize: buttonStyles.fontSize ? `${buttonStyles.fontSize}px` : undefined,
-    fontWeight: buttonStyles.fontWeight ?? 600,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxSizing: 'border-box',
-  }), [buttonStyles, paddingX, paddingY]);
+  const customButtonStyle: React.CSSProperties = useMemo(() => {
+    if (!hasCustomStyles) {
+      // Legacy mode: natural sizing with generous padding
+      // Button size is determined by content + padding, not fixed dimensions
+      return {
+        padding: '14px 32px',
+        borderRadius: '8px',
+        fontFamily: 'inherit',
+        fontWeight: 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxSizing: 'border-box',
+      };
+    }
+    
+    // New mode: explicit dimensions (for sites that have used the button style editor)
+    // This matches the sample button in the style editor exactly
+    return {
+      // Base text area assumption: ~100px wide, ~20px tall for "Sample Button"
+      minWidth: `${paddingX * 2 + 100}px`,
+      height: `${paddingY * 2 + 20}px`,
+      // No padding - dimensions already account for visual padding space
+      padding: 0,
+      borderRadius: `${buttonStyles.borderRadius ?? 8}px`,
+      fontFamily: buttonStyles.fontFamily || 'inherit',
+      fontSize: buttonStyles.fontSize ? `${buttonStyles.fontSize}px` : undefined,
+      fontWeight: buttonStyles.fontWeight ?? 600,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxSizing: 'border-box',
+    };
+  }, [buttonStyles, hasCustomStyles, paddingX, paddingY]);
+  
+  // Single button gets a soft pulse animation for emphasis
+  const isSingleButton = buttons.length === 1;
   
   // Track mousedown on grid to detect drags vs clicks
   const handleGridMouseDown = useCallback((e: React.MouseEvent) => {
@@ -638,7 +670,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
         >
           <button
             onClick={editable ? undefined : () => onButtonClick?.(button)}
-            className="w-full group inline-flex items-center justify-center font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press"
+            className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton && !editable ? 'button-soft-pulse' : ''}`}
             style={{
               ...getButtonStyles(button, hoveredButtonId === button.id, buttonIndex),
               ...customButtonStyle,
@@ -789,7 +821,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             >
               <button
                 onClick={editable ? undefined : () => onButtonClick?.(button)}
-                className="w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press"
+                className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton && !editable ? 'button-soft-pulse' : ''}`}
                 style={{
                   ...getButtonStyles(button, hoveredButtonId === button.id, index),
                   ...mobileButtonStyle,

@@ -56,6 +56,20 @@
     }
   }
 
+  /* Soft pulse animation for single hero buttons */
+  .button-soft-pulse {
+    animation: soft-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes soft-pulse {
+    0%, 100% {
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    }
+    50% {
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+    }
+  }
+
   /* Fade In Animation */
   .animate-fade-in {
     animation: fadeIn 200ms ease-out forwards;

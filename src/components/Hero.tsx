@@ -400,6 +400,16 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const layoutStyle = hero?.layoutStyle || 'standard';
   const isFullwidthOverlay = String(layoutStyle).toLowerCase() === 'fullwidth-overlay';
   
+  // Legacy mode detection for fullwidth-overlay
+  // If no explicit positioning/styling has been set, render buttons inline with text (old behavior)
+  // This maintains backwards compatibility with sites created before the drag/position features
+  // Sites with overlayBlur are NOT legacy (blur is a newer feature they explicitly enabled)
+  const isLegacyFullwidthLayout = isFullwidthOverlay && 
+    !hero?.buttonsPosition && 
+    !hero?.overlayPosition &&
+    !hero?.buttonStyles &&
+    !hero?.overlayBlur;
+  
   // Detect mobile screen size for responsive positioning
   useEffect(() => {
     const checkMobile = () => {
@@ -1700,7 +1710,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   />
                   <EditableText
                     as="p"
-                    className={`text-lg md:text-xl lg:text-2xl mb-8 leading-relaxed drop-shadow-xl text-white/90 ${(hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true') ? 'font-bold' : ''}`}
+                    className={`text-lg md:text-xl lg:text-2xl ${isLegacyFullwidthLayout ? 'mb-10' : 'mb-8'} leading-relaxed drop-shadow-xl text-white/90 ${(hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true') ? 'font-bold' : ''}`}
                     style={{ 
                       color: hero?.colors?.subheadline,
                       textShadow: '0 2px 15px rgba(0,0,0,0.6), 0 4px 30px rgba(0,0,0,0.4)',
@@ -1733,14 +1743,42 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
                     showFontPicker={true}
                   />
-                  {/* Buttons are rendered in the floating container below for all fullwidth layouts */}
+                  {/* Legacy mode: render buttons inline with text (grouped as visual unit) */}
+                  {isLegacyFullwidthLayout && (
+                    <div className="flex flex-col items-center">
+                      <ButtonGridEditor
+                        buttons={ctaButtons}
+                        gridLayout={effectiveGridLayout}
+                        onLayoutChange={handleGridLayoutChange}
+                        onButtonClick={onButtonClick}
+                        editable={editable}
+                        colorPalette={colorPalette}
+                        defaultCtaBg={hero?.colors?.ctaBackground}
+                        defaultCtaText={hero?.colors?.ctaText}
+                        getButtonStyles={getButtonStyles}
+                        ctaButtons={hero?.ctaButtons}
+                        onEdit={onEdit}
+                        payment={payment}
+                        isFullwidthOverlay={true}
+                        isMobile={isMobile}
+                        buttonStyles={hero?.buttonStyles}
+                        onButtonStylesChange={handleButtonStylesChange}
+                      />
+                      {/* Social links for legacy layout (mobile and desktop) */}
+                      {socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                        <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-6" />
+                      )}
+                    </div>
+                  )}
+                  {/* Non-legacy: Buttons are rendered in the floating container below */}
                 </>
               )}
               </div>
               
-              {/* Floating Social Links - positioned separately (when NOT using blur overlay) */}
+              {/* Floating Social Links - positioned separately (when NOT using blur overlay, non-legacy) */}
               {/* On mobile, social links appear after buttons in the flow */}
-              {!hero?.overlayBlur && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && !isMobile && (
+              {/* Legacy layouts render social links inline with buttons above */}
+              {!hero?.overlayBlur && !isLegacyFullwidthLayout && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && !isMobile && (
                 <div 
                   ref={socialLinksFloatingRef}
                   className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
@@ -1773,86 +1811,89 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 </div>
               )}
               
-              {/* Floating CTA Buttons - positioned separately, always shown for all fullwidth layouts */}
+              {/* Floating CTA Buttons - positioned separately (only for non-legacy layouts) */}
+              {/* Legacy layouts render buttons inline with the text above */}
               {/* On mobile: static positioning at bottom with proper padding */}
               {/* On desktop: absolute positioning with drag support */}
-              <div 
-                ref={buttonsFloatingRef}
-                className={`z-30 ${
-                  isMobile 
-                    ? 'w-full mt-auto pb-6 pt-4' 
-                    : `absolute ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`
-                }`}
-                style={isMobile ? {} : {
-                  left: hero?.buttonsPosition?.x !== undefined ? `${hero.buttonsPosition.x}%` : '50%',
-                  top: hero?.buttonsPosition?.y !== undefined ? `${hero.buttonsPosition.y}%` : '85%',
-                  transform: 'translate(-50%, -50%)',
-                }}
-                onMouseDown={isMobile ? undefined : handleButtonsDragStart}
-                onClick={(e) => {
-                  // Only stop propagation if clicking on the container itself (not on buttons/grid)
-                  // This prevents the style editor from opening when clicking the drag area edges
-                  if (e.target === e.currentTarget) {
-                    e.stopPropagation();
-                  }
-                }}
-              >
-                {/* Move handle indicator for editor */}
-                {editable && !isMobile && (
-                  <div 
-                    className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
-                    onClick={(e) => e.stopPropagation()} // Prevent click from opening style editor
-                  >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                    </svg>
-                    Move Buttons
-                    {/* Reset button - only show when position has been customized */}
-                    {hero?.buttonsPosition && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onEdit) {
-                            onEdit('hero.buttonsPosition', null as any);
-                          }
-                        }}
-                        className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
-                        title="Reset to default position"
-                      >
-                        Reset
-                      </button>
-                    )}
-                  </div>
-                )}
-                
-                {/* CTA Buttons Grid - visual drag-and-drop editor */}
-                <ButtonGridEditor
-                  buttons={ctaButtons}
-                  gridLayout={effectiveGridLayout}
-                  onLayoutChange={handleGridLayoutChange}
-                  onButtonClick={onButtonClick}
-                  editable={editable}
-                  colorPalette={colorPalette}
-                  defaultCtaBg={hero?.colors?.ctaBackground}
-                  defaultCtaText={hero?.colors?.ctaText}
-                  getButtonStyles={getButtonStyles}
-                  ctaButtons={hero?.ctaButtons}
-                  onEdit={onEdit}
-                  payment={payment}
-                  isFullwidthOverlay={true}
-                  isMobile={isMobile}
-                  buttonStyles={hero?.buttonStyles}
-                  onButtonStylesChange={handleButtonStylesChange}
-                />
-                
-                {/* Mobile social links - rendered after buttons in the flow */}
-                {isMobile && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
-                  <div className="mt-4 flex justify-center">
-                    <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
-                  </div>
-                )}
-              </div>
+              {!isLegacyFullwidthLayout && (
+                <div 
+                  ref={buttonsFloatingRef}
+                  className={`z-30 ${
+                    isMobile 
+                      ? 'w-full mt-auto pb-6 pt-4' 
+                      : `absolute ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`
+                  }`}
+                  style={isMobile ? {} : {
+                    left: hero?.buttonsPosition?.x !== undefined ? `${hero.buttonsPosition.x}%` : '50%',
+                    top: hero?.buttonsPosition?.y !== undefined ? `${hero.buttonsPosition.y}%` : '85%',
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                  onMouseDown={isMobile ? undefined : handleButtonsDragStart}
+                  onClick={(e) => {
+                    // Only stop propagation if clicking on the container itself (not on buttons/grid)
+                    // This prevents the style editor from opening when clicking the drag area edges
+                    if (e.target === e.currentTarget) {
+                      e.stopPropagation();
+                    }
+                  }}
+                >
+                  {/* Move handle indicator for editor */}
+                  {editable && !isMobile && (
+                    <div 
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
+                      onClick={(e) => e.stopPropagation()} // Prevent click from opening style editor
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      Move Buttons
+                      {/* Reset button - only show when position has been customized */}
+                      {hero?.buttonsPosition && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit) {
+                              onEdit('hero.buttonsPosition', null as any);
+                            }
+                          }}
+                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                          title="Reset to default position"
+                        >
+                          Reset
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* CTA Buttons Grid - visual drag-and-drop editor */}
+                  <ButtonGridEditor
+                    buttons={ctaButtons}
+                    gridLayout={effectiveGridLayout}
+                    onLayoutChange={handleGridLayoutChange}
+                    onButtonClick={onButtonClick}
+                    editable={editable}
+                    colorPalette={colorPalette}
+                    defaultCtaBg={hero?.colors?.ctaBackground}
+                    defaultCtaText={hero?.colors?.ctaText}
+                    getButtonStyles={getButtonStyles}
+                    ctaButtons={hero?.ctaButtons}
+                    onEdit={onEdit}
+                    payment={payment}
+                    isFullwidthOverlay={true}
+                    isMobile={isMobile}
+                    buttonStyles={hero?.buttonStyles}
+                    onButtonStylesChange={handleButtonStylesChange}
+                  />
+                  
+                  {/* Mobile social links - rendered after buttons in the flow */}
+                  {isMobile && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                    <div className="mt-4 flex justify-center">
+                      <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Floating Social Links - positioned separately from buttons (only when using blur overlay, desktop only) */}
               {/* On mobile, social links are rendered inside the button container above */}
