@@ -568,12 +568,36 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   // Compute custom button styles
   // Legacy mode: use natural padding-based sizing
   // New mode: use explicit dimensions (for button style editor compatibility)
+  // Standard layout (non-fullwidth, non-mobile): use viewport-scaled sizing
   const paddingX = buttonStyles.paddingX ?? 32;
   const paddingY = buttonStyles.paddingY ?? 16;
   const customButtonStyle: React.CSSProperties = useMemo(() => {
+    // Standard layout on desktop: use fluid/responsive sizing that scales with viewport width
+    // This applies when buttons are to the left of the hero image
+    const useFluidSizing = !isFullwidthOverlay && !isMobile;
+    
     if (!hasCustomStyles) {
       // Legacy mode: natural sizing with generous padding
       // Button size is determined by content + padding, not fixed dimensions
+      if (useFluidSizing) {
+        // Fluid sizing: padding and font scale with viewport width
+        // clamp(min, preferred, max) - scales smoothly between min and max
+        // At 1024px (lg breakpoint): ~1vw = 10.24px
+        // At 1920px (common desktop): ~1vw = 19.2px
+        return {
+          // Padding scales: min 12px, preferred 1.4vw (~14px at 1024px, ~27px at 1920px), max 32px
+          padding: 'clamp(12px, 1.4vw, 32px) clamp(20px, 2.5vw, 48px)',
+          borderRadius: 'clamp(6px, 0.6vw, 12px)',
+          fontFamily: 'inherit',
+          fontWeight: 600,
+          // Font size scales: min 14px, preferred ~1.5vw, max 20px
+          fontSize: 'clamp(14px, 1.5vw, 20px)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxSizing: 'border-box',
+        };
+      }
       return {
         padding: '14px 32px',
         borderRadius: '8px',
@@ -588,6 +612,29 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     
     // New mode: explicit dimensions (for sites that have used the button style editor)
     // This matches the sample button in the style editor exactly
+    if (useFluidSizing) {
+      // Fluid sizing with custom styles: scale the custom values with viewport
+      const basePaddingX = paddingX;
+      const basePaddingY = paddingY;
+      const baseFontSize = buttonStyles.fontSize || 16;
+      const baseRadius = buttonStyles.borderRadius ?? 8;
+      
+      return {
+        // Min-width scales with viewport, based on custom padding settings
+        minWidth: `clamp(${basePaddingX * 2 + 80}px, ${(basePaddingX * 2 + 100) * 0.12}vw, ${basePaddingX * 2 + 140}px)`,
+        height: `clamp(${basePaddingY * 2 + 16}px, ${(basePaddingY * 2 + 20) * 0.055}vw, ${basePaddingY * 2 + 28}px)`,
+        padding: 0,
+        borderRadius: `clamp(${Math.max(4, baseRadius * 0.7)}px, ${baseRadius * 0.08}vw, ${baseRadius * 1.3}px)`,
+        fontFamily: buttonStyles.fontFamily || 'inherit',
+        fontSize: `clamp(${Math.max(12, baseFontSize * 0.85)}px, ${baseFontSize * 0.1}vw, ${baseFontSize * 1.2}px)`,
+        fontWeight: buttonStyles.fontWeight ?? 600,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxSizing: 'border-box',
+      };
+    }
+    
     return {
       // Base text area assumption: ~100px wide, ~20px tall for "Sample Button"
       minWidth: `${paddingX * 2 + 100}px`,
@@ -603,7 +650,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
       justifyContent: 'center',
       boxSizing: 'border-box',
     };
-  }, [buttonStyles, hasCustomStyles, paddingX, paddingY]);
+  }, [buttonStyles, hasCustomStyles, paddingX, paddingY, isFullwidthOverlay, isMobile]);
   
   // Single button gets a soft pulse animation for emphasis
   const isSingleButton = buttons.length === 1;
@@ -686,6 +733,17 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     handleMouseDown(e, buttonId);
   }, [handleMouseDown]);
   
+  // Compute whether to use fluid sizing (for arrow icon scaling)
+  const useFluidSizing = !isFullwidthOverlay && !isMobile;
+  
+  // Arrow icon style for fluid sizing
+  const arrowIconStyle: React.CSSProperties = useFluidSizing ? {
+    width: 'clamp(16px, 1.3vw, 24px)',
+    height: 'clamp(16px, 1.3vw, 24px)',
+    marginLeft: 'clamp(6px, 0.6vw, 12px)',
+    flexShrink: 0,
+  } : {};
+
   const renderButton = (button: HeroCtaButton, col: number, row: number) => {
     const buttonIndex = buttons.findIndex(b => b.id === button.id);
     const isDraggedButton = draggedButtonId === button.id;
@@ -752,13 +810,17 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
           >
             {/* Text is display-only here; editing happens in SingleButtonEditor modal */}
             <span style={{ 
-              ...(buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : {}),
+              // Don't override font-size when using fluid sizing - let customButtonStyle handle it
+              ...(!useFluidSizing && buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : {}),
               pointerEvents: 'none' 
             }}>
               {button.label || 'Button text'}
             </span>
             {button.showArrow !== false && (
-              <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
+              <ArrowRightIcon 
+                className={`${useFluidSizing ? '' : 'ml-2 h-5 w-5'} group-hover:translate-x-1 transition-transform duration-200`}
+                style={arrowIconStyle}
+              />
             )}
           </button>
         </div>
@@ -839,7 +901,12 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
           }}
         >
           {draggedButton.label}
-          {draggedButton.showArrow !== false && <ArrowRightIcon className="ml-2 h-5 w-5" />}
+          {draggedButton.showArrow !== false && (
+            <ArrowRightIcon 
+              className={useFluidSizing ? '' : 'ml-2 h-5 w-5'}
+              style={arrowIconStyle}
+            />
+          )}
         </button>
       </div>
     );
@@ -852,33 +919,39 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   if (isMobile) {
     // Mobile-specific button styling
     // Ignore desktop width/height settings, use mobile-appropriate sizing
+    // Standard layout gets generous padding for full-width buttons
     const mobileButtonPadding = isFullwidthOverlay 
       ? { padding: '14px 24px' }
-      : { padding: '12px 20px' };
+      : { padding: '16px 24px' };
     
     const mobileFontSize = isFullwidthOverlay
       ? (buttonStyles.fontSize ? `${Math.min(buttonStyles.fontSize, 18)}px` : '16px')
-      : (buttonStyles.fontSize ? `${Math.min(Math.max(14, buttonStyles.fontSize * 0.85), 16)}px` : '14px');
+      : (buttonStyles.fontSize ? `${Math.min(Math.max(15, buttonStyles.fontSize * 0.9), 18)}px` : '16px');
     
     // Mobile button style - only use font/radius from desktop, NOT width/height
+    // Force full width regardless of any desktop settings
     const mobileButtonStyle: React.CSSProperties = {
       borderRadius: `${buttonStyles.borderRadius ?? 8}px`,
       fontFamily: buttonStyles.fontFamily || 'inherit',
       fontSize: mobileFontSize,
       fontWeight: buttonStyles.fontWeight ?? 600,
-      // Override any width/height constraints - let buttons be full width
-      minWidth: 'unset',
+      // Force full width - override any desktop constraints
+      display: 'flex',
       width: '100%',
+      minWidth: '100%',
+      maxWidth: '100%',
       height: 'auto',
+      boxSizing: 'border-box',
       ...mobileButtonPadding,
     };
     
     return (
-      <div className={`relative ${isFullwidthOverlay ? 'w-full' : ''}`}>
+      <div className="relative w-full">
         <div className="flex flex-col gap-3 w-full">
           {buttons.map((button, index) => (
             <div
               key={button.id}
+              className="w-full"
               onClick={(e) => {
                 if (editable && onEdit) {
                   e.stopPropagation();
@@ -888,7 +961,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             >
               <button
                 onClick={editable ? undefined : () => onButtonClick?.(button)}
-                className={`w-full group inline-flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton ? 'button-soft-pulse' : ''}`}
+                className={`w-full group flex items-center justify-center font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl button-press ${isSingleButton ? 'button-soft-pulse' : ''}`}
                 style={{
                   ...getButtonStyles(button, hoveredButtonId === button.id, index),
                   ...mobileButtonStyle,

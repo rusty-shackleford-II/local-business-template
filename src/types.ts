@@ -117,6 +117,9 @@ export type Hero = {
   // Vertical offset in pixels from the default position (positive = down)
   standardButtonsVerticalOffset?: number;
   standardSocialLinksVerticalOffset?: number;
+  // Width as percentage of container (0-1) - stored for consistent zone detection
+  standardButtonsWidthPercent?: number;
+  standardSocialLinksWidthPercent?: number;
 };
 
 export type AboutStatistic = {

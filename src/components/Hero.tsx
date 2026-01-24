@@ -628,6 +628,12 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Measured anchor positions (relative to heroInnerContainerRef - the common parent)
+  // These absolute positions are used to calculate container-relative positions on demand
+  const [absoluteTextBottom, setAbsoluteTextBottom] = useState(0);
+  const [absoluteImageBottom, setAbsoluteImageBottom] = useState(0);
+  const [absoluteImageLeft, setAbsoluteImageLeft] = useState(0.5); // As percentage of container width
   const [showImageEditor, setShowImageEditor] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -776,20 +782,54 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     !hero?.buttonStyles &&
     !hero?.overlayBlur;
   
-  // Detect mobile screen size for responsive positioning
+  // Detect mobile/tablet screen size for responsive positioning
+  // Include tablets (up to 1024px) to ensure buttons are always full-width and properly positioned
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
     };
     
-    // Check on mount
-    checkMobile();
+    handleResize();
+    window.addEventListener('resize', handleResize);
     
-    // Add resize listener
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+  
+  // Measure anchor positions after every layout change
+  // Use ResizeObserver for reliable size change detection (fires after layout recalculation)
+  // All measurements are relative to heroInnerContainerRef (the common parent)
+  useEffect(() => {
+    if (isMobile) return;
+    
+    const measure = () => {
+      const parentRect = heroInnerContainerRef.current?.getBoundingClientRect();
+      const textRect = heroSubheadlineRef.current?.getBoundingClientRect();
+      const imageRect = heroMediaContainerRef.current?.getBoundingClientRect();
+      
+      if (!parentRect || !textRect || !imageRect || parentRect.width === 0) return;
+      
+      // Measure positions relative to the common parent container
+      setAbsoluteTextBottom(textRect.bottom - parentRect.top);
+      setAbsoluteImageBottom(imageRect.bottom - parentRect.top);
+      setAbsoluteImageLeft((imageRect.left - parentRect.left) / parentRect.width);
+    };
+    
+    // Measure immediately
+    measure();
+    
+    // Use ResizeObserver for reliable resize detection
+    const resizeObserver = new ResizeObserver(() => {
+      // Small delay to ensure layout has settled
+      requestAnimationFrame(measure);
+    });
+    
+    // Observe all relevant elements
+    if (heroInnerContainerRef.current) resizeObserver.observe(heroInnerContainerRef.current);
+    if (heroSubheadlineRef.current) resizeObserver.observe(heroSubheadlineRef.current);
+    if (heroMediaContainerRef.current) resizeObserver.observe(heroMediaContainerRef.current);
+    
+    return () => resizeObserver.disconnect();
+  }, [isMobile]);
   
   // Track video container dimensions for cover behavior calculation
   // Re-run when video mode is active to ensure we measure after the container is rendered
@@ -1498,6 +1538,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const [liveSocialTop, setLiveSocialTop] = useState<number | null>(null);
   const draggedElementRef = useRef<HTMLDivElement | null>(null);
   
+  
   // Calculate min-height for hero section based on positioned elements
   // Uses stored value from drag operations, which is recalculated during drag
   const standardHeroMinHeight = useMemo(() => {
@@ -1620,6 +1661,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       hero?.standardButtonsPosition, hero?.standardSocialLinksPosition,
       liveButtonsTop, liveSocialTop, isMobile]);
   
+  
   // Helper to parse value as number
   const parseNum = (value: number | string | undefined, fallback: number = 0): number => {
     if (value === undefined || value === null) return fallback;
@@ -1683,24 +1725,43 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [isDraggingStandardButtons, dragStartMouse, dragStartElementLeft, dragStartElementTop]);
   
   const handleStandardButtonsDragEnd = useCallback(() => {
-    // Store offset from center in PIXELS (stable when container resizes)
-    if (onEdit && standardButtonsRef.current && draggedElementRef.current && liveButtonsLeft !== null) {
+    // Store left position as PERCENTAGE (0-1) for proper scaling when container resizes
+    // Store vertical offset RELATIVE TO ANCHOR (text/image bottom) for responsive positioning
+    if (onEdit && standardButtonsRef.current && heroInnerContainerRef.current && draggedElementRef.current && liveButtonsLeft !== null && liveButtonsTop !== null) {
       const containerRect = standardButtonsRef.current.getBoundingClientRect();
+      const parentRect = heroInnerContainerRef.current.getBoundingClientRect();
       const elementRect = draggedElementRef.current.getBoundingClientRect();
-      // Calculate how far the element center is from container center
-      const containerCenter = containerRect.width / 2;
-      const elementCenter = liveButtonsLeft + elementRect.width / 2;
-      const offsetFromCenter = elementCenter - containerCenter;
       
-      onEdit('hero.standardButtonsHorizontalAlign', offsetFromCenter as any);
-      onEdit('hero.standardButtonsVerticalOffset', liveButtonsTop as any);
+      // Calculate left position as percentage of container width
+      const leftPercent = liveButtonsLeft / containerRect.width;
+      // Clamp to 0-1 range
+      const clampedPercent = Math.max(0, Math.min(1, leftPercent));
+      
+      // Calculate button width as percentage for anchor determination
+      const buttonWidthPercent = containerRect.width > 0 ? elementRect.width / containerRect.width : 0.25;
+      const buttonRightPercent = clampedPercent + buttonWidthPercent;
+      
+      // If button's right edge is to the LEFT of image's left edge, use text anchor
+      const isInTextZone = buttonRightPercent < absoluteImageLeft;
+      const absoluteAnchor = isInTextZone ? absoluteTextBottom : absoluteImageBottom;
+      
+      // Convert absolute anchor to container-relative for storing offset
+      const containerTop = containerRect.top - parentRect.top;
+      const containerRelativeAnchor = absoluteAnchor - containerTop;
+      
+      // Store offset relative to the determined anchor
+      const relativeOffset = liveButtonsTop - containerRelativeAnchor;
+      
+      onEdit('hero.standardButtonsHorizontalAlign', clampedPercent as any);
+      onEdit('hero.standardButtonsVerticalOffset', relativeOffset as any);
+      onEdit('hero.standardButtonsWidthPercent', buttonWidthPercent as any); // Store width for consistent zone detection
     }
     
     setIsDraggingStandardButtons(false);
     setLiveButtonsLeft(null);
     setLiveButtonsTop(null);
     draggedElementRef.current = null;
-  }, [onEdit, liveButtonsLeft, liveButtonsTop]);
+  }, [onEdit, liveButtonsLeft, liveButtonsTop, absoluteTextBottom, absoluteImageBottom, absoluteImageLeft]);
   
   // Social links drag handlers
   // Standard layout social drag - uses pending drag pattern
@@ -1804,16 +1865,35 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       standardSocialRecentDragRef.current = true;
       setTimeout(() => { standardSocialRecentDragRef.current = false; }, 100);
       
-      // Save position
-      if (onEdit && standardSocialRef.current && draggedElementRef.current && liveSocialLeft !== null) {
+      // Save position as percentage (0-1) for proper scaling when container resizes
+      // Store vertical offset RELATIVE TO ANCHOR for responsive positioning
+      if (onEdit && standardSocialRef.current && heroInnerContainerRef.current && draggedElementRef.current && liveSocialLeft !== null && liveSocialTop !== null) {
         const containerRect = standardSocialRef.current.getBoundingClientRect();
+        const parentRect = heroInnerContainerRef.current.getBoundingClientRect();
         const elementRect = draggedElementRef.current.getBoundingClientRect();
-        const containerCenter = containerRect.width / 2;
-        const elementCenter = liveSocialLeft + elementRect.width / 2;
-        const offsetFromCenter = elementCenter - containerCenter;
         
-        onEdit('hero.standardSocialLinksHorizontalAlign', offsetFromCenter as any);
-        onEdit('hero.standardSocialLinksVerticalOffset', liveSocialTop as any);
+        // Calculate left position as percentage of container width
+        const leftPercent = liveSocialLeft / containerRect.width;
+        // Clamp to 0-1 range
+        const clampedPercent = Math.max(0, Math.min(1, leftPercent));
+        
+        // Calculate element width as percentage for anchor determination
+        const elementWidthPercent = containerRect.width > 0 ? elementRect.width / containerRect.width : 0.15;
+        const elementRightPercent = clampedPercent + elementWidthPercent;
+        
+        // If element's right edge is to the LEFT of image's left edge, use text anchor
+        const isInTextZone = elementRightPercent < absoluteImageLeft;
+        const absoluteAnchor = isInTextZone ? absoluteTextBottom : absoluteImageBottom;
+        
+        // Convert absolute anchor to container-relative for storing offset
+        const containerTop = containerRect.top - parentRect.top;
+        const containerRelativeAnchor = absoluteAnchor - containerTop;
+        
+        const relativeOffset = liveSocialTop - containerRelativeAnchor;
+        
+        onEdit('hero.standardSocialLinksHorizontalAlign', clampedPercent as any);
+        onEdit('hero.standardSocialLinksVerticalOffset', relativeOffset as any);
+        onEdit('hero.standardSocialLinksWidthPercent', elementWidthPercent as any); // Store width for consistent zone detection
       }
     }
     
@@ -1825,7 +1905,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     setLiveSocialLeft(null);
     setLiveSocialTop(null);
     draggedElementRef.current = null;
-  }, [isDraggingStandardSocial, onEdit, liveSocialLeft, liveSocialTop]);
+  }, [isDraggingStandardSocial, onEdit, liveSocialLeft, liveSocialTop, absoluteTextBottom, absoluteImageBottom, absoluteImageLeft]);
   
   // LEGACY: Drag handlers for pixel-based positioning (kept for backward compatibility)
   const [legacyDragOffset, setLegacyDragOffset] = useState({ x: 0, y: 0 });
@@ -1997,16 +2077,49 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [hasPendingStandardSocialDrag, hasPendingLegacySocialDrag, isDraggingStandardSocial, isUsingLegacySystem, handleLegacySocialDragMove, handleLegacySocialDragEnd, handleStandardSocialDragMove, handleStandardSocialDragEnd]);
   
-  // Calculate position style using CSS-based centering with pixel offset
-  // offsetFromCenter: pixel offset from center (0 = centered, negative = left, positive = right)
-  // This approach is stable when container width changes because it's relative to 50%
-  const getPositionStyle = (offsetFromCenter: number, verticalOffset: number) => {
-    // Sanity check: values over 1000px are clearly from a buggy old implementation, reset to centered
-    const safeOffset = (Math.abs(offsetFromCenter || 0) > 1000) ? 0 : (offsetFromCenter || 0);
+  // Calculate position style using percentage-based left positioning
+  // leftPercent: 0-1 value representing position from left edge (0 = far left, 1 = far right)
+  // verticalOffset: pixel offset from the anchor point (text bottom or image bottom)
+  // Anchor selection: if element is entirely in text zone (left of image), anchor to text; otherwise to image
+  // containerRef: the container element to calculate positions relative to
+  const getPositionStyle = (
+    leftPercent: number, 
+    verticalOffset: number, 
+    elementWidthPercent: number = 0.25,
+    containerRef: React.RefObject<HTMLDivElement | null>
+  ) => {
+    // Handle legacy values (pixel offsets from center, typically large numbers or negative)
+    // New values are 0-1 percentages
+    let safePercent: number;
+    if (leftPercent > 1 || leftPercent < 0) {
+      // Legacy pixel offset from center - reset to left aligned (0%)
+      safePercent = 0;
+    } else {
+      safePercent = leftPercent;
+    }
+    
+    // Determine anchor based on element position relative to image
+    const elementRightPercent = safePercent + elementWidthPercent;
+    const isInTextZone = elementRightPercent < absoluteImageLeft;
+    
+    // Use text anchor if element is entirely in text zone, otherwise use image anchor
+    const absoluteAnchor = isInTextZone ? absoluteTextBottom : absoluteImageBottom;
+    
+    // Convert absolute anchor to container-relative position
+    let containerRelativeAnchor = absoluteAnchor;
+    if (containerRef.current && heroInnerContainerRef.current) {
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const parentRect = heroInnerContainerRef.current.getBoundingClientRect();
+      const containerTop = containerRect.top - parentRect.top;
+      containerRelativeAnchor = absoluteAnchor - containerTop;
+    }
+    
+    // Calculate final top position: anchor bottom + stored offset
+    const finalTop = containerRelativeAnchor + (verticalOffset || 0);
+    
     return {
-      left: '50%',
-      transform: `translateX(calc(-50% + ${safeOffset}px))`,
-      top: `${verticalOffset || 0}px`,
+      left: `${safePercent * 100}%`,
+      top: `${finalTop}px`,
     };
   };
 
@@ -2279,30 +2392,29 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             const useLegacyPixel = hasStandardButtonsPosition && !hasStandardButtonsHorizontalAlign;
             const useInline = !hasStandardButtonsHorizontalAlign && !hasStandardButtonsPosition;
             
-            // On mobile: always render centered, ignoring desktop settings
+            // On mobile: always render full-width column layout with fixed positioning
+            // Desktop position settings are ignored - mobile has its own clean layout
             if (isMobile) {
               return (
-                <div className="mt-8 flex justify-center" ref={standardButtonsRef}>
-                  <div className="inline-block">
-                    <ButtonGridEditor
-                      buttons={ctaButtons}
-                      gridLayout={effectiveGridLayout}
-                      onLayoutChange={handleGridLayoutChange}
-                      onButtonClick={onButtonClick}
-                      editable={editable}
-                      colorPalette={colorPalette}
-                      defaultCtaBg={hero?.colors?.ctaBackground}
-                      defaultCtaText={hero?.colors?.ctaText}
-                      getButtonStyles={getButtonStyles}
-                      ctaButtons={hero?.ctaButtons}
-                      onEdit={onEdit}
-                      payment={payment}
-                      isFullwidthOverlay={false}
-                      isMobile={isMobile}
-                      buttonStyles={hero?.buttonStyles}
-                      onButtonStylesChange={handleButtonStylesChange}
-                    />
-                  </div>
+                <div className="mt-6 w-full px-4" ref={standardButtonsRef}>
+                  <ButtonGridEditor
+                    buttons={ctaButtons}
+                    gridLayout={effectiveGridLayout}
+                    onLayoutChange={handleGridLayoutChange}
+                    onButtonClick={onButtonClick}
+                    editable={editable}
+                    colorPalette={colorPalette}
+                    defaultCtaBg={hero?.colors?.ctaBackground}
+                    defaultCtaText={hero?.colors?.ctaText}
+                    getButtonStyles={getButtonStyles}
+                    ctaButtons={hero?.ctaButtons}
+                    onEdit={onEdit}
+                    payment={payment}
+                    isFullwidthOverlay={false}
+                    isMobile={true}
+                    buttonStyles={hero?.buttonStyles}
+                    onButtonStylesChange={handleButtonStylesChange}
+                  />
                 </div>
               );
             }
@@ -2311,12 +2423,13 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             if (useNewAlign) {
               const align = parseNum(hero?.standardButtonsHorizontalAlign, 0);
               const verticalOffset = parseNum(hero?.standardButtonsVerticalOffset, 0);
+              const storedWidth = parseNum(hero?.standardButtonsWidthPercent, 0.25); // Use stored width for consistent zone detection
               
               // During drag: use live pixel position directly
               // Not dragging: calculate from stored 0-1 alignment
               const posStyle = (isDraggingStandardButtons && liveButtonsLeft !== null) 
                 ? { left: `${liveButtonsLeft}px`, top: `${liveButtonsTop}px` }
-                : getPositionStyle(align, verticalOffset);
+                : getPositionStyle(align, verticalOffset, storedWidth, standardButtonsRef);
               
               return (
                 <div className="mt-8 w-full relative" ref={standardButtonsRef} style={{ minHeight: '80px' }}>
@@ -2344,6 +2457,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                             if (onEdit) {
                               onEdit('hero.standardButtonsHorizontalAlign', null as any);
                               onEdit('hero.standardButtonsVerticalOffset', null as any);
+                              onEdit('hero.standardButtonsWidthPercent', null as any);
                             }
                           }}
                           className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
@@ -2520,16 +2634,17 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             if (useNewAlign) {
               const align = parseNum(hero?.standardSocialLinksHorizontalAlign, 0);
               const verticalOffset = parseNum(hero?.standardSocialLinksVerticalOffset, 0);
+              const storedWidth = parseNum(hero?.standardSocialLinksWidthPercent, 0.15); // Use stored width for consistent zone detection
               
               const posStyle = (isDraggingStandardSocial && liveSocialLeft !== null) 
                 ? { left: `${liveSocialLeft}px`, top: `${liveSocialTop}px` }
-                : getPositionStyle(align, verticalOffset);
+                : getPositionStyle(align, verticalOffset, storedWidth, standardSocialRef);
               
               return (
                 <div className="mt-4 w-full relative" ref={standardSocialRef} style={{ minHeight: '50px' }}>
                   <div 
                     ref={standardSocialDraggableRef}
-                    className={`absolute p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-gray-400 cursor-pointer' : ''} ${isDraggingStandardSocial ? 'opacity-70' : ''}`}
+                    className={`absolute ${editable ? 'cursor-move' : ''} ${isDraggingStandardSocial ? 'opacity-70' : ''}`}
                     style={posStyle}
                     onMouseDown={(e) => {
                       standardSocialDraggableRef.current && handleStandardSocialMouseDown(e, standardSocialDraggableRef.current);
@@ -2538,6 +2653,33 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       handleStandardSocialClick(e, standardSocialDraggableRef.current);
                     }}
                   >
+                    {/* Drag handle for editor */}
+                    {editable && (
+                      <div 
+                        className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Drag to position
+                        {/* Reset button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit) {
+                              onEdit('hero.standardSocialLinksHorizontalAlign', null as any);
+                              onEdit('hero.standardSocialLinksVerticalOffset', null as any);
+                              onEdit('hero.standardSocialLinksWidthPercent', null as any);
+                            }
+                          }}
+                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                          title="Reset to default position"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    )}
                     <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} className="!mt-0" />
                   </div>
                 </div>
@@ -2562,20 +2704,34 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               );
             }
             
-            // DEFAULT: Inline rendering - click to edit only (no positioning yet)
+            // DEFAULT: Inline rendering - click to enable positioning (same as buttons)
             return (
               <div className="mt-4" ref={standardSocialRef}>
                 <div 
                   ref={standardSocialDraggableRef}
-                  className={`inline-block p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-gray-400 cursor-pointer' : ''}`}
+                  className={`inline-block relative p-2 -m-2 rounded ${editable ? 'cursor-pointer' : ''}`}
                   onClick={(e) => {
                     if (!editable) return;
                     if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
                     e.stopPropagation();
-                    socialIconSizeTargetRef.current = standardSocialDraggableRef.current;
-                    setShowSocialIconSizePopup(true);
+                    // Initialize positioning when clicked (like buttons)
+                    if (onEdit) {
+                      onEdit('hero.standardSocialLinksHorizontalAlign', 0 as any);
+                      onEdit('hero.standardSocialLinksVerticalOffset', 0 as any);
+                    }
                   }}
                 >
+                  {/* Click hint for editor to enable positioning */}
+                  {editable && (
+                    <div 
+                      className="absolute -top-6 left-0 bg-gray-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                      </svg>
+                      Click to enable positioning
+                    </div>
+                  )}
                   <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} className="!mt-0" />
                 </div>
               </div>
