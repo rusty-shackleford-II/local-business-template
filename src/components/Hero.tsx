@@ -167,16 +167,24 @@ const HeroSocialLinks: React.FC<{
   
   // Size classes based on compact mode
   const sizeClass = compact 
-    ? 'w-8 h-8' 
-    : 'w-10 h-10';
+    ? 'w-12 h-12' 
+    : 'w-14 h-14';
   
-  const iconSize = compact ? 'h-3.5 w-3.5' : 'h-4 w-4';
+  const iconSize = compact ? 'h-5 w-5' : 'h-6 w-6';
   const gapClass = compact ? 'gap-2' : 'gap-3';
   const marginClass = compact ? 'mt-4' : 'mt-6';
   
-  const iconClass = isFullwidthOverlay 
-    ? `${sizeClass} bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm` 
-    : `${sizeClass} bg-gray-100 hover:bg-gray-200 text-gray-700`;
+  // Base class for all icons - white background with shadow (like contact form)
+  const baseClass = `${sizeClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`;
+  
+  // For fullwidth overlay, use semi-transparent white with white icons
+  // For standard layout, use white background with brand colors (like contact form)
+  const getIconClass = (brandColor: string) => {
+    if (isFullwidthOverlay) {
+      return `${baseClass} bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm`;
+    }
+    return `${baseClass} bg-white ${brandColor}`;
+  };
   
   return (
     <div className={`flex flex-wrap ${gapClass} ${marginClass} ${justifyClass} ${className}`}>
@@ -185,7 +193,7 @@ const HeroSocialLinks: React.FC<{
           href={links.facebook}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-blue-600')}
           aria-label="Facebook"
         >
           <FaFacebookF className={iconSize} />
@@ -196,7 +204,7 @@ const HeroSocialLinks: React.FC<{
           href={links.twitter}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-black')}
           aria-label="X (Twitter)"
         >
           <FaXTwitter className={iconSize} />
@@ -207,7 +215,7 @@ const HeroSocialLinks: React.FC<{
           href={links.instagram}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-pink-600')}
           aria-label="Instagram"
         >
           <FaInstagram className={iconSize} />
@@ -218,7 +226,7 @@ const HeroSocialLinks: React.FC<{
           href={links.linkedin}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-blue-700')}
           aria-label="LinkedIn"
         >
           <FaLinkedinIn className={iconSize} />
@@ -229,7 +237,7 @@ const HeroSocialLinks: React.FC<{
           href={links.youtube}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-red-600')}
           aria-label="YouTube"
         >
           <svg className={iconSize} fill="currentColor" viewBox="0 0 24 24">
@@ -242,7 +250,7 @@ const HeroSocialLinks: React.FC<{
           href={links.tiktok}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-black')}
           aria-label="TikTok"
         >
           <FaTiktok className={iconSize} />
@@ -253,7 +261,7 @@ const HeroSocialLinks: React.FC<{
           href={links.yelp}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-red-600')}
           aria-label="Yelp"
         >
           <FaYelp className={iconSize} />
@@ -264,7 +272,7 @@ const HeroSocialLinks: React.FC<{
           href={links.googleBusinessProfile}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`}
+          className={getIconClass('text-blue-600')}
           aria-label="Google Business"
         >
           <FaGoogle className={iconSize} />
@@ -278,7 +286,7 @@ const HeroSocialLinks: React.FC<{
             href={customLink.url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center overflow-hidden`}
+            className={`${getIconClass('text-gray-700')} overflow-hidden`}
             aria-label={customLink.label || 'External Link'}
           >
             {customLink.iconUrl ? (
