@@ -980,7 +980,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   // ──────────────────────────────────────────────────────────────────────────
   
   return (
-    <div className="relative">
+    <div className="relative overflow-visible">
       {/* CSS Grid container - centered or left-aligned, clickable background for style editor */}
       <div
         className={`grid gap-4 p-4 -m-4 rounded-lg ${alignToStart ? '' : 'mx-auto'}`}
@@ -1014,9 +1014,9 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
       {/* Floating drag preview */}
       <DragPreview />
       
-      {/* Editor hint and Add Button */}
+      {/* Editor hint and Add Button - height:0 overflow:visible so it doesn't affect centering calculations */}
       {editable && (
-        <div className="mt-3 flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 pt-3" style={{ height: 0, overflow: 'visible' }}>
           <p className="text-xs text-gray-400 text-center select-none">
             {buttons.length > 1 ? 'Drag buttons to rearrange • ' : ''}Click a button to edit it • Click empty area for global style
           </p>

@@ -3104,7 +3104,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               {!isLegacyFullwidthLayout && (
                 <div 
                   ref={buttonsFloatingRef}
-                  className={`z-30 ${
+                  className={`z-30 overflow-visible ${
                     isMobile 
                       ? 'w-full mt-auto pb-6 pt-4' 
                       : `absolute ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`
@@ -3112,7 +3112,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   style={isMobile ? {} : {
                     left: hero?.buttonsPosition?.x !== undefined ? `${hero.buttonsPosition.x}%` : '50%',
                     top: hero?.buttonsPosition?.y !== undefined ? `${hero.buttonsPosition.y}%` : '85%',
-                    transform: 'translateX(-50%)',
+                    transform: 'translate(-50%, -50%)',
                   }}
                   onMouseDown={isMobile ? undefined : handleButtonsDragStart}
                   onClick={(e) => {
@@ -3126,7 +3126,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   {/* Move handle indicator for editor */}
                   {editable && !isMobile && (
                     <div 
-                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
+                      className="absolute -top-6 left-1/2 -translate-x-1/2 z-10 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()} // Prevent click from opening style editor
                     >
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -3152,11 +3152,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     </div>
                   )}
                   
-                  {/* Inner wrapper for buttons only - translateY centers just the buttons, not the editor UI */}
-                  {/* Only apply on desktop; mobile uses flow layout with mt-auto */}
-                  <div style={isMobile ? {} : { transform: 'translateY(-50%)' }}>
-                    {/* CTA Buttons Grid - visual drag-and-drop editor */}
-                    <ButtonGridEditor
+                  {/* CTA Buttons Grid - visual drag-and-drop editor */}
+                  <ButtonGridEditor
                       buttons={ctaButtons}
                       gridLayout={effectiveGridLayout}
                       onLayoutChange={handleGridLayoutChange}
@@ -3173,8 +3170,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       isMobile={isMobile}
                       buttonStyles={hero?.buttonStyles}
                       onButtonStylesChange={handleButtonStylesChange}
-                    />
-                  </div>
+                  />
                   
                   {/* Mobile social links - rendered after buttons in the flow */}
                   {isMobile && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
