@@ -1419,18 +1419,24 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [isDraggingStandardSocial, isUsingLegacySystem, handleLegacySocialDragMove, handleLegacySocialDragEnd, handleStandardSocialDragMove, handleStandardSocialDragEnd]);
   
-  // Calculate position style from stored percentage
-  // align: percentage of container width where left edge should be (0 = left edge, 0.5 = 50%, etc)
-  // Uses CSS percentage so it works on initial render without needing ref measurements
+  // Calculate pixel position from stored percentage
+  // align: percentage of container width where left edge should be (0 = left edge, 0.5 = center, etc)
   const getPositionStyle = (
     align: number, 
-    verticalOffset: number
+    verticalOffset: number, 
+    containerRef: React.RefObject<HTMLDivElement | null>
   ) => {
     const safeAlign = isNaN(align) ? 0 : Math.max(0, align);
     const safeVertical = isNaN(verticalOffset) ? 0 : verticalOffset;
     
+    // Get container width
+    const containerWidth = containerRef.current?.getBoundingClientRect().width || 0;
+    
+    // Simple: left position = percentage * container width
+    const left = safeAlign * containerWidth;
+    
     return {
-      left: `${safeAlign * 100}%`,
+      left: `${left}px`,
       top: `${safeVertical}px`,
     };
   };
@@ -1707,7 +1713,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               // Not dragging: calculate from stored 0-1 alignment
               const posStyle = (isDraggingStandardButtons && liveButtonsLeft !== null) 
                 ? { left: `${liveButtonsLeft}px`, top: `${liveButtonsTop}px` }
-                : getPositionStyle(align, verticalOffset);
+                : getPositionStyle(align, verticalOffset, standardButtonsRef);
               
               return (
                 <div className="mt-8 w-full relative" ref={standardButtonsRef} style={{ minHeight: '80px' }}>
@@ -1906,7 +1912,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               // Not dragging: calculate from stored 0-1 alignment
               const posStyle = (isDraggingStandardSocial && liveSocialLeft !== null) 
                 ? { left: `${liveSocialLeft}px`, top: `${liveSocialTop}px` }
-                : getPositionStyle(align, verticalOffset);
+                : getPositionStyle(align, verticalOffset, standardSocialRef);
               
               return (
                 <div className="mt-4 w-full relative" ref={standardSocialRef} style={{ minHeight: '50px' }}>

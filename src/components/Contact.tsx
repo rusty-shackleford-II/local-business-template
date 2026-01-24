@@ -685,7 +685,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   const hasCustomLinks = social?.customLinks?.some(link => link.url?.trim());
                   const hasSocialLinks = hasStandardLinks || hasCustomLinks;
                   
-                  if (!showInContact || !hasSocialLinks) return null;
+                  if (!showInContact || !hasSocialLinks || !social) return null;
                   
                   return (
                     <div className="border-t border-gray-300 pt-6 px-4 sm:px-0 mb-4">
