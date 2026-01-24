@@ -5,8 +5,8 @@ export type ColorPalette = {
 
 export type HeaderColors = { brandText?: string; navText?: string; businessNameColor?: string; background?: string };
 export type Header = { 
-  showLogo?: boolean; // Toggle logo visibility (default: true when undefined for backwards compatibility)
-  showBusinessName?: boolean; // Toggle header business name visibility (default: true when undefined for backwards compatibility)
+  showLogo?: boolean | string; // Toggle logo visibility (default: true when undefined for backwards compatibility, stored as string in editor)
+  showBusinessName?: boolean | string; // Toggle header business name visibility (default: true when undefined for backwards compatibility, stored as string in editor)
   brandText?: string; // Custom header business name text (defaults to businessInfo.businessName when undefined for backwards compatibility)
   colors?: HeaderColors;
   logoSize?: number; // Logo size multiplier (0.5 to 3.0, default 1.0)
@@ -448,8 +448,8 @@ export type Footer = {
   textSize?: number; // Business name text size multiplier (0.5 to 2.0, default 1.0)
   navLinkSize?: number; // Nav link text size multiplier (0.75 to 1.5, default 1.0)
   hidevLogoSize?: number; // Hi Dev logo size multiplier (0.4 to 1.0, default 1.0 = max size)
-  showLogo?: boolean; // Toggle footer logo visibility (default: true when undefined for backwards compatibility)
-  showBusinessName?: boolean; // Toggle footer business name visibility (default: true when undefined for backwards compatibility)
+  showLogo?: boolean | string; // Toggle footer logo visibility (default: true when undefined for backwards compatibility, stored as string in editor)
+  showBusinessName?: boolean | string; // Toggle footer business name visibility (default: true when undefined for backwards compatibility, stored as string in editor)
   brandText?: string; // Custom footer business name text (defaults to businessInfo.businessName when undefined for backwards compatibility)
   showPrivacyPolicy?: boolean | string; // Toggle privacy policy link visibility (stored as string in editor)
   privacyPolicyText?: string; // Privacy policy content (supports text/HTML)
