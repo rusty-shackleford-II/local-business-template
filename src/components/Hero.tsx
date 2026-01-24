@@ -1479,6 +1479,11 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const standardSocialDraggableRef = useRef<HTMLDivElement>(null);
   // Ref for the inner container (to calculate positioning bounds)
   const heroInnerContainerRef = useRef<HTMLDivElement>(null);
+  // Refs for adaptive hero bottom calculation
+  const heroSubheadlineRef = useRef<HTMLDivElement>(null);
+  const heroMediaContainerRef = useRef<HTMLDivElement>(null);
+  // State for adaptive bottom padding in standard layout
+  const [adaptiveBottomPadding, setAdaptiveBottomPadding] = useState(0);
   
   // Drag state for standard layout positioning - simple pixel-based dragging
   const [isDraggingStandardButtons, setIsDraggingStandardButtons] = useState(false);
@@ -1517,6 +1522,103 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     // Only apply min-height if elements are positioned below ~500px
     return maxBottom > 500 ? maxBottom : 0;
   }, [hero?.standardButtonsPosition, hero?.standardSocialLinksPosition, hero?.standardHeroMinHeight, hasStandardButtonsHorizontalAlign, hasStandardSocialLinksHorizontalAlign]);
+  
+  // Calculate adaptive min-height for standard layout hero section
+  // Ensures hero section bottom lies comfortably below the max of:
+  // social icons, button group, hero image, hero subtitle text
+  useEffect(() => {
+    // Only apply for standard layout (not fullwidth overlay)
+    if (isFullwidthOverlay) {
+      setAdaptiveBottomPadding(0);
+      return;
+    }
+    
+    const calculateAdaptiveBottom = () => {
+      if (!heroSectionRef.current) return;
+      
+      const sectionRect = heroSectionRef.current.getBoundingClientRect();
+      const sectionTop = sectionRect.top + window.scrollY; // Account for scroll
+      
+      // Get absolute bottom positions of all four elements
+      const bottoms: number[] = [];
+      
+      // 1. Social icons bottom
+      const socialElement = standardSocialDraggableRef.current || standardSocialRef.current;
+      if (socialElement) {
+        const rect = socialElement.getBoundingClientRect();
+        bottoms.push(rect.bottom + window.scrollY - sectionTop);
+      }
+      
+      // 2. Button group bottom
+      const buttonsElement = standardButtonsDraggableRef.current || standardButtonsRef.current;
+      if (buttonsElement) {
+        const rect = buttonsElement.getBoundingClientRect();
+        bottoms.push(rect.bottom + window.scrollY - sectionTop);
+      }
+      
+      // 3. Hero image/media container bottom
+      if (heroMediaContainerRef.current) {
+        const rect = heroMediaContainerRef.current.getBoundingClientRect();
+        bottoms.push(rect.bottom + window.scrollY - sectionTop);
+      }
+      
+      // 4. Hero subtitle text bottom
+      if (heroSubheadlineRef.current) {
+        const rect = heroSubheadlineRef.current.getBoundingClientRect();
+        bottoms.push(rect.bottom + window.scrollY - sectionTop);
+      }
+      
+      if (bottoms.length === 0) {
+        setAdaptiveBottomPadding(0);
+        return;
+      }
+      
+      // Find the maximum bottom position (lowest element)
+      const maxBottom = Math.max(...bottoms);
+      
+      // Add small padding below the lowest element (main padding comes from inner container's py classes)
+      const desiredPadding = 16; // 16px minimal padding below content
+      const neededMinHeight = maxBottom + desiredPadding;
+      
+      // Set the min-height value (will be applied to the section)
+      setAdaptiveBottomPadding(neededMinHeight);
+    };
+    
+    // Run calculation after render and on resize
+    // Use requestAnimationFrame to ensure DOM is ready
+    const runCalculation = () => requestAnimationFrame(calculateAdaptiveBottom);
+    
+    runCalculation();
+    
+    // Recalculate on resize
+    window.addEventListener('resize', runCalculation);
+    
+    // Also recalculate after images load or content changes
+    const observer = new MutationObserver(runCalculation);
+    
+    if (heroSectionRef.current) {
+      observer.observe(heroSectionRef.current, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class']
+      });
+    }
+    
+    // Recalculate after delays to account for async content/images
+    const timer1 = setTimeout(runCalculation, 100);
+    const timer2 = setTimeout(runCalculation, 500);
+    
+    return () => {
+      window.removeEventListener('resize', runCalculation);
+      observer.disconnect();
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+    };
+  }, [isFullwidthOverlay, hero?.standardButtonsHorizontalAlign, hero?.standardButtonsVerticalOffset, 
+      hero?.standardSocialLinksHorizontalAlign, hero?.standardSocialLinksVerticalOffset,
+      hero?.standardButtonsPosition, hero?.standardSocialLinksPosition,
+      liveButtonsTop, liveSocialTop, isMobile]);
   
   // Helper to parse value as number
   const parseNum = (value: number | string | undefined, fallback: number = 0): number => {
@@ -1572,8 +1674,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       newLeft = Math.min(maxLeft, newLeft);
     }
     
-    // Constrain vertically: allow some movement up/down
-    newTop = Math.max(-100, Math.min(200, newTop));
+    // Constrain vertically: allow movement up/down (more upward range for top-aligned layout)
+    newTop = Math.max(-400, Math.min(200, newTop));
     
     // Update live position (used directly for rendering during drag)
     setLiveButtonsLeft(newLeft);
@@ -1689,7 +1791,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     if (maxLeft > 0) {
       newLeft = Math.min(maxLeft, newLeft);
     }
-    newTop = Math.max(-100, Math.min(200, newTop));
+    // Constrain vertically: allow movement up/down (more upward range for top-aligned layout)
+    newTop = Math.max(-400, Math.min(200, newTop));
     
     setLiveSocialLeft(newLeft);
     setLiveSocialTop(newTop);
@@ -1924,14 +2027,20 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           className={`relative ${backgroundClass} ${isPreview ? '' : 'body-padding'}`}
           style={{
             // Ensure section is tall enough for positioned elements
-            minHeight: standardHeroMinHeight > 0 ? `${standardHeroMinHeight}px` : undefined
+            // Uses adaptive calculation for standard layout, or legacy value for pixel positioning
+            minHeight: adaptiveBottomPadding > 0 
+              ? `${adaptiveBottomPadding}px` 
+              : (standardHeroMinHeight > 0 ? `${standardHeroMinHeight}px` : undefined)
           }}
         >
-          <div ref={heroInnerContainerRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          <div 
+            ref={heroInnerContainerRef} 
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16"
+          >
           {/* Main content grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Text Content */}
-            <div className="order-2 lg:order-1 text-left relative">
+            <div className="order-2 lg:order-1 text-left relative pt-0 lg:pt-8">
               <div className="animate-fade-in">
               <EditableText
                 as="h1"
@@ -1960,43 +2069,45 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.headlineFont', font) : undefined}
                 showFontPicker={true}
               />
-              <EditableText
-                as="p"
-                className={`text-lg md:text-xl text-gray-600 mb-8 leading-relaxed ${(hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true') ? 'font-bold' : ''}`}
-                style={{ color: hero?.colors?.subheadline }}
-                value={hero?.subheadline}
-                path="hero.subheadline"
-                editable={editable}
-                onEdit={onEdit}
-                placeholder="Enter your subheadline"
-                multiline
-                textSize={hero?.subheadlineTextSize || 1.25}
-                onTextSizeChange={onEdit ? (size: number) => onEdit('hero.subheadlineTextSize', size.toString()) : undefined}
-                textSizeLabel="Hero Subheadline Size"
-                textSizePresets={[1.0, 1.25, 1.5, 1.75]}
-                textSizeNormal={1.25}
-                textSizeMin={0.875}
-                textSizeMax={2.5}
-                textColor={hero?.colors?.subheadline}
-                onTextColorChange={onEdit ? (color: string) => onEdit('hero.colors.subheadline', color) : undefined}
-                showColorPicker={true}
-                presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
-                textBold={hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true'}
-                onTextBoldChange={onEdit ? (bold: boolean) => onEdit('hero.subheadlineBold', bold.toString()) : undefined}
-                showBoldToggle={true}
-                textAlign={hero?.subheadlineAlign || 'left'}
-                onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.subheadlineAlign', align) : undefined}
-                showAlignmentToggle={true}
-                fontFamily={hero?.subheadlineFont}
-                onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
-                showFontPicker={true}
-              />
+              <div ref={heroSubheadlineRef}>
+                <EditableText
+                  as="p"
+                  className={`text-lg md:text-xl text-gray-600 mb-8 leading-relaxed ${(hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true') ? 'font-bold' : ''}`}
+                  style={{ color: hero?.colors?.subheadline }}
+                  value={hero?.subheadline}
+                  path="hero.subheadline"
+                  editable={editable}
+                  onEdit={onEdit}
+                  placeholder="Enter your subheadline"
+                  multiline
+                  textSize={hero?.subheadlineTextSize || 1.25}
+                  onTextSizeChange={onEdit ? (size: number) => onEdit('hero.subheadlineTextSize', size.toString()) : undefined}
+                  textSizeLabel="Hero Subheadline Size"
+                  textSizePresets={[1.0, 1.25, 1.5, 1.75]}
+                  textSizeNormal={1.25}
+                  textSizeMin={0.875}
+                  textSizeMax={2.5}
+                  textColor={hero?.colors?.subheadline}
+                  onTextColorChange={onEdit ? (color: string) => onEdit('hero.colors.subheadline', color) : undefined}
+                  showColorPicker={true}
+                  presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                  textBold={hero?.subheadlineBold === true || String(hero?.subheadlineBold) === 'true'}
+                  onTextBoldChange={onEdit ? (bold: boolean) => onEdit('hero.subheadlineBold', bold.toString()) : undefined}
+                  showBoldToggle={true}
+                  textAlign={hero?.subheadlineAlign || 'left'}
+                  onTextAlignChange={onEdit ? (align: 'left' | 'center' | 'right') => onEdit('hero.subheadlineAlign', align) : undefined}
+                  showAlignmentToggle={true}
+                  fontFamily={hero?.subheadlineFont}
+                  onFontFamilyChange={onEdit ? (font: string) => onEdit('hero.subheadlineFont', font) : undefined}
+                  showFontPicker={true}
+                />
+              </div>
                 
               </div>
             </div>
 
             {/* Hero Media (Image or Video) */}
-            <div className="order-1 lg:order-2">
+            <div className="order-1 lg:order-2" ref={heroMediaContainerRef}>
               <div className="relative">
                 {/* Decorative elements - behind the media */}
                 <div className="absolute -top-4 -left-4 w-72 h-72 bg-primary-100 rounded-full filter blur-xl opacity-70 animate-pulse -z-10"></div>

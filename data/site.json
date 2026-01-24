@@ -162,7 +162,7 @@
       "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero-image-0_2025-10-03T02-35-52.jpg",
       "https://eejrhvuxthdbmyyiubnr.supabase.co/storage/v1/object/public/vm-sites/public/d6adff42-ebc6-4aa7-8be7-da8f3e8efaa1/solarpanelslebanon.com/hero-image-1_2025-10-03T02-35-53.jpg"
     ],
-    "layoutStyle": "fullwidth-overlay",
+    "layoutStyle": "standard",
     "overlayBlur": false,
     "subheadlineBold": false,
     "subheadlineAlign": "center",
