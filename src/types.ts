@@ -387,6 +387,7 @@ export type SocialLinksConfig = {
   links?: SocialMedia;
   showInHero?: boolean;
   showInContact?: boolean;
+  heroSocialIconSize?: number; // Size multiplier for social icons in hero (0.5 to 2.0, default 1.0)
 };
 
 export type BusinessHours = {

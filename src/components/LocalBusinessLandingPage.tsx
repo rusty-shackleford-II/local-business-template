@@ -350,7 +350,14 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           isPreview={site.isPreview}
           backgroundClass={backgroundClass}
           editable={site.editable}
-          onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('hero.', '')}`, value) : undefined}
+          onEdit={site.onEdit ? (path, value) => {
+            // socialLinks is a top-level config, not nested under hero
+            if (path.startsWith('socialLinks.')) {
+              site.onEdit!(path, value);
+            } else {
+              site.onEdit!(`${editBasePath}.${path.replace('hero.', '')}`, value);
+            }
+          } : undefined}
           onHeroImageClick={site.onHeroImageClick}
           colorPalette={site.colorPalette}
           sectionId={customSectionId}

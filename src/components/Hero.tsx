@@ -7,6 +7,8 @@ import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import ButtonGridEditor, { getEffectiveGridLayout, legacyToGridLayout } from './ButtonGridEditor';
 import HeroImageEditor from './HeroImageEditor';
+import TextSizePopup from './TextSizePopup';
+import { createPortal } from 'react-dom';
 import { 
   FaInstagram, 
   FaFacebookF, 
@@ -14,10 +16,303 @@ import {
   FaTiktok,
   FaYelp,
   FaGoogle,
-  FaExternalLinkAlt
+  FaExternalLinkAlt,
+  FaYoutube
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
-import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton, SocialLinksConfig, ButtonGridLayout } from '../types';
+import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton, SocialLinksConfig, ButtonGridLayout, SocialMedia } from '../types';
+
+// Social Links Editor Popup Component
+const SocialLinksEditorPopup: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  socialLinks?: SocialLinksConfig;
+  onEdit?: (path: string, value: any) => void;
+  targetElement?: HTMLElement | null;
+}> = ({ isOpen, onClose, socialLinks, onEdit, targetElement }) => {
+  const popupRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [position, setPosition] = useState({ top: 0, left: 0 });
+  const [positionCalculated, setPositionCalculated] = useState(false);
+  
+  // Local state for form values (synced with props)
+  const [localIconSize, setLocalIconSize] = useState(socialLinks?.heroSocialIconSize ?? 1.0);
+  const [localLinks, setLocalLinks] = useState<Record<string, string>>({});
+  const [localShowInHero, setLocalShowInHero] = useState(socialLinks?.showInHero !== false);
+  
+  // Sync local state with props when popup opens
+  useEffect(() => {
+    if (isOpen) {
+      setLocalIconSize(socialLinks?.heroSocialIconSize ?? 1.0);
+      setLocalLinks({
+        facebook: socialLinks?.links?.facebook || '',
+        instagram: socialLinks?.links?.instagram || '',
+        twitter: socialLinks?.links?.twitter || '',
+        linkedin: socialLinks?.links?.linkedin || '',
+        youtube: socialLinks?.links?.youtube || '',
+        tiktok: socialLinks?.links?.tiktok || '',
+        yelp: socialLinks?.links?.yelp || '',
+        googleBusinessProfile: socialLinks?.links?.googleBusinessProfile || '',
+      });
+      setLocalShowInHero(socialLinks?.showInHero !== false);
+    }
+  }, [isOpen, socialLinks]);
+
+  // Handle mounting for SSR compatibility
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Reset position calculation when popup opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setPositionCalculated(false);
+    }
+  }, [isOpen]);
+
+  // Position the popup
+  useEffect(() => {
+    if (!isOpen || !targetElement || !mounted) return;
+
+    const updatePosition = () => {
+      const rect = targetElement.getBoundingClientRect();
+      const popupElement = popupRef.current;
+      if (!popupElement) return;
+      
+      const popupWidth = popupElement.offsetWidth;
+      const popupHeight = popupElement.offsetHeight;
+      const gap = 16;
+      const screenMargin = 16;
+      
+      // Center horizontally relative to target
+      let left = rect.left + rect.width / 2 - popupWidth / 2;
+      
+      // Position above or below based on screen position
+      const screenMidpoint = window.innerHeight / 2;
+      const isInBottomHalf = rect.top + rect.height / 2 > screenMidpoint;
+      let top = isInBottomHalf 
+        ? rect.top - popupHeight - gap 
+        : rect.bottom + gap;
+      
+      // Keep on screen horizontally
+      if (left + popupWidth > window.innerWidth - screenMargin) {
+        left = window.innerWidth - popupWidth - screenMargin;
+      }
+      if (left < screenMargin) {
+        left = screenMargin;
+      }
+      
+      // Keep on screen vertically
+      if (top < screenMargin) {
+        top = screenMargin;
+      }
+      if (top + popupHeight > window.innerHeight - screenMargin) {
+        top = window.innerHeight - popupHeight - screenMargin;
+      }
+      
+      setPosition({ top, left });
+      setPositionCalculated(true);
+    };
+
+    // Small delay to ensure popup is rendered
+    setTimeout(updatePosition, 10);
+    
+    window.addEventListener('scroll', updatePosition);
+    window.addEventListener('resize', updatePosition);
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, targetElement, mounted]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  // Close on click outside
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    // Use setTimeout to avoid closing immediately when opening
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen || !mounted) return null;
+
+  const handleSizeChange = (size: number) => {
+    setLocalIconSize(size);
+    if (onEdit) {
+      onEdit('socialLinks.heroSocialIconSize', size);
+    }
+  };
+
+  const handleLinkChange = (platform: string, value: string) => {
+    setLocalLinks(prev => ({ ...prev, [platform]: value }));
+    if (onEdit) {
+      onEdit(`socialLinks.links.${platform}`, value);
+    }
+  };
+  
+  const handleShowInHeroChange = (checked: boolean) => {
+    setLocalShowInHero(checked);
+    if (onEdit) {
+      onEdit('socialLinks.showInHero', checked);
+    }
+  };
+
+  // Social platform configurations
+  const platforms = [
+    { key: 'facebook', label: 'Facebook', icon: FaFacebookF, color: 'text-blue-600', placeholder: 'https://facebook.com/yourpage' },
+    { key: 'instagram', label: 'Instagram', icon: FaInstagram, color: 'text-pink-600', placeholder: 'https://instagram.com/yourprofile' },
+    { key: 'twitter', label: 'X (Twitter)', icon: FaXTwitter, color: 'text-black', placeholder: 'https://x.com/yourhandle' },
+    { key: 'linkedin', label: 'LinkedIn', icon: FaLinkedinIn, color: 'text-blue-700', placeholder: 'https://linkedin.com/company/yourcompany' },
+    { key: 'youtube', label: 'YouTube', icon: FaYoutube, color: 'text-red-600', placeholder: 'https://youtube.com/@yourchannel' },
+    { key: 'tiktok', label: 'TikTok', icon: FaTiktok, color: 'text-black', placeholder: 'https://tiktok.com/@yourprofile' },
+    { key: 'yelp', label: 'Yelp', icon: FaYelp, color: 'text-red-600', placeholder: 'https://yelp.com/biz/yourbusiness' },
+    { key: 'googleBusinessProfile', label: 'Google Business', icon: FaGoogle, color: 'text-blue-600', placeholder: 'https://g.page/yourbusiness' },
+  ];
+
+  const popupContent = (
+    <div
+      ref={popupRef}
+      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 w-[380px] max-h-[80vh] overflow-y-auto"
+      style={{
+        top: positionCalculated ? `${position.top}px` : '50%',
+        left: positionCalculated ? `${position.left}px` : '50%',
+        transform: positionCalculated ? 'none' : 'translate(-50%, -50%)',
+        zIndex: 10000,
+        opacity: 1,
+      }}
+    >
+      <div className="space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-medium text-gray-700">Social Links</div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Icon Size Slider */}
+        <div className="space-y-2 pb-3 border-b border-gray-200">
+          <label className="block text-xs font-medium text-gray-600">Icon Size</label>
+          <div className="flex gap-2">
+            {[0.75, 1.0, 1.25, 1.5].map((size) => (
+              <button
+                key={size}
+                onClick={() => handleSizeChange(size)}
+                className={`px-2 py-1 text-xs rounded-md border transition-all ${
+                  Math.abs(localIconSize - size) < 0.05
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                {size === 1.0 ? 'Normal' : `${size}x`}
+              </button>
+            ))}
+          </div>
+          <input
+            type="range"
+            min={0.5}
+            max={2.0}
+            step={0.05}
+            value={localIconSize}
+            onChange={(e) => handleSizeChange(parseFloat(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            style={{
+              background: `linear-gradient(to right, #3b82f6 ${((localIconSize - 0.5) / 1.5) * 100}%, #e5e7eb ${((localIconSize - 0.5) / 1.5) * 100}%)`
+            }}
+          />
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>Small</span>
+            <span className="font-medium">{Math.round(localIconSize * 100)}%</span>
+            <span>Large</span>
+          </div>
+        </div>
+
+        {/* Social Link Inputs */}
+        <div className="space-y-3">
+          <label className="block text-xs font-medium text-gray-600">Social Links</label>
+          {platforms.map(({ key, label, icon: Icon, color, placeholder }) => (
+            <div key={key} className="flex items-center gap-2">
+              <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 ${color}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                value={localLinks[key] || ''}
+                onChange={(e) => handleLinkChange(key, e.target.value)}
+                placeholder={placeholder}
+                className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              {localLinks[key] && (
+                <button
+                  onClick={() => handleLinkChange(key, '')}
+                  className="text-gray-400 hover:text-red-500 transition-colors"
+                  title="Remove"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Show in Hero Toggle */}
+        <div className="pt-3 border-t border-gray-200">
+          <label className="flex items-center cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={localShowInHero}
+              onChange={(e) => handleShowInHeroChange(e.target.checked)}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+            />
+            <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
+              Show social icons in hero section
+            </span>
+          </label>
+        </div>
+
+        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+          💡 Drag the icons to reposition them in the hero
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(popupContent, document.body);
+};
 
 // Video utility functions (copied from Videos component)
 function extractIframeSrc(input: string): string {
@@ -148,7 +443,8 @@ const HeroSocialLinks: React.FC<{
   isFullwidthOverlay?: boolean;
   compact?: boolean; // Smaller icons for standard layout
   className?: string;
-}> = ({ socialLinks, align = 'left', isFullwidthOverlay = false, compact = false, className = '' }) => {
+  iconSizeMultiplier?: number; // Size multiplier (0.5 to 2.0, default 1.0)
+}> = ({ socialLinks, align = 'left', isFullwidthOverlay = false, compact = false, className = '', iconSizeMultiplier }) => {
   const links = socialLinks?.links;
   
   // Check if we should show social links in hero
@@ -165,17 +461,26 @@ const HeroSocialLinks: React.FC<{
         ? 'justify-end' 
         : 'justify-start';
   
-  // Size classes based on compact mode
-  const sizeClass = compact 
-    ? 'w-12 h-12' 
-    : 'w-14 h-14';
+  // Use the size multiplier from props, then from socialLinks config, then default to 1.0
+  const sizeMultiplier = iconSizeMultiplier ?? socialLinks?.heroSocialIconSize ?? 1.0;
   
-  const iconSize = compact ? 'h-5 w-5' : 'h-6 w-6';
+  // Base sizes (compact: 48px container, 20px icon; standard: 56px container, 24px icon)
+  const baseContainerSize = compact ? 48 : 56;
+  const baseIconSize = compact ? 20 : 24;
+  
+  // Calculate actual sizes based on multiplier
+  const containerSize = Math.round(baseContainerSize * sizeMultiplier);
+  const iconSizePx = Math.round(baseIconSize * sizeMultiplier);
+  
+  // Use inline styles for dynamic sizing
+  const containerStyle = { width: `${containerSize}px`, height: `${containerSize}px` };
+  const iconStyle = { width: `${iconSizePx}px`, height: `${iconSizePx}px` };
+  
   const gapClass = compact ? 'gap-2' : 'gap-3';
   const marginClass = compact ? 'mt-4' : 'mt-6';
   
   // Base class for all icons - white background with shadow (like contact form)
-  const baseClass = `${sizeClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`;
+  const baseClass = `rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center`;
   
   // For fullwidth overlay, use semi-transparent white with white icons
   // For standard layout, use white background with brand colors (like contact form)
@@ -194,9 +499,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-blue-600')}
+          style={containerStyle}
           aria-label="Facebook"
         >
-          <FaFacebookF className={iconSize} />
+          <FaFacebookF style={iconStyle} />
         </a>
       )}
       {links.twitter && (
@@ -205,9 +511,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-black')}
+          style={containerStyle}
           aria-label="X (Twitter)"
         >
-          <FaXTwitter className={iconSize} />
+          <FaXTwitter style={iconStyle} />
         </a>
       )}
       {links.instagram && (
@@ -216,9 +523,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-pink-600')}
+          style={containerStyle}
           aria-label="Instagram"
         >
-          <FaInstagram className={iconSize} />
+          <FaInstagram style={iconStyle} />
         </a>
       )}
       {links.linkedin && (
@@ -227,9 +535,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-blue-700')}
+          style={containerStyle}
           aria-label="LinkedIn"
         >
-          <FaLinkedinIn className={iconSize} />
+          <FaLinkedinIn style={iconStyle} />
         </a>
       )}
       {links.youtube && (
@@ -238,9 +547,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-red-600')}
+          style={containerStyle}
           aria-label="YouTube"
         >
-          <svg className={iconSize} fill="currentColor" viewBox="0 0 24 24">
+          <svg style={iconStyle} fill="currentColor" viewBox="0 0 24 24">
             <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
           </svg>
         </a>
@@ -251,9 +561,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-black')}
+          style={containerStyle}
           aria-label="TikTok"
         >
-          <FaTiktok className={iconSize} />
+          <FaTiktok style={iconStyle} />
         </a>
       )}
       {links.yelp && (
@@ -262,9 +573,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-red-600')}
+          style={containerStyle}
           aria-label="Yelp"
         >
-          <FaYelp className={iconSize} />
+          <FaYelp style={iconStyle} />
         </a>
       )}
       {links.googleBusinessProfile && (
@@ -273,9 +585,10 @@ const HeroSocialLinks: React.FC<{
           target="_blank"
           rel="noopener noreferrer"
           className={getIconClass('text-blue-600')}
+          style={containerStyle}
           aria-label="Google Business"
         >
-          <FaGoogle className={iconSize} />
+          <FaGoogle style={iconStyle} />
         </a>
       )}
       {/* Custom external links with custom icons */}
@@ -287,6 +600,7 @@ const HeroSocialLinks: React.FC<{
             target="_blank"
             rel="noopener noreferrer"
             className={`${getIconClass('text-gray-700')} overflow-hidden`}
+            style={containerStyle}
             aria-label={customLink.label || 'External Link'}
           >
             {customLink.iconUrl ? (
@@ -294,10 +608,11 @@ const HeroSocialLinks: React.FC<{
               <img 
                 src={customLink.iconUrl} 
                 alt={customLink.label || 'Custom icon'} 
-                className={`${iconSize} object-contain`}
+                style={iconStyle}
+                className="object-contain"
               />
             ) : (
-              <FaExternalLinkAlt className={iconSize} />
+              <FaExternalLinkAlt style={iconStyle} />
             )}
           </a>
         )
@@ -337,6 +652,15 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const [isDraggingSocialLinks, setIsDraggingSocialLinks] = useState(false);
   const [socialLinksDragStartPos, setSocialLinksDragStartPos] = useState({ x: 0, y: 0 });
   const socialLinksFloatingRef = useRef<HTMLDivElement>(null);
+  
+  // Social icon size popup state
+  const [showSocialIconSizePopup, setShowSocialIconSizePopup] = useState(false);
+  const socialIconSizeTargetRef = useRef<HTMLDivElement>(null);
+  
+  // Pending drag state for social links - tracks mousedown before drag threshold is met
+  const [hasPendingSocialDrag, setHasPendingSocialDrag] = useState(false);
+  const pendingSocialDragRef = useRef<{ startX: number; startY: number } | null>(null);
+  const SOCIAL_DRAG_THRESHOLD = 5; // pixels
   
   // Get CTA buttons array with backwards compatibility
   // If ctaButtons array exists, use it; otherwise, convert single cta to array format
@@ -996,47 +1320,65 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [isDraggingButtons, handleButtonsDragMove, handleButtonsDragEnd]);
 
-  // Social links position drag handlers (for fullwidth overlay)
-  const handleSocialLinksDragStart = useCallback((e: ReactMouseEvent) => {
+  // Track if a drag just happened (to prevent click after drag)
+  const socialLinksRecentDragRef = useRef(false);
+  // Track mousedown position for click detection
+  const socialLinksMouseDownRef = useRef<{ x: number; y: number } | null>(null);
+  
+  // Social links mousedown handler (for fullwidth overlay)
+  const handleSocialLinksMouseDown = useCallback((e: ReactMouseEvent) => {
     if (!editable || !isFullwidthOverlay) return;
-    
-    // Don't drag if clicking on actual links
     const target = e.target as HTMLElement;
-    if (target.tagName === 'A' || target.closest('a')) {
-      return;
-    }
+    if (target.tagName === 'A' || target.closest('a')) return;
     
-    e.preventDefault();
-    setIsDraggingSocialLinks(true);
+    socialLinksMouseDownRef.current = { x: e.clientX, y: e.clientY };
+    pendingSocialDragRef.current = { startX: e.clientX, startY: e.clientY };
     setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
+    setHasPendingSocialDrag(true);
   }, [editable, isFullwidthOverlay]);
 
-  // Social links position drag handlers (for standard layout floating mode)
-  const handleStandardSocialLinksDragStart = useCallback((e: ReactMouseEvent) => {
-    if (!editable) return;
-    
-    // Don't drag if clicking on actual links
+  // Handle click on social links - opens popup if no drag occurred
+  const handleSocialLinksClick = useCallback((e: ReactMouseEvent, targetElement: HTMLDivElement | null) => {
     const target = e.target as HTMLElement;
-    if (target.tagName === 'A' || target.closest('a')) {
-      return;
+    if (target.tagName === 'A' || target.closest('a')) return;
+    if (socialLinksRecentDragRef.current) return;
+    
+    if (socialLinksMouseDownRef.current) {
+      const dx = Math.abs(e.clientX - socialLinksMouseDownRef.current.x);
+      const dy = Math.abs(e.clientY - socialLinksMouseDownRef.current.y);
+      socialLinksMouseDownRef.current = null;
+      if (dx > SOCIAL_DRAG_THRESHOLD || dy > SOCIAL_DRAG_THRESHOLD) return;
     }
     
-    e.preventDefault();
-    setIsDraggingSocialLinks(true);
-    setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
+    if (editable) {
+      e.stopPropagation();
+      socialIconSizeTargetRef.current = targetElement;
+      setShowSocialIconSizePopup(true);
+    }
   }, [editable]);
 
   const handleSocialLinksDragMove = useCallback((e: MouseEvent) => {
+    // Check for pending drag that hasn't activated yet
+    if (pendingSocialDragRef.current && !isDraggingSocialLinks) {
+      const dx = Math.abs(e.clientX - pendingSocialDragRef.current.startX);
+      const dy = Math.abs(e.clientY - pendingSocialDragRef.current.startY);
+      
+      // If moved beyond threshold, activate drag
+      if (dx > SOCIAL_DRAG_THRESHOLD || dy > SOCIAL_DRAG_THRESHOLD) {
+        e.preventDefault();
+        setIsDraggingSocialLinks(true);
+      }
+      return;
+    }
+    
     if (!isDraggingSocialLinks || !onEdit) return;
     
     // Find the appropriate container based on layout type
     let container: HTMLElement | null = null;
     
     if (isFullwidthOverlay) {
-      // For fullwidth, use the hero media container
       container = socialLinksFloatingRef.current?.closest('.relative.w-full') as HTMLElement;
     } else {
-      // For standard layout, use the grid container
       container = socialLinksFloatingRef.current?.closest('.grid') as HTMLElement;
     }
     
@@ -1061,11 +1403,21 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [isDraggingSocialLinks, socialLinksDragStartPos, hero?.socialLinksPosition, onEdit, isFullwidthOverlay]);
 
   const handleSocialLinksDragEnd = useCallback(() => {
-    setIsDraggingSocialLinks(false);
-  }, []);
-
-  useEffect(() => {
+    // Mark if we just dragged to prevent click handler
     if (isDraggingSocialLinks) {
+      socialLinksRecentDragRef.current = true;
+      setTimeout(() => { socialLinksRecentDragRef.current = false; }, 100);
+    }
+    // Clear all drag state
+    pendingSocialDragRef.current = null;
+    socialLinksMouseDownRef.current = null;
+    setHasPendingSocialDrag(false);
+    setIsDraggingSocialLinks(false);
+  }, [isDraggingSocialLinks]);
+
+  // Global listeners for social links drag (fullwidth overlay)
+  useEffect(() => {
+    if (hasPendingSocialDrag || isDraggingSocialLinks) {
       document.addEventListener('mousemove', handleSocialLinksDragMove);
       document.addEventListener('mouseup', handleSocialLinksDragEnd);
       return () => {
@@ -1073,7 +1425,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         document.removeEventListener('mouseup', handleSocialLinksDragEnd);
       };
     }
-  }, [isDraggingSocialLinks, handleSocialLinksDragMove, handleSocialLinksDragEnd]);
+  }, [hasPendingSocialDrag, isDraggingSocialLinks, handleSocialLinksDragMove, handleSocialLinksDragEnd]);
 
   // Preload resources for faster loading
   const preloadHints = useMemo(() => {
@@ -1249,13 +1601,23 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [onEdit, liveButtonsLeft, liveButtonsTop]);
   
   // Social links drag handlers
-  const handleStandardSocialDragStart = useCallback((e: ReactMouseEvent, elementRef: HTMLDivElement) => {
+  // Standard layout social drag - uses pending drag pattern
+  const [hasPendingStandardSocialDrag, setHasPendingStandardSocialDrag] = useState(false);
+  const pendingStandardSocialDragRef = useRef<{ elementRef: HTMLDivElement; startX: number; startY: number } | null>(null);
+  const standardSocialRecentDragRef = useRef(false);
+  const standardSocialMouseDownRef = useRef<{ x: number; y: number } | null>(null);
+  
+  const handleStandardSocialMouseDown = useCallback((e: ReactMouseEvent, elementRef: HTMLDivElement) => {
     if (!editable || isMobile) return;
-    e.preventDefault();
-    e.stopPropagation();
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' || target.closest('a')) return;
     
-    draggedElementRef.current = elementRef;
+    standardSocialMouseDownRef.current = { x: e.clientX, y: e.clientY };
+    
+    // Store pending drag info - don't activate drag yet
+    pendingStandardSocialDragRef.current = { elementRef, startX: e.clientX, startY: e.clientY };
     setDragStartMouse({ x: e.clientX, y: e.clientY });
+    draggedElementRef.current = elementRef;
     
     const rect = elementRef.getBoundingClientRect();
     const containerRect = standardSocialRef.current?.getBoundingClientRect();
@@ -1264,14 +1626,52 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       const currentTop = rect.top - containerRect.top;
       setDragStartElementLeft(currentLeft);
       setDragStartElementTop(currentTop);
-      setLiveSocialLeft(currentLeft);
-      setLiveSocialTop(currentTop);
     }
     
-    setIsDraggingStandardSocial(true);
+    setHasPendingStandardSocialDrag(true);
   }, [editable, isMobile]);
   
+  const handleStandardSocialClick = useCallback((e: ReactMouseEvent, targetElement: HTMLDivElement | null) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' || target.closest('a')) {
+      return;
+    }
+    if (standardSocialRecentDragRef.current) {
+      return;
+    }
+    
+    if (standardSocialMouseDownRef.current) {
+      const dx = Math.abs(e.clientX - standardSocialMouseDownRef.current.x);
+      const dy = Math.abs(e.clientY - standardSocialMouseDownRef.current.y);
+      standardSocialMouseDownRef.current = null;
+      if (dx > SOCIAL_DRAG_THRESHOLD || dy > SOCIAL_DRAG_THRESHOLD) {
+        return;
+      }
+    }
+    
+    if (editable) {
+      e.stopPropagation();
+      socialIconSizeTargetRef.current = targetElement;
+      setShowSocialIconSizePopup(true);
+    }
+  }, [editable]);
+  
   const handleStandardSocialDragMove = useCallback((e: MouseEvent) => {
+    // Check for pending drag that hasn't activated yet
+    if (pendingStandardSocialDragRef.current && !isDraggingStandardSocial) {
+      const dx = Math.abs(e.clientX - pendingStandardSocialDragRef.current.startX);
+      const dy = Math.abs(e.clientY - pendingStandardSocialDragRef.current.startY);
+      
+      // If moved beyond threshold, activate drag
+      if (dx > SOCIAL_DRAG_THRESHOLD || dy > SOCIAL_DRAG_THRESHOLD) {
+        e.preventDefault();
+        setIsDraggingStandardSocial(true);
+        setLiveSocialLeft(dragStartElementLeft);
+        setLiveSocialTop(dragStartElementTop);
+      }
+      return;
+    }
+    
     if (!isDraggingStandardSocial || !standardSocialRef.current || !draggedElementRef.current) return;
     
     const containerRect = standardSocialRef.current.getBoundingClientRect();
@@ -1284,9 +1684,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     let newLeft = dragStartElementLeft + deltaX;
     let newTop = dragStartElementTop + deltaY;
     
-    // Constrain left edge (can't go negative)
     newLeft = Math.max(0, newLeft);
-    // Constrain right edge (element's right edge can't go past container's right edge)
     const maxLeft = containerRect.width - elementRect.width;
     if (maxLeft > 0) {
       newLeft = Math.min(maxLeft, newLeft);
@@ -1298,24 +1696,33 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [isDraggingStandardSocial, dragStartMouse, dragStartElementLeft, dragStartElementTop]);
   
   const handleStandardSocialDragEnd = useCallback(() => {
-    // Store offset from center in PIXELS (stable when container resizes)
-    if (onEdit && standardSocialRef.current && draggedElementRef.current && liveSocialLeft !== null) {
-      const containerRect = standardSocialRef.current.getBoundingClientRect();
-      const elementRect = draggedElementRef.current.getBoundingClientRect();
-      // Calculate how far the element center is from container center
-      const containerCenter = containerRect.width / 2;
-      const elementCenter = liveSocialLeft + elementRect.width / 2;
-      const offsetFromCenter = elementCenter - containerCenter;
+    // Mark if we just dragged to prevent click handler
+    if (isDraggingStandardSocial) {
+      standardSocialRecentDragRef.current = true;
+      setTimeout(() => { standardSocialRecentDragRef.current = false; }, 100);
       
-      onEdit('hero.standardSocialLinksHorizontalAlign', offsetFromCenter as any);
-      onEdit('hero.standardSocialLinksVerticalOffset', liveSocialTop as any);
+      // Save position
+      if (onEdit && standardSocialRef.current && draggedElementRef.current && liveSocialLeft !== null) {
+        const containerRect = standardSocialRef.current.getBoundingClientRect();
+        const elementRect = draggedElementRef.current.getBoundingClientRect();
+        const containerCenter = containerRect.width / 2;
+        const elementCenter = liveSocialLeft + elementRect.width / 2;
+        const offsetFromCenter = elementCenter - containerCenter;
+        
+        onEdit('hero.standardSocialLinksHorizontalAlign', offsetFromCenter as any);
+        onEdit('hero.standardSocialLinksVerticalOffset', liveSocialTop as any);
+      }
     }
     
+    // Clear all drag state
+    pendingStandardSocialDragRef.current = null;
+    standardSocialMouseDownRef.current = null;
+    setHasPendingStandardSocialDrag(false);
     setIsDraggingStandardSocial(false);
     setLiveSocialLeft(null);
     setLiveSocialTop(null);
     draggedElementRef.current = null;
-  }, [onEdit, liveSocialLeft, liveSocialTop]);
+  }, [isDraggingStandardSocial, onEdit, liveSocialLeft, liveSocialTop]);
   
   // LEGACY: Drag handlers for pixel-based positioning (kept for backward compatibility)
   const [legacyDragOffset, setLegacyDragOffset] = useState({ x: 0, y: 0 });
@@ -1360,22 +1767,67 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     setIsDraggingStandardButtons(false);
   }, []);
   
-  const handleLegacySocialDragStart = useCallback((e: ReactMouseEvent) => {
+  // Legacy social drag - also uses pending drag pattern
+  const [hasPendingLegacySocialDrag, setHasPendingLegacySocialDrag] = useState(false);
+  const pendingLegacySocialDragRef = useRef<{ startX: number; startY: number; offsetX: number; offsetY: number } | null>(null);
+  const legacySocialRecentDragRef = useRef(false);
+  const legacySocialMouseDownRef = useRef<{ x: number; y: number } | null>(null);
+  
+  const handleLegacySocialMouseDown = useCallback((e: ReactMouseEvent) => {
     if (!editable) return;
-    e.preventDefault();
-    e.stopPropagation();
+    const targetEl = e.target as HTMLElement;
+    if (targetEl.tagName === 'A' || targetEl.closest('a')) return;
+    
+    legacySocialMouseDownRef.current = { x: e.clientX, y: e.clientY };
     
     const target = e.currentTarget as HTMLElement;
     const rect = target.getBoundingClientRect();
     
-    setLegacyDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
-    setIsDraggingStandardSocial(true);
+    pendingLegacySocialDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top
+    };
+    setHasPendingLegacySocialDrag(true);
+  }, [editable]);
+  
+  const handleLegacySocialClick = useCallback((e: ReactMouseEvent, targetElement: HTMLDivElement | null) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' || target.closest('a')) return;
+    if (legacySocialRecentDragRef.current) return;
+    
+    if (legacySocialMouseDownRef.current) {
+      const dx = Math.abs(e.clientX - legacySocialMouseDownRef.current.x);
+      const dy = Math.abs(e.clientY - legacySocialMouseDownRef.current.y);
+      legacySocialMouseDownRef.current = null;
+      if (dx > SOCIAL_DRAG_THRESHOLD || dy > SOCIAL_DRAG_THRESHOLD) return;
+    }
+    
+    if (editable) {
+      e.stopPropagation();
+      socialIconSizeTargetRef.current = targetElement;
+      setShowSocialIconSizePopup(true);
+    }
   }, [editable]);
   
   const handleLegacySocialDragMove = useCallback((e: MouseEvent) => {
+    // Check for pending drag that hasn't activated yet
+    if (pendingLegacySocialDragRef.current && !isDraggingStandardSocial) {
+      const dx = Math.abs(e.clientX - pendingLegacySocialDragRef.current.startX);
+      const dy = Math.abs(e.clientY - pendingLegacySocialDragRef.current.startY);
+      
+      if (dx > SOCIAL_DRAG_THRESHOLD || dy > SOCIAL_DRAG_THRESHOLD) {
+        e.preventDefault();
+        setLegacyDragOffset({
+          x: pendingLegacySocialDragRef.current.offsetX,
+          y: pendingLegacySocialDragRef.current.offsetY
+        });
+        setIsDraggingStandardSocial(true);
+      }
+      return;
+    }
+    
     if (!isDraggingStandardSocial || !onEdit || !heroSectionRef.current) return;
     
     const sectionRect = heroSectionRef.current.getBoundingClientRect();
@@ -1397,8 +1849,15 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [isDraggingStandardSocial, legacyDragOffset, hero?.standardButtonsPosition, onEdit]);
   
   const handleLegacySocialDragEnd = useCallback(() => {
+    if (isDraggingStandardSocial) {
+      legacySocialRecentDragRef.current = true;
+      setTimeout(() => { legacySocialRecentDragRef.current = false; }, 100);
+    }
+    pendingLegacySocialDragRef.current = null;
+    legacySocialMouseDownRef.current = null;
+    setHasPendingLegacySocialDrag(false);
     setIsDraggingStandardSocial(false);
-  }, []);
+  }, [isDraggingStandardSocial]);
   
   // Determine which drag handlers to use based on positioning mode
   const isUsingNewAlignSystem = hasStandardButtonsHorizontalAlign || hasStandardSocialLinksHorizontalAlign;
@@ -1421,7 +1880,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   
   // Effect for social drag (selects between new and legacy handlers)
   useEffect(() => {
-    if (isDraggingStandardSocial) {
+    const hasPending = isUsingLegacySystem ? hasPendingLegacySocialDrag : hasPendingStandardSocialDrag;
+    if (hasPending || isDraggingStandardSocial) {
       const moveHandler = isUsingLegacySystem ? handleLegacySocialDragMove : handleStandardSocialDragMove;
       const endHandler = isUsingLegacySystem ? handleLegacySocialDragEnd : handleStandardSocialDragEnd;
       
@@ -1432,7 +1892,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         document.removeEventListener('mouseup', endHandler);
       };
     }
-  }, [isDraggingStandardSocial, isUsingLegacySystem, handleLegacySocialDragMove, handleLegacySocialDragEnd, handleStandardSocialDragMove, handleStandardSocialDragEnd]);
+  }, [hasPendingStandardSocialDrag, hasPendingLegacySocialDrag, isDraggingStandardSocial, isUsingLegacySystem, handleLegacySocialDragMove, handleLegacySocialDragEnd, handleStandardSocialDragMove, handleStandardSocialDragEnd]);
   
   // Calculate position style using CSS-based centering with pixel offset
   // offsetFromCenter: pixel offset from center (0 = centered, negative = left, positive = right)
@@ -1900,10 +2360,20 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             const useLegacyPixel = hasStandardSocialLinksPosition && !hasStandardSocialLinksHorizontalAlign;
             const useInline = !hasStandardSocialLinksHorizontalAlign && !hasStandardSocialLinksPosition;
             
-            // On mobile: always render centered
+            // On mobile: always render centered (click to edit only, no drag)
             if (isMobile) {
               return (
-                <div className="mt-4 flex justify-center" ref={standardSocialRef}>
+                <div 
+                  className={`mt-4 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-gray-400 cursor-pointer' : ''}`} 
+                  ref={standardSocialRef}
+                  onClick={(e) => {
+                    if (!editable) return;
+                    if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                    e.stopPropagation();
+                    socialIconSizeTargetRef.current = standardSocialRef.current;
+                    setShowSocialIconSizePopup(true);
+                  }}
+                >
                   <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={false} compact={true} />
                 </div>
               );
@@ -1914,47 +2384,23 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               const align = parseNum(hero?.standardSocialLinksHorizontalAlign, 0);
               const verticalOffset = parseNum(hero?.standardSocialLinksVerticalOffset, 0);
               
-              // During drag: use live pixel position directly
-              // Not dragging: calculate from stored 0-1 alignment
               const posStyle = (isDraggingStandardSocial && liveSocialLeft !== null) 
                 ? { left: `${liveSocialLeft}px`, top: `${liveSocialTop}px` }
                 : getPositionStyle(align, verticalOffset);
               
               return (
                 <div className="mt-4 w-full relative" ref={standardSocialRef} style={{ minHeight: '50px' }}>
-                  {/* Draggable content */}
                   <div 
                     ref={standardSocialDraggableRef}
-                    className={`absolute ${editable ? 'cursor-move' : ''}`}
+                    className={`absolute p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-gray-400 cursor-pointer' : ''} ${isDraggingStandardSocial ? 'opacity-70' : ''}`}
                     style={posStyle}
-                    onMouseDown={(e) => standardSocialDraggableRef.current && handleStandardSocialDragStart(e, standardSocialDraggableRef.current)}
+                    onMouseDown={(e) => {
+                      standardSocialDraggableRef.current && handleStandardSocialMouseDown(e, standardSocialDraggableRef.current);
+                    }}
+                    onClick={(e) => {
+                      handleStandardSocialClick(e, standardSocialDraggableRef.current);
+                    }}
                   >
-                    {/* Drag handle for editor */}
-                    {editable && (
-                      <div 
-                        className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                        </svg>
-                        Drag to position
-                        {/* Reset button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onEdit) {
-                              onEdit('hero.standardSocialLinksHorizontalAlign', null as any);
-                              onEdit('hero.standardSocialLinksVerticalOffset', null as any);
-                            }
-                          }}
-                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
-                          title="Reset to default position"
-                        >
-                          Reset
-                        </button>
-                      </div>
-                    )}
                     <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} className="!mt-0" />
                   </div>
                 </div>
@@ -1965,70 +2411,34 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             if (useLegacyPixel && hero?.standardSocialLinksPosition) {
               return (
                 <div 
-                  className={`absolute z-30 ${editable ? 'cursor-grab' : ''} ${isDraggingStandardSocial ? 'cursor-grabbing opacity-70' : ''}`}
+                  className={`absolute z-30 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-gray-400 cursor-pointer' : ''} ${isDraggingStandardSocial ? 'opacity-70' : ''}`}
                   style={{
                     left: `${hero.standardSocialLinksPosition.x}px`,
                     top: `${hero.standardSocialLinksPosition.y}px`,
                   }}
-                  onMouseDown={handleLegacySocialDragStart}
+                  onMouseDown={handleLegacySocialMouseDown}
+                  onClick={(e) => handleLegacySocialClick(e, standardSocialRef.current)}
                   ref={standardSocialRef}
                 >
-                  {/* Drag handle for editor */}
-                  {editable && (
-                    <div 
-                      className="absolute -top-6 left-0 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap cursor-grab"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                      </svg>
-                      Drag Social (Legacy)
-                      {/* Reset button */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onEdit) {
-                            onEdit('hero.standardSocialLinksPosition', null as any);
-                          }
-                        }}
-                        className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
-                        title="Reset to inline position"
-                      >
-                        Reset
-                      </button>
-                    </div>
-                  )}
                   <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} />
                 </div>
               );
             }
             
-            // DEFAULT: Inline rendering (no positioning - click to enable positioning)
+            // DEFAULT: Inline rendering - click to edit only (no positioning yet)
             return (
               <div className="mt-4" ref={standardSocialRef}>
                 <div 
                   ref={standardSocialDraggableRef}
-                  className={`inline-block relative ${editable ? 'cursor-pointer' : ''}`}
+                  className={`inline-block p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-gray-400 cursor-pointer' : ''}`}
                   onClick={(e) => {
                     if (!editable) return;
-                    // Initialize positioning when clicked
-                    if (onEdit) {
-                      onEdit('hero.standardSocialLinksHorizontalAlign', 0 as any);
-                      onEdit('hero.standardSocialLinksVerticalOffset', 0 as any);
-                    }
+                    if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                    e.stopPropagation();
+                    socialIconSizeTargetRef.current = standardSocialDraggableRef.current;
+                    setShowSocialIconSizePopup(true);
                   }}
                 >
-                  {/* Click hint for editor to enable positioning */}
-                  {editable && (
-                    <div 
-                      className="absolute -top-6 left-0 bg-gray-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                      </svg>
-                      Click to enable positioning
-                    </div>
-                  )}
                   <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} className="!mt-0" />
                 </div>
               </div>
@@ -2054,6 +2464,15 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
             onClose={() => setShowImageEditor(false)}
           />
         )}
+        
+        {/* Social Links Editor Popup - for standard layout */}
+        <SocialLinksEditorPopup
+          isOpen={showSocialIconSizePopup}
+          onClose={() => setShowSocialIconSizePopup(false)}
+          socialLinks={socialLinks}
+          onEdit={onEdit}
+          targetElement={socialIconSizeTargetRef.current}
+        />
       </>
     );
   }
@@ -2478,7 +2897,18 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       />
                       {/* Social links for legacy layout (mobile and desktop) */}
                       {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
-                        <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-6" />
+                        <div 
+                          className={`mt-6 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-white/50 cursor-pointer' : ''}`}
+                          onClick={(e) => {
+                            if (!editable) return;
+                            if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                            e.stopPropagation();
+                            socialIconSizeTargetRef.current = e.currentTarget as HTMLDivElement;
+                            setShowSocialIconSizePopup(true);
+                          }}
+                        >
+                          <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
+                        </div>
                       )}
                     </div>
                   )}
@@ -2488,37 +2918,18 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               </div>
               
               {/* Floating Social Links - positioned separately (when NOT using blur overlay, non-legacy) */}
-              {/* On mobile, social links appear after buttons in the flow */}
-              {/* Legacy layouts render social links inline with buttons above */}
               {!hero?.overlayBlur && !isLegacyFullwidthLayout && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && !isMobile && (
                 <div 
                   ref={socialLinksFloatingRef}
-                  className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
+                  className={`absolute z-30 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-white/50 cursor-pointer' : ''} ${isDraggingSocialLinks ? 'opacity-70' : ''}`}
                   style={{
                     left: hero?.socialLinksPosition?.x !== undefined ? `${hero.socialLinksPosition.x}%` : '50%',
                     top: hero?.socialLinksPosition?.y !== undefined ? `${hero.socialLinksPosition.y}%` : '92%',
                     transform: 'translate(-50%, -50%)',
                   }}
-                  onMouseDown={handleSocialLinksDragStart}
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                      e.stopPropagation();
-                    }
-                  }}
+                  onMouseDown={handleSocialLinksMouseDown}
+                  onClick={(e) => handleSocialLinksClick(e, socialLinksFloatingRef.current)}
                 >
-                  {/* Move handle indicator for editor */}
-                  {editable && (
-                    <div 
-                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                      </svg>
-                      Move Social Links
-                    </div>
-                  )}
-                  
                   <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
                 </div>
               )}
@@ -2600,45 +3011,35 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   
                   {/* Mobile social links - rendered after buttons in the flow */}
                   {isMobile && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
-                    <div className="mt-4 flex justify-center">
+                    <div 
+                      className={`mt-4 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-white/50 cursor-pointer' : ''}`}
+                      onClick={(e) => {
+                        if (!editable) return;
+                        if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                        e.stopPropagation();
+                        socialIconSizeTargetRef.current = e.currentTarget as HTMLDivElement;
+                        setShowSocialIconSizePopup(true);
+                      }}
+                    >
                       <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
                     </div>
                   )}
                 </div>
               )}
               
-              {/* Floating Social Links - positioned separately from buttons (only when using blur overlay, desktop only) */}
-              {/* On mobile, social links are rendered inside the button container above */}
+              {/* Floating Social Links - blur overlay, desktop only */}
               {hero?.overlayBlur && !isMobile && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
                 <div 
                   ref={socialLinksFloatingRef}
-                  className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
+                  className={`absolute z-30 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-white/50 cursor-pointer' : ''} ${isDraggingSocialLinks ? 'opacity-70' : ''}`}
                   style={{
                     left: hero?.socialLinksPosition?.x !== undefined ? `${hero.socialLinksPosition.x}%` : '50%',
                     top: hero?.socialLinksPosition?.y !== undefined ? `${hero.socialLinksPosition.y}%` : '92%',
                     transform: 'translate(-50%, -50%)',
                   }}
-                  onMouseDown={handleSocialLinksDragStart}
-                  onClick={(e) => {
-                    // Only stop propagation if clicking on the container itself (not on links)
-                    if (e.target === e.currentTarget) {
-                      e.stopPropagation();
-                    }
-                  }}
+                  onMouseDown={handleSocialLinksMouseDown}
+                  onClick={(e) => handleSocialLinksClick(e, socialLinksFloatingRef.current)}
                 >
-                  {/* Move handle indicator for editor */}
-                  {editable && (
-                    <div 
-                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                      </svg>
-                      Move Social Links
-                    </div>
-                  )}
-                  
                   <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
                 </div>
               )}
@@ -2657,6 +3058,15 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           onClose={() => setShowImageEditor(false)}
         />
       )}
+      
+      {/* Social Links Editor Popup - for fullwidth overlay layout */}
+      <SocialLinksEditorPopup
+        isOpen={showSocialIconSizePopup}
+        onClose={() => setShowSocialIconSizePopup(false)}
+        socialLinks={socialLinks}
+        onEdit={onEdit}
+        targetElement={socialIconSizeTargetRef.current}
+      />
     </>
   );
 };

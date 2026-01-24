@@ -8,7 +8,7 @@
 
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { XMarkIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, ArrowRightIcon, TrashIcon } from '@heroicons/react/24/outline';
 import type { HeroCtaButton, ColorPalette, ButtonStyles } from '../types';
 
 // ============================================================================
@@ -119,6 +119,9 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
   
   // Pulse animation state
   const [showPulse, setShowPulse] = useState(true);
+  
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Global button styles for preview
   const paddingX = buttonStyles.paddingX ?? 32;
@@ -251,7 +254,7 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '580px',
+          width: '640px',
           maxWidth: '95vw',
           maxHeight: '90vh',
           overflowY: 'auto',
@@ -262,21 +265,63 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-white font-semibold text-lg">Edit Button</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-800"
-          >
-            <XMarkIcon className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Delete button - only show if there's more than one button */}
+            {allButtons.length > 1 && !isLegacyButton && (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="text-gray-400 hover:text-red-400 transition-colors p-1.5 rounded hover:bg-red-500/10"
+                title="Delete this button"
+              >
+                <TrashIcon className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition-colors p-1.5 rounded hover:bg-gray-800"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
         
+        {/* Delete Confirmation */}
+        {showDeleteConfirm && (
+          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p className="text-red-400 text-sm font-medium mb-3">
+              Are you sure you want to delete this button?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  // Remove this button from the array
+                  const updatedButtons = allButtons.filter((_, i) => i !== buttonIndex);
+                  onEdit('hero.ctaButtons', updatedButtons);
+                  onClose();
+                }}
+                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+              >
+                Yes, Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+        
         {/* Subtitle explaining scope */}
-        <p className="text-amber-400/90 text-sm mb-5 flex items-center gap-2">
-          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          Editing only this button — not all buttons
-        </p>
+        {!showDeleteConfirm && (
+          <p className="text-amber-400/90 text-sm mb-5 flex items-center gap-2">
+            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            Editing only this button — not all buttons
+          </p>
+        )}
         
         {/* Button Preview */}
         <div 
@@ -597,25 +642,6 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
           </div>
         </div>
         
-        {/* Danger Zone - Delete Button */}
-        {allButtons.length > 1 && !isLegacyButton && (
-          <div className="pt-4 mt-4 border-t border-gray-700">
-            <button
-              onClick={() => {
-                // Remove this button from the array
-                const updatedButtons = allButtons.filter((_, i) => i !== buttonIndex);
-                onEdit('hero.ctaButtons', updatedButtons);
-                onClose();
-              }}
-              className="w-full px-4 py-2 text-sm font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg border border-red-500/30 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Delete This Button
-            </button>
-          </div>
-        )}
       </div>
       
       {/* Pulse animation keyframes */}

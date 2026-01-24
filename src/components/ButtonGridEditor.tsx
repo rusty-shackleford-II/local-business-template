@@ -61,7 +61,7 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { ArrowRightIcon } from '@heroicons/react/24/outline';
 import type { HeroCtaButton, ButtonGridLayout, ButtonGridPosition, ColorPalette, ButtonStyles } from '../types';
-import EditableText from './EditableText';
+// EditableText no longer needed - button text editing happens in SingleButtonEditor modal
 import ButtonStyleEditor from './ButtonStyleEditor';
 import SingleButtonEditor from './SingleButtonEditor';
 
@@ -310,8 +310,12 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   }, [gridLayout]);
   
   // ──────────────────────────────────────────────────────────────────────────
-  // MOUSE HANDLERS
+  // MOUSE HANDLERS (with drag threshold to distinguish click from drag)
   // ──────────────────────────────────────────────────────────────────────────
+  
+  // Pending drag state - tracks mousedown before drag threshold is met
+  const pendingDragRef = useRef<{ buttonId: string; startX: number; startY: number; offsetX: number; offsetY: number } | null>(null);
+  const DRAG_THRESHOLD = 5; // pixels of movement before drag activates
   
   const handleMouseDown = useCallback((e: React.MouseEvent, buttonId: string) => {
     if (!editable || buttons.length <= 1) return;
@@ -322,13 +326,35 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     
-    setDraggedButtonId(buttonId);
-    setIsDragging(true);
-    setDragOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top });
-    setDragPosition({ x: e.clientX, y: e.clientY });
+    // Store pending drag info - don't activate drag yet
+    pendingDragRef.current = {
+      buttonId,
+      startX: e.clientX,
+      startY: e.clientY,
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+    };
+    
+    // Track position for click detection
+    buttonMouseDownRef.current = { x: e.clientX, y: e.clientY, buttonId };
   }, [editable, buttons.length]);
   
   const handleMouseMove = useCallback((e: MouseEvent) => {
+    // Check if we have a pending drag that hasn't activated yet
+    if (pendingDragRef.current && !isDragging) {
+      const dx = Math.abs(e.clientX - pendingDragRef.current.startX);
+      const dy = Math.abs(e.clientY - pendingDragRef.current.startY);
+      
+      // If moved beyond threshold, activate drag
+      if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+        setDraggedButtonId(pendingDragRef.current.buttonId);
+        setIsDragging(true);
+        setDragOffset({ x: pendingDragRef.current.offsetX, y: pendingDragRef.current.offsetY });
+        setDragPosition({ x: e.clientX, y: e.clientY });
+      }
+      return;
+    }
+    
     if (!isDragging || !draggedButtonId) return;
     
     setDragPosition({ x: e.clientX, y: e.clientY });
@@ -357,6 +383,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   }, [isDragging, draggedButtonId]);
   
   const handleMouseUp = useCallback(() => {
+    // If drag was active and we have a drop target, perform the drop
     if (isDragging && draggedButtonId && activeDropTarget) {
       const newLayout = calculateNewLayout(draggedButtonId, activeDropTarget);
       onLayoutChange(newLayout);
@@ -369,27 +396,68 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
       setTimeout(() => { recentDragRef.current = false; }, 100);
     }
     
+    // Clear all drag state
+    pendingDragRef.current = null;
     setIsDragging(false);
     setDraggedButtonId(null);
     setActiveDropTarget(null);
   }, [isDragging, draggedButtonId, activeDropTarget, calculateNewLayout, onLayoutChange]);
   
-  // Global mouse event listeners
+  // Global mouse event listeners for drag handling
   useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      // Check if we have a pending drag that hasn't activated yet
+      if (pendingDragRef.current && !isDragging) {
+        const dx = Math.abs(e.clientX - pendingDragRef.current.startX);
+        const dy = Math.abs(e.clientY - pendingDragRef.current.startY);
+        
+        // If moved beyond threshold, activate drag
+        if (dx > DRAG_THRESHOLD || dy > DRAG_THRESHOLD) {
+          setDraggedButtonId(pendingDragRef.current.buttonId);
+          setIsDragging(true);
+          setDragOffset({ x: pendingDragRef.current.offsetX, y: pendingDragRef.current.offsetY });
+          setDragPosition({ x: e.clientX, y: e.clientY });
+        }
+        return;
+      }
+      
+      // Handle active drag
+      if (isDragging && draggedButtonId) {
+        handleMouseMove(e);
+      }
+    };
+    
+    const onUp = () => {
+      // If mouseup without drag activating, just clear pending state
+      if (pendingDragRef.current && !isDragging) {
+        pendingDragRef.current = null;
+        return;
+      }
+      
+      // Handle active drag end
+      if (isDragging) {
+        handleMouseUp();
+      }
+    };
+    
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    
+    // Set cursor style when dragging
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
       document.body.style.userSelect = 'none';
       document.body.style.cursor = 'grabbing';
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (isDragging) {
         document.body.style.userSelect = '';
         document.body.style.cursor = '';
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+      }
+    };
+  }, [isDragging, draggedButtonId, handleMouseMove, handleMouseUp]);
   
   // ──────────────────────────────────────────────────────────────────────────
   // CALCULATE VALID DROP POSITIONS
@@ -682,17 +750,13 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             onMouseEnter={() => !isDragging && setHoveredButtonId(button.id)}
             onMouseLeave={() => setHoveredButtonId(null)}
           >
-            <EditableText
-              value={button.label}
-              path={ctaButtons ? `hero.ctaButtons.${buttonIndex}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-              editable={editable}
-              onEdit={onEdit}
-              placeholder="Button text"
-              textSize={button.labelTextSize || 1.0}
-              onTextSizeChange={onEdit ? (size: number) => onEdit(ctaButtons ? `hero.ctaButtons.${buttonIndex}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-              textSizeLabel="CTA Button Text Size"
-              style={buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : undefined}
-            />
+            {/* Text is display-only here; editing happens in SingleButtonEditor modal */}
+            <span style={{ 
+              ...(buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : {}),
+              pointerEvents: 'none' 
+            }}>
+              {button.label || 'Button text'}
+            </span>
             {button.showArrow !== false && (
               <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform duration-200" />
             )}
@@ -833,17 +897,10 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
                 onMouseEnter={() => setHoveredButtonId(button.id)}
                 onMouseLeave={() => setHoveredButtonId(null)}
               >
-                <EditableText
-                  value={button.label}
-                  path={ctaButtons ? `hero.ctaButtons.${index}.label` : (payment?.addHeroCta ? "payment.heroCtaLabel" : "hero.cta.label")}
-                  editable={editable}
-                  onEdit={onEdit}
-                  placeholder="Button text"
-                  textSize={button.labelTextSize || 1.0}
-                  onTextSizeChange={onEdit ? (size: number) => onEdit(ctaButtons ? `hero.ctaButtons.${index}.labelTextSize` : (payment?.addHeroCta ? 'payment.heroCtaLabelTextSize' : 'hero.cta.labelTextSize'), size.toString()) : undefined}
-                  textSizeLabel="CTA Button Text Size"
-                  style={{ fontSize: mobileFontSize }}
-                />
+                {/* Text is display-only here; editing happens in SingleButtonEditor modal */}
+                <span style={{ fontSize: mobileFontSize, pointerEvents: 'none' }}>
+                  {button.label || 'Button text'}
+                </span>
                 {button.showArrow !== false && (
                   <ArrowRightIcon className="ml-2 h-5 w-5 flex-shrink-0" />
                 )}
