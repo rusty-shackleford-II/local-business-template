@@ -2035,8 +2035,34 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         >
           <div 
             ref={heroInnerContainerRef} 
-            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16"
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative"
           >
+          {/* Alignment guides - shown when dragging */}
+          {(isDraggingStandardButtons || isDraggingStandardSocial) && editable && (
+            <>
+              {/* Vertical center line - dotted, uses hero text color for visibility */}
+              <div 
+                className="absolute top-0 bottom-0 pointer-events-none z-50"
+                style={{ 
+                  left: '50%', 
+                  width: '2px',
+                  backgroundImage: `repeating-linear-gradient(to bottom, ${hero?.colors?.headline || '#000'} 0, ${hero?.colors?.headline || '#000'} 8px, transparent 8px, transparent 16px)`
+                }}
+              />
+              {/* Center line label */}
+              <div 
+                className="absolute top-2 text-xs px-1.5 py-0.5 rounded pointer-events-none z-50"
+                style={{ 
+                  left: '50%', 
+                  transform: 'translateX(-50%)',
+                  backgroundColor: hero?.colors?.headline || '#000',
+                  color: hero?.colors?.headline === '#ffffff' || hero?.colors?.headline === '#fff' || hero?.colors?.headline === 'white' ? '#000' : '#fff'
+                }}
+              >
+                center
+              </div>
+            </>
+          )}
           {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             {/* Text Content */}
@@ -2602,6 +2628,32 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         {/* Full-width media background */}
         {/* Mobile height is dynamic based on content; desktop uses fixed heights */}
         <div className="relative w-full min-h-[500px] md:h-[700px] lg:h-[800px] overflow-hidden flex flex-col md:block">
+          {/* Alignment guides - shown when dragging in fullwidth overlay */}
+          {(isDragging || isDraggingButtons || isDraggingSocialLinks) && editable && (
+            <>
+              {/* Vertical center line - dotted, uses hero text color for visibility */}
+              <div 
+                className="absolute top-0 bottom-0 pointer-events-none z-50"
+                style={{ 
+                  left: '50%', 
+                  width: '2px',
+                  backgroundImage: `repeating-linear-gradient(to bottom, ${hero?.colors?.headline || '#fff'} 0, ${hero?.colors?.headline || '#fff'} 8px, transparent 8px, transparent 16px)`
+                }}
+              />
+              {/* Center line label */}
+              <div 
+                className="absolute top-2 text-xs px-1.5 py-0.5 rounded pointer-events-none z-50"
+                style={{ 
+                  left: '50%', 
+                  transform: 'translateX(-50%)',
+                  backgroundColor: hero?.colors?.headline || '#fff',
+                  color: hero?.colors?.headline === '#000000' || hero?.colors?.headline === '#000' || hero?.colors?.headline === 'black' ? '#fff' : '#000'
+                }}
+              >
+                center
+              </div>
+            </>
+          )}
           {/* Media layer */}
           {hero?.mediaType === 'video' && videoEmbedSrc ? (
             <div ref={videoContainerRef} className="absolute inset-0">
