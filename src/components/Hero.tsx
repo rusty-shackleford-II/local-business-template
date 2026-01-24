@@ -1221,13 +1221,16 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [isDraggingStandardButtons, dragStartMouse, dragStartElementLeft, dragStartElementTop]);
   
   const handleStandardButtonsDragEnd = useCallback(() => {
-    // Store left position as percentage of container width (simple, doesn't depend on element width)
-    if (onEdit && standardButtonsRef.current && liveButtonsLeft !== null) {
+    // Store offset from center in PIXELS (stable when container resizes)
+    if (onEdit && standardButtonsRef.current && draggedElementRef.current && liveButtonsLeft !== null) {
       const containerRect = standardButtonsRef.current.getBoundingClientRect();
-      // Store as percentage of container width (0 = left edge, 1 = 100% from left)
-      const leftPercent = containerRect.width > 0 ? liveButtonsLeft / containerRect.width : 0;
+      const elementRect = draggedElementRef.current.getBoundingClientRect();
+      // Calculate how far the element center is from container center
+      const containerCenter = containerRect.width / 2;
+      const elementCenter = liveButtonsLeft + elementRect.width / 2;
+      const offsetFromCenter = elementCenter - containerCenter;
       
-      onEdit('hero.standardButtonsHorizontalAlign', leftPercent as any);
+      onEdit('hero.standardButtonsHorizontalAlign', offsetFromCenter as any);
       onEdit('hero.standardButtonsVerticalOffset', liveButtonsTop as any);
     }
     
@@ -1287,12 +1290,16 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [isDraggingStandardSocial, dragStartMouse, dragStartElementLeft, dragStartElementTop]);
   
   const handleStandardSocialDragEnd = useCallback(() => {
-    // Store left position as percentage of container width
-    if (onEdit && standardSocialRef.current && liveSocialLeft !== null) {
+    // Store offset from center in PIXELS (stable when container resizes)
+    if (onEdit && standardSocialRef.current && draggedElementRef.current && liveSocialLeft !== null) {
       const containerRect = standardSocialRef.current.getBoundingClientRect();
-      const leftPercent = containerRect.width > 0 ? liveSocialLeft / containerRect.width : 0;
+      const elementRect = draggedElementRef.current.getBoundingClientRect();
+      // Calculate how far the element center is from container center
+      const containerCenter = containerRect.width / 2;
+      const elementCenter = liveSocialLeft + elementRect.width / 2;
+      const offsetFromCenter = elementCenter - containerCenter;
       
-      onEdit('hero.standardSocialLinksHorizontalAlign', leftPercent as any);
+      onEdit('hero.standardSocialLinksHorizontalAlign', offsetFromCenter as any);
       onEdit('hero.standardSocialLinksVerticalOffset', liveSocialTop as any);
     }
     
@@ -1419,25 +1426,16 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [isDraggingStandardSocial, isUsingLegacySystem, handleLegacySocialDragMove, handleLegacySocialDragEnd, handleStandardSocialDragMove, handleStandardSocialDragEnd]);
   
-  // Calculate pixel position from stored percentage
-  // align: percentage of container width where left edge should be (0 = left edge, 0.5 = center, etc)
-  const getPositionStyle = (
-    align: number, 
-    verticalOffset: number, 
-    containerRef: React.RefObject<HTMLDivElement | null>
-  ) => {
-    const safeAlign = isNaN(align) ? 0 : Math.max(0, align);
-    const safeVertical = isNaN(verticalOffset) ? 0 : verticalOffset;
-    
-    // Get container width
-    const containerWidth = containerRef.current?.getBoundingClientRect().width || 0;
-    
-    // Simple: left position = percentage * container width
-    const left = safeAlign * containerWidth;
-    
+  // Calculate position style using CSS-based centering with pixel offset
+  // offsetFromCenter: pixel offset from center (0 = centered, negative = left, positive = right)
+  // This approach is stable when container width changes because it's relative to 50%
+  const getPositionStyle = (offsetFromCenter: number, verticalOffset: number) => {
+    // Sanity check: values over 1000px are clearly from a buggy old implementation, reset to centered
+    const safeOffset = (Math.abs(offsetFromCenter || 0) > 1000) ? 0 : (offsetFromCenter || 0);
     return {
-      left: `${left}px`,
-      top: `${safeVertical}px`,
+      left: '50%',
+      transform: `translateX(calc(-50% + ${safeOffset}px))`,
+      top: `${verticalOffset || 0}px`,
     };
   };
 
@@ -1713,7 +1711,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               // Not dragging: calculate from stored 0-1 alignment
               const posStyle = (isDraggingStandardButtons && liveButtonsLeft !== null) 
                 ? { left: `${liveButtonsLeft}px`, top: `${liveButtonsTop}px` }
-                : getPositionStyle(align, verticalOffset, standardButtonsRef);
+                : getPositionStyle(align, verticalOffset);
               
               return (
                 <div className="mt-8 w-full relative" ref={standardButtonsRef} style={{ minHeight: '80px' }}>
@@ -1912,7 +1910,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               // Not dragging: calculate from stored 0-1 alignment
               const posStyle = (isDraggingStandardSocial && liveSocialLeft !== null) 
                 ? { left: `${liveSocialLeft}px`, top: `${liveSocialTop}px` }
-                : getPositionStyle(align, verticalOffset, standardSocialRef);
+                : getPositionStyle(align, verticalOffset);
               
               return (
                 <div className="mt-4 w-full relative" ref={standardSocialRef} style={{ minHeight: '50px' }}>
