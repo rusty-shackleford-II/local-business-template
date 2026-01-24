@@ -183,6 +183,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     
     window.addEventListener('hashchange', handleHashChange);
     return () => window.removeEventListener('hashchange', handleHashChange);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site.onPageChange]);
   
   // Find current page
@@ -533,6 +534,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         editable={site.editable}
         onEdit={site.onEdit}
         isPreview={site.isPreview}
+        colorPalette={site.colorPalette}
       />
     </div>
   );

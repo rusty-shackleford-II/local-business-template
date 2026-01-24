@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import EditableText from './EditableText';
 import type { BusinessBenefits, ColorPalette } from '../types';
 
@@ -40,8 +40,11 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
     ]
   };
 
-  // Get the actual items array
-  const allItems = Array.isArray(businessBenefits.items) ? businessBenefits.items : [];
+  // Get the actual items array - memoized to prevent useCallback dependency changes
+  const allItems = useMemo(() => 
+    Array.isArray(businessBenefits.items) ? businessBenefits.items : [],
+    [businessBenefits.items]
+  );
   
   // Filter for display: show non-empty benefits OR newly added ones (so they can be edited)
   const displayItems = allItems

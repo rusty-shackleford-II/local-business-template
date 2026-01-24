@@ -12,7 +12,8 @@ import {
   FaTiktok,
   FaYelp,
   FaStar,
-  FaGoogle
+  FaGoogle,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import { 
@@ -677,7 +678,12 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   // Fall back to contact.social for backward compatibility
                   const showInContact = socialLinks?.showInContact ?? true;
                   const social = socialLinks?.links || contact?.social;
-                  const hasSocialLinks = social && Object.values(social).some(url => url && url.trim());
+                  // Check for social links - handle both string values and customLinks array
+                  const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
+                    key !== 'customLinks' && typeof value === 'string' && value.trim()
+                  );
+                  const hasCustomLinks = social?.customLinks?.some(link => link.url?.trim());
+                  const hasSocialLinks = hasStandardLinks || hasCustomLinks;
                   
                   if (!showInContact || !hasSocialLinks) return null;
                   
@@ -861,6 +867,30 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             />
                           </a>
                         )}
+                        {/* Custom external links with custom icons */}
+                        {social.customLinks?.map((customLink) => (
+                          customLink.url && (
+                            <a
+                              key={customLink.id}
+                              href={customLink.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center overflow-hidden"
+                              aria-label={customLink.label || 'External Link'}
+                            >
+                              {customLink.iconUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img 
+                                  src={customLink.iconUrl} 
+                                  alt={customLink.label || 'Custom icon'} 
+                                  className="h-5 w-5 object-contain"
+                                />
+                              ) : (
+                                <FaExternalLinkAlt className="h-5 w-5" />
+                              )}
+                            </a>
+                          )
+                        ))}
                       </div>
                     </div>
                   );

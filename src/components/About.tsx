@@ -211,13 +211,13 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
     setIsModalOpen(false);
   };
 
-  const nextModalImage = () => {
+  const nextModalImage = React.useCallback(() => {
     setModalImageIndex((prev) => (prev + 1) % images.length);
-  };
+  }, [images.length]);
 
-  const prevModalImage = () => {
+  const prevModalImage = React.useCallback(() => {
     setModalImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  }, [images.length]);
 
   // Handle keyboard navigation in modal
   useEffect(() => {
@@ -235,7 +235,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isModalOpen, images.length]);
+  }, [isModalOpen, nextModalImage, prevModalImage]);
 
   return (
     <>

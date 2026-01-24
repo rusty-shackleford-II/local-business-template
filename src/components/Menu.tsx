@@ -1,7 +1,7 @@
-import React, { useState, useRef, memo, startTransition, useEffect } from 'react';
+import React, { useState, useRef, memo, startTransition, useEffect, createContext, useContext } from 'react';
 import Image from 'next/image';
 import IdbImage from './IdbImage';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { Menu as MenuType, MenuItem, MenuCategory, MenuImage } from '../types';
 import EditableText from './EditableText';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -10,6 +10,66 @@ import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+
+// Context for image zoom modal
+type ZoomContextType = {
+  openZoom: (imageUrl: string, alt: string) => void;
+};
+const ZoomContext = createContext<ZoomContextType | null>(null);
+
+// Image Zoom Modal Component
+const ImageZoomModal: React.FC<{
+  imageUrl: string | null;
+  alt: string;
+  onClose: () => void;
+}> = ({ imageUrl, alt, onClose }) => {
+  useEffect(() => {
+    if (!imageUrl) return;
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [imageUrl, onClose]);
+
+  if (!imageUrl) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors duration-200 z-10"
+        aria-label="Close"
+      >
+        <XMarkIcon className="w-6 h-6 text-white" />
+      </button>
+      <div
+        className="relative max-w-[90vw] max-h-[90vh] w-auto h-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <IdbImage
+          src={imageUrl}
+          alt={alt}
+          width={1920}
+          height={1080}
+          className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg"
+          sizes="90vw"
+          priority
+        />
+      </div>
+    </div>
+  );
+};
 
 // Helper hook to fetch HTML content at runtime
 function useHtmlContent(path: string | null): string {
@@ -56,49 +116,88 @@ type Props = {
 
 // Hoisted components to avoid remounts on parent re-renders
 const MenuImageCarousel: React.FC<{ images: MenuImage[] }> = memo(({ images }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const imageScrollRef = useRef<HTMLDivElement>(null);
+  const zoomContext = useContext(ZoomContext);
+  
   if (!images || images.length === 0) return null;
-  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  const goToImage = (index: number) => setCurrentImageIndex(index);
+  
+  const handleImageClick = (index: number) => {
+    const image = images[index];
+    zoomContext?.openZoom(
+      image.imageUrl,
+      image.alt || `Menu image ${index + 1}`
+    );
+  };
+  
   return (
     <div className="mb-8 sm:mb-12 -mx-4 sm:mx-0">
-      <div className="relative max-w-4xl sm:mx-auto">
-        <div className="relative w-full overflow-hidden sm:rounded-xl bg-gray-100">
-          <IdbImage
-            src={images[currentImageIndex].imageUrl}
-            alt={images[currentImageIndex].alt || `Menu image ${currentImageIndex + 1}`}
-            width={1024}
-            height={0}
-            className="w-full h-auto object-contain"
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1024px"
-            loading={currentImageIndex === 0 ? "eager" : "lazy"}
-            priority={currentImageIndex === 0}
-            style={{ height: 'auto' }}
-          />
-          {images.length > 1 && (
-            <>
-              <button onClick={prevImage} className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all duration-200 z-10" aria-label="Previous image" style={{ top: '50%' }}>
-                <ChevronLeftIcon className="w-5 h-5 text-gray-700" />
-              </button>
-              <button onClick={nextImage} className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all duration-200 z-10" aria-label="Next image" style={{ top: '50%' }}>
-                <ChevronRightIcon className="w-5 h-5 text-gray-700" />
-              </button>
-            </>
-          )}
-          {images[currentImageIndex].caption && (
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-              <p className="text-white text-sm sm:text-base font-medium">{images[currentImageIndex].caption}</p>
-            </div>
-          )}
-        </div>
+      <div className="relative max-w-4xl sm:mx-auto" style={{ touchAction: 'pan-y pinch-zoom' }}>
+        <Swiper
+          modules={[Navigation, Pagination]}
+          spaceBetween={0}
+          slidesPerView={1}
+          centeredSlides={false}
+          touchReleaseOnEdges={true}
+          touchStartPreventDefault={false}
+          touchStartForcePreventDefault={false}
+          threshold={10}
+          navigation={{
+            prevEl: '.menu-image-swiper-button-prev',
+            nextEl: '.menu-image-swiper-button-next',
+          }}
+          pagination={{
+            clickable: true,
+            el: '.menu-image-swiper-pagination',
+          }}
+          className="sm:rounded-xl overflow-hidden"
+        >
+          {images.map((image, index) => (
+            <SwiperSlide key={index}>
+              <div 
+                className="relative w-full bg-gray-100 cursor-zoom-in"
+                onClick={() => handleImageClick(index)}
+              >
+                <IdbImage
+                  src={image.imageUrl}
+                  alt={image.alt || `Menu image ${index + 1}`}
+                  width={1024}
+                  height={0}
+                  className="w-full h-auto object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1024px"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  priority={index === 0}
+                  style={{ height: 'auto' }}
+                />
+                {image.caption && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                    <p className="text-white text-sm sm:text-base font-medium">{image.caption}</p>
+                  </div>
+                )}
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        
+        {/* Navigation Buttons - Hidden on mobile, visible on desktop */}
         {images.length > 1 && (
-          <div className="flex justify-center mt-4 gap-2">
-            {images.map((_, index) => (
-              <button key={index} onClick={() => goToImage(index)} className={`w-2 h-2 rounded-full transition-all duration-200 ${index === currentImageIndex ? 'bg-gray-900 w-6' : 'bg-gray-300 hover:bg-gray-400'}`} aria-label={`Go to image ${index + 1}`} />
-            ))}
-          </div>
+          <>
+            <button 
+              className="menu-image-swiper-button-prev hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all duration-200 z-10 items-center justify-center" 
+              aria-label="Previous image"
+            >
+              <ChevronLeftIcon className="w-5 h-5 text-gray-700" />
+            </button>
+            <button 
+              className="menu-image-swiper-button-next hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-all duration-200 z-10 items-center justify-center" 
+              aria-label="Next image"
+            >
+              <ChevronRightIcon className="w-5 h-5 text-gray-700" />
+            </button>
+          </>
+        )}
+        
+        {/* Pagination Dots */}
+        {images.length > 1 && (
+          <div className="menu-image-swiper-pagination flex justify-center mt-4"></div>
         )}
       </div>
     </div>
@@ -110,6 +209,7 @@ MenuImageCarousel.displayName = 'MenuImageCarousel';
 type CategoryCarouselProps = { category: MenuCategory; categoryIndex: number; activeTab: number; editable?: boolean; onEdit?: (path: string, value: string) => void };
 const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, categoryIndex, activeTab, editable, onEdit }) => {
   const swiperRef = useRef<SwiperType | null>(null);
+  const zoomContext = useContext(ZoomContext);
   
   // Reset to first slide when category changes
   useEffect(() => {
@@ -149,7 +249,13 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
         }
       >
         {item.imageUrl && (
-          <div className="relative aspect-[4/3] w-full overflow-hidden">
+          <div 
+            className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in"
+            onClick={(e) => {
+              e.stopPropagation();
+              zoomContext?.openZoom(item.imageUrl!, item.alt || item.title);
+            }}
+          >
             <IdbImage src={item.imageUrl} alt={item.alt || item.title} fill loading="lazy" className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
           </div>
         )}
@@ -380,12 +486,22 @@ CategoryCarousel.displayName = 'CategoryCarousel';
 
 const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit, backgroundClass = 'bg-gray-50', isPreview = false, sectionId = 'menu' }) => {
   const [activeTab, setActiveTab] = useState(0);
+  const [zoomedImage, setZoomedImage] = useState<{ url: string; alt: string } | null>(null);
   
   // Fetch HTML content from file if it exists, otherwise fall back to JSON
   const currentTabId = menuProp?.tabs?.[activeTab]?.id;
   const htmlFromFile = useHtmlContent(
     currentTabId ? `/html-content/menu-${currentTabId}.html` : null
   );
+  
+  // Zoom handlers
+  const openZoom = (imageUrl: string, alt: string) => {
+    setZoomedImage({ url: imageUrl, alt });
+  };
+  
+  const closeZoom = () => {
+    setZoomedImage(null);
+  };
   
   const menu = menuProp ?? {
     title: "Our Menu",
@@ -474,11 +590,17 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
   }
 
   return (
-    <section id={sectionId} className={`py-12 sm:py-16 ${backgroundClass}`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="text-center mobile-left mb-8 sm:mb-12">
-          <EditableText
+    <ZoomContext.Provider value={{ openZoom }}>
+      <ImageZoomModal
+        imageUrl={zoomedImage?.url || null}
+        alt={zoomedImage?.alt || ''}
+        onClose={closeZoom}
+      />
+      <section id={sectionId} className={`py-12 sm:py-16 ${backgroundClass}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="text-center mobile-left mb-8 sm:mb-12">
+            <EditableText
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4"
             value={menu.title}
@@ -662,7 +784,10 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                           className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
                         >
                           {item.imageUrl && (
-                            <div className="relative aspect-[4/3] w-full overflow-hidden">
+                            <div 
+                              className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in"
+                              onClick={() => openZoom(item.imageUrl!, item.alt || item.title)}
+                            >
                               <IdbImage
                                 src={item.imageUrl}
                                 alt={item.alt || item.title}
@@ -724,7 +849,10 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                 className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
               >
                 {item.imageUrl && (
-                  <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  <div 
+                    className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in"
+                    onClick={() => openZoom(item.imageUrl!, item.alt || item.title)}
+                  >
                     <IdbImage
                       src={item.imageUrl}
                       alt={item.alt || item.title}
@@ -771,8 +899,9 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
             ))}
           </div>
         )}
-      </div>
-    </section>
+        </div>
+      </section>
+    </ZoomContext.Provider>
   );
 };
 

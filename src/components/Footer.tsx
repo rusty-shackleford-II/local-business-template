@@ -5,8 +5,9 @@ import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LegalTextModal from './LegalTextModal';
 import TextSizePopup from './TextSizePopup';
+import BrandingPopup from './BrandingPopup';
 import { useI18nContext } from './I18nProvider';
-import type { Footer as FooterCfg, Layout, SectionKey, Page } from '../types';
+import type { Footer as FooterCfg, Layout, SectionKey, Page, ColorPalette } from '../types';
 
 // Use public folder assets instead of src/assets to avoid build issues
 const logo = '/logo.png';
@@ -59,19 +60,36 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   isPreview?: boolean;
+  // Branding popup callbacks
+  onShowLogoChange?: (show: boolean) => void;
+  onShowBusinessNameChange?: (show: boolean) => void;
+  onLogoSizeChange?: (size: number) => void;
+  onTextSizeChange?: (size: number) => void;
+  onTextColorChange?: (color: string) => void;
+  colorPalette?: ColorPalette;
 };
 
-const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, pages, currentPageSlug, isMultipage, editable, onEdit, isPreview }) => {
+const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, pages, currentPageSlug, isMultipage, editable, onEdit, isPreview, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, onTextSizeChange, onTextColorChange, colorPalette }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [hidevLogoPopupOpen, setHidevLogoPopupOpen] = useState(false);
+  const [brandingPopupOpen, setBrandingPopupOpen] = useState(false);
   const hidevLogoRef = useRef<HTMLDivElement>(null);
+  const brandingAreaRef = useRef<HTMLDivElement>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
+  // Backwards-compatible toggles: default to true when undefined
+  // Handle both boolean and string values (editor stores as strings)
+  const showLogo = footer?.showLogo !== false && footer?.showLogo !== 'false';
+  const showBusinessName = footer?.showBusinessName !== false && footer?.showBusinessName !== 'false';
+  
+  // Backwards-compatible business name text: use footer.brandText if defined, otherwise fall back to businessName prop
+  const displayBusinessName = footer?.brandText !== undefined ? footer.brandText : businessName;
+  
   // Debug: log what translations the footer is getting
   console.log(`🦶 [Footer] RENDER - i18n enabled:`, i18n?.enabled, `language:`, i18n?.currentLanguage);
-  console.log(`🦶 [Footer] businessName:`, businessName);
+  console.log(`🦶 [Footer] businessName:`, businessName, `displayBusinessName:`, displayBusinessName);
   console.log(`🦶 [Footer] Actual t() results in render:`, {
     privacyPolicy: t('footer.privacyPolicy', 'Privacy Policy'),
     termsAndConditions: t('footer.termsAndConditions', 'Terms and Conditions'),
@@ -302,50 +320,64 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           '--hidev-logo-max-width': `${hidevLogoMaxWidth}px`
         } as React.CSSProperties & { [key: string]: string }}
       >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-12">
         {/* Desktop Layout */}
         <div className="hidden lg:flex items-center justify-between">
-          {/* Logo and Business Name Left */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              {logoUrl ? (
-                <IdbImage 
-                  src={logoUrl} 
-                  alt={`${businessName} Logo`} 
-                  width={200}
-                  height={60}
-                  loading="lazy"
-                  className="footer-logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo" 
-                />
-              ) : (
-                <Image
-                  src={logo}
-                  alt={`${businessName} Logo`}
-                  height={48}
-                  width={120}
-                  className="w-auto logo-hover transition-all duration-300 ease-in-out dynamic-logo"
-                  onError={(e) => {
-                    // Hide image if it fails to load
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              )}
-            </div>
-            <EditableText
-              className="ml-3 text-gray-900 font-semibold" 
-              value={businessName}
-              path="businessInfo.businessName"
-              editable={editable}
-              onEdit={onEdit}
-              placeholder="Business Name"
-              textSize={footer?.textSize || 1.0}
-              onTextSizeChange={onEdit ? (size: number) => onEdit('footer.textSize', size.toString()) : undefined}
-              textSizeLabel="Footer Business Name Size"
-              textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Footer text presets
-              textSizeNormal={1.0} // 16px - standard text size
-              textSizeMin={0.75}
-              textSizeMax={1.5}
-            />
+          {/* Logo and Business Name Left - clickable area for branding popup in edit mode */}
+          <div 
+            ref={brandingAreaRef}
+            className={`flex items-center ${editable ? 'cursor-pointer hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60 rounded-lg p-1 -m-1' : ''}`}
+            onClick={(e) => {
+              if (editable) {
+                e.stopPropagation();
+                setBrandingPopupOpen(true);
+              }
+            }}
+            title={editable ? 'Click to edit branding' : undefined}
+          >
+            {/* Logo - toggleable, defaults to showing */}
+            {showLogo && (
+              <div className="flex-shrink-0">
+                {logoUrl ? (
+                  <IdbImage 
+                    src={logoUrl} 
+                    alt={`${displayBusinessName} Logo`} 
+                    width={200}
+                    height={60}
+                    loading="lazy"
+                    className="footer-logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo" 
+                  />
+                ) : (
+                  <Image
+                    src={logo}
+                    alt={`${displayBusinessName} Logo`}
+                    height={48}
+                    width={120}
+                    className="w-auto logo-hover transition-all duration-300 ease-in-out dynamic-logo"
+                    onError={(e) => {
+                      // Hide image if it fails to load
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+            )}
+            {/* Business Name - toggleable, defaults to showing */}
+            {showBusinessName && (
+              <span
+                className={`${showLogo ? 'ml-4' : ''} text-gray-900 font-semibold`} 
+                style={{ 
+                  color: footer?.colors?.textColor,
+                  fontSize: `${footer?.textSize || 1.0}rem`
+                }}
+              >
+                {displayBusinessName || 'Business Name'}
+              </span>
+            )}
+            {/* Show placeholder when both are hidden */}
+            {!showLogo && !showBusinessName && editable && (
+              <span className="text-gray-400 text-sm italic">Click to add branding</span>
+            )}
           </div>
 
           {/* Links Center */}
@@ -399,48 +431,61 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         </div>
 
         {/* Mobile Layout */}
-        <div className="lg:hidden space-y-6">
-          {/* Logo and Business Name Top */}
-          <div className="flex flex-col items-center space-y-2">
-            <div>
-              {logoUrl ? (
-                <IdbImage 
-                  src={logoUrl} 
-                  alt={`${businessName} Logo`} 
-                  width={200}
-                  height={60}
-                  loading="lazy"
-                  className="footer-logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo" 
-                />
-              ) : (
-                <Image
-                  src={logo}
-                  alt={`${businessName} Logo`}
-                  height={48}
-                  width={120}
-                  className="w-auto logo-hover transition-all duration-300 ease-in-out dynamic-logo"
-                  onError={(e) => {
-                    // Hide image if it fails to load
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
-                />
-              )}
-            </div>
-            <EditableText
-              className="text-gray-900 font-semibold text-center mobile-left" 
-              value={businessName}
-              path="businessInfo.businessName"
-              editable={editable}
-              onEdit={onEdit}
-              placeholder="Business Name"
-              textSize={footer?.textSize || 1.0}
-              onTextSizeChange={onEdit ? (size: number) => onEdit('footer.textSize', size.toString()) : undefined}
-              textSizeLabel="Footer Business Name Size"
-              textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Footer text presets
-              textSizeNormal={1.0} // 16px - standard text size
-              textSizeMin={0.75}
-              textSizeMax={1.5}
-            />
+        <div className="lg:hidden space-y-8">
+          {/* Logo and Business Name Top - clickable area for branding popup in edit mode */}
+          <div 
+            className={`flex flex-col items-center space-y-2 ${editable ? 'cursor-pointer hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60 rounded-lg p-2 -m-2' : ''}`}
+            onClick={(e) => {
+              if (editable) {
+                e.stopPropagation();
+                setBrandingPopupOpen(true);
+              }
+            }}
+            title={editable ? 'Click to edit branding' : undefined}
+          >
+            {/* Logo - toggleable, defaults to showing */}
+            {showLogo && (
+              <div>
+                {logoUrl ? (
+                  <IdbImage 
+                    src={logoUrl} 
+                    alt={`${displayBusinessName} Logo`} 
+                    width={200}
+                    height={60}
+                    loading="lazy"
+                    className="footer-logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo" 
+                  />
+                ) : (
+                  <Image
+                    src={logo}
+                    alt={`${displayBusinessName} Logo`}
+                    height={48}
+                    width={120}
+                    className="w-auto logo-hover transition-all duration-300 ease-in-out dynamic-logo"
+                    onError={(e) => {
+                      // Hide image if it fails to load
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                )}
+              </div>
+            )}
+            {/* Business Name - toggleable, defaults to showing */}
+            {showBusinessName && (
+              <span
+                className="text-gray-900 font-semibold text-center mobile-left" 
+                style={{ 
+                  color: footer?.colors?.textColor,
+                  fontSize: `${footer?.textSize || 1.0}rem`
+                }}
+              >
+                {displayBusinessName || 'Business Name'}
+              </span>
+            )}
+            {/* Show placeholder when both are hidden */}
+            {!showLogo && !showBusinessName && editable && (
+              <span className="text-gray-400 text-sm italic">Click to add branding</span>
+            )}
           </div>
 
           {/* Links Center - Conditional Layout */}
@@ -462,7 +507,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           </nav>
 
           {/* Hi Dev Logo Bottom */}
-          <div className="flex justify-center pt-2">
+          <div className="flex justify-center pt-4">
             {editable ? (
               <div
                 onClick={(e) => {
@@ -498,7 +543,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         </div>
 
         {/* Copyright and Legal Links */}
-        <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="flex flex-col items-center space-y-3">
             {/* Legal Links */}
             {(showPrivacyPolicy || showTermsAndConditions) && (
@@ -528,8 +573,8 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
             {/* Copyright */}
             <div className="text-center text-sm text-gray-500">
               {'\u00A9'} {new Date().getFullYear()} <EditableText
-                value={businessName || 'Local Business'}
-                path="businessInfo.businessName"
+                value={displayBusinessName || 'Local Business'}
+                path="footer.brandText"
                 editable={editable}
                 onEdit={onEdit}
                 placeholder="Business Name"
@@ -581,6 +626,58 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           normalSize={1.0}
           minSize={0.4}
           maxSize={1.0}
+        />
+      )}
+      
+      {/* Branding Popup for editing logo/business name visibility and text */}
+      {editable && (
+        <BrandingPopup
+          isOpen={brandingPopupOpen}
+          onClose={() => setBrandingPopupOpen(false)}
+          targetElement={brandingAreaRef.current}
+          location="footer"
+          showLogo={showLogo}
+          onShowLogoChange={(show) => {
+            if (onShowLogoChange) {
+              onShowLogoChange(show);
+            } else if (onEdit) {
+              onEdit('footer.showLogo', show.toString());
+            }
+          }}
+          logoUrl={logoUrl}
+          showBusinessName={showBusinessName}
+          onShowBusinessNameChange={(show) => {
+            if (onShowBusinessNameChange) {
+              onShowBusinessNameChange(show);
+            } else if (onEdit) {
+              onEdit('footer.showBusinessName', show.toString());
+            }
+          }}
+          brandText={displayBusinessName || ''}
+          onBrandTextChange={(text) => {
+            if (onEdit) {
+              onEdit('footer.brandText', text);
+            }
+          }}
+          textSize={footer?.textSize || 1.0}
+          onTextSizeChange={onTextSizeChange ? onTextSizeChange : (size) => {
+            if (onEdit) {
+              onEdit('footer.textSize', size.toString());
+            }
+          }}
+          textColor={footer?.colors?.textColor}
+          onTextColorChange={onTextColorChange ? onTextColorChange : (color) => {
+            if (onEdit) {
+              onEdit('footer.colors.textColor', color);
+            }
+          }}
+          logoSize={logoSize}
+          onLogoSizeChange={onLogoSizeChange ? onLogoSizeChange : (size) => {
+            if (onEdit) {
+              onEdit('footer.logoSize', size.toString());
+            }
+          }}
+          presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
         />
       )}
     </footer>

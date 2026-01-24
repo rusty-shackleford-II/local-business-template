@@ -4,6 +4,7 @@ import Image from 'next/image';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LanguageToggle from './LanguageToggle';
+import BrandingPopup from './BrandingPopup';
 import { useI18nContext } from './I18nProvider';
 import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette, Page, PageSection } from '../types';
 
@@ -23,6 +24,9 @@ type Props = {
   onTextSizeChange?: (size: number) => void;
   onBusinessNameColorChange?: (color: string) => void;
   onLogoClick?: () => void;
+  onShowLogoChange?: (show: boolean) => void;
+  onShowBusinessNameChange?: (show: boolean) => void;
+  onLogoSizeChange?: (size: number) => void;
   colorPalette?: ColorPalette;
 };
 
@@ -42,14 +46,24 @@ type NavLink = {
   }>;
 };
 
-const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, colorPalette }) => {
+const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, colorPalette }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [expandedMobileNav, setExpandedMobileNav] = useState<string | null>(null);
+  const [brandingPopupOpen, setBrandingPopupOpen] = useState(false);
   const hoverTimeoutRef = useRef<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const brandingAreaRef = useRef<HTMLDivElement | null>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Backwards-compatible toggles: default to true when undefined
+  // Handle both boolean and string values (editor stores as strings)
+  const showLogo = header?.showLogo !== false && header?.showLogo !== 'false';
+  const showBusinessName = header?.showBusinessName !== false && header?.showBusinessName !== 'false';
+  
+  // Backwards-compatible business name text: use header.brandText if defined, otherwise fall back to businessName prop
+  const displayBusinessName = header?.brandText !== undefined ? header.brandText : businessName;
   
   // Clear timeout on unmount
   useEffect(() => {
@@ -95,12 +109,12 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
   };
   
   // Calculate header height based on logo size (with padding)
-  const calculateHeaderHeight = () => {
+  const calculateHeaderHeight = React.useCallback(() => {
     if (!expandableHeader) return 'auto';
     const maxLogoHeight = Math.max(logoHeights.sm, logoHeights.md, logoHeights.lg);
     const padding = 1.5; // py-3 = 0.75rem top + 0.75rem bottom = 1.5rem total
     return `${maxLogoHeight + padding}rem`;
-  };
+  }, [expandableHeader, logoHeights.sm, logoHeights.md, logoHeights.lg]);
 
   // Set CSS custom property for body padding to match header height
   React.useEffect(() => {
@@ -111,7 +125,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       // Use default header heights for non-expandable headers
       document.documentElement.style.setProperty('--dynamic-header-height', '5rem'); // Default fallback
     }
-  }, [logoSize, expandableHeader]);
+  }, [logoSize, expandableHeader, calculateHeaderHeight]);
 
   const handleNavigation = (linkId: string, isSection: boolean, isPage: boolean = false) => {
     console.log('🔗 [Nav] handleNavigation called:', linkId, 'isSection:', isSection, 'isPage:', isPage);
@@ -456,72 +470,87 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full py-3">
-          {/* Logo */}
-          <div className="flex items-center">
-            <div 
-              className={`flex-shrink-0 ${editable && onLogoClick ? 'cursor-pointer group relative' : ''}`}
-              onClick={editable && onLogoClick ? onLogoClick : undefined}
-              title={editable && onLogoClick ? 'Click to upload logo' : undefined}
-            >
-              {logoUrl ? (
-                <>
+          {/* Logo and Business Name - clickable area for branding popup in edit mode */}
+          <div 
+            ref={brandingAreaRef}
+            className={`flex items-center ${editable ? 'cursor-pointer hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60 rounded-lg p-1 -m-1' : ''}`}
+            onClick={(e) => {
+              if (editable) {
+                e.stopPropagation();
+                setBrandingPopupOpen(true);
+              } else if (!editable) {
+                // Non-edit mode: scroll to top/hero
+                e.preventDefault();
+                if (typeof window !== 'undefined') {
+                  if (isPreview) {
+                    // Preview mode: find scrollable ancestor
+                    const headerEl = e.currentTarget.closest('header');
+                    if (headerEl) {
+                      let scrollableParent: HTMLElement | null = headerEl.nextElementSibling as HTMLElement;
+                      while (scrollableParent) {
+                        const style = window.getComputedStyle(scrollableParent);
+                        const overflowY = style.overflowY;
+                        const isScrollable = (overflowY === 'auto' || overflowY === 'scroll') && 
+                                             scrollableParent.scrollHeight > scrollableParent.clientHeight;
+                        if (isScrollable) {
+                          scrollableParent.scrollTo({ top: 0, behavior: 'smooth' });
+                          return;
+                        }
+                        scrollableParent = scrollableParent.parentElement;
+                      }
+                    }
+                    // Fallback to window scroll
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  } else {
+                    // Production mode: scroll to top
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }
+              }
+            }}
+            title={editable ? 'Click to edit branding' : 'Go to top'}
+          >
+            {/* Logo - toggleable, defaults to showing */}
+            {showLogo && (
+              <div className="flex-shrink-0">
+                {logoUrl ? (
                   <IdbImage 
                     src={logoUrl} 
-                    alt={businessName} 
+                    alt={displayBusinessName} 
                     width={200}
                     height={60}
                     loading="eager"
                     priority
-                    className={`logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo ${editable && onLogoClick ? 'group-hover:opacity-75' : ''}`}
+                    className="logo-container object-contain logo-hover transition-all duration-300 ease-in-out dynamic-logo"
                   />
-                  {editable && onLogoClick && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                      <div className="bg-black/60 text-white px-3 py-1.5 rounded-lg text-xs font-medium shadow-lg">
-                        <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        Upload Logo
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className={`w-auto flex items-center justify-center bg-primary-100 text-primary-600 font-bold px-4 rounded logo-hover transition-all duration-300 ease-in-out dynamic-logo ${editable && onLogoClick ? 'group-hover:opacity-75' : ''}`}>
-                  {businessName?.substring(0, 2).toUpperCase() || 'LB'}
-                  {editable && onLogoClick && (
-                    <span className="ml-2 text-xs">Click to upload</span>
-                  )}
-                </div>
-              )}
-            </div>
-            <EditableText
-              className="ml-3 text-gray-900 font-semibold" 
-              style={{ 
-                color: header?.colors?.businessNameColor || header?.colors?.brandText,
-                fontSize: `${textSize}rem`
-              }}
-              value={businessName}
-              path="businessInfo.businessName"
-              editable={editable}
-              onEdit={onEdit}
-              placeholder="Business Name"
-              textSize={textSize}
-              onTextSizeChange={onTextSizeChange}
-              textSizeLabel="Business Name Size"
-              textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Header navigation text presets
-              textSizeNormal={1.0} // 16px - standard navigation text size
-              textSizeMin={0.75}
-              textSizeMax={1.5}
-              textColor={header?.colors?.businessNameColor || header?.colors?.brandText}
-              onTextColorChange={onBusinessNameColorChange}
-              showColorPicker={true}
-              presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
-            />
+                ) : (
+                  <div className="w-auto flex items-center justify-center bg-primary-100 text-primary-600 font-bold px-4 rounded logo-hover transition-all duration-300 ease-in-out dynamic-logo">
+                    {displayBusinessName?.substring(0, 2).toUpperCase() || 'LB'}
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Business Name - toggleable, defaults to showing */}
+            {showBusinessName && (
+              <span
+                className={`${showLogo ? 'ml-4' : ''} text-gray-900 font-semibold`} 
+                style={{ 
+                  color: header?.colors?.businessNameColor || header?.colors?.brandText,
+                  fontSize: `${textSize}rem`
+                }}
+              >
+                {displayBusinessName || 'Business Name'}
+              </span>
+            )}
+            {/* Show placeholder when both are hidden */}
+            {!showLogo && !showBusinessName && editable && (
+              <span className="text-gray-400 text-sm italic">Click to add branding</span>
+            )}
           </div>
 
           {/* Desktop Navigation - Right Aligned */}
-          <div className="flex items-center gap-2" ref={dropdownRef}>
-            <nav className="hidden md:flex space-x-8 mr-4">
+          <div className="flex items-center gap-4" ref={dropdownRef}>
+            <nav className="hidden md:flex space-x-6 lg:space-x-8 mr-2 lg:mr-4">
               {navigationLinks.map((link) => (
                 <div 
                   key={link.id}
@@ -683,6 +712,51 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           </div>
         )}
       </div>
+      
+      {/* Branding Popup for editing logo/business name visibility and text */}
+      {editable && (
+        <BrandingPopup
+          isOpen={brandingPopupOpen}
+          onClose={() => setBrandingPopupOpen(false)}
+          targetElement={brandingAreaRef.current}
+          location="header"
+          showLogo={showLogo}
+          onShowLogoChange={(show) => {
+            if (onShowLogoChange) {
+              onShowLogoChange(show);
+            } else if (onEdit) {
+              onEdit('header.showLogo', show.toString());
+            }
+          }}
+          onLogoUpload={onLogoClick}
+          logoUrl={logoUrl}
+          showBusinessName={showBusinessName}
+          onShowBusinessNameChange={(show) => {
+            if (onShowBusinessNameChange) {
+              onShowBusinessNameChange(show);
+            } else if (onEdit) {
+              onEdit('header.showBusinessName', show.toString());
+            }
+          }}
+          brandText={displayBusinessName || ''}
+          onBrandTextChange={(text) => {
+            if (onEdit) {
+              onEdit('header.brandText', text);
+            }
+          }}
+          textSize={textSize}
+          onTextSizeChange={onTextSizeChange}
+          textColor={header?.colors?.businessNameColor || header?.colors?.brandText}
+          onTextColorChange={onBusinessNameColorChange}
+          logoSize={logoSize}
+          onLogoSizeChange={onLogoSizeChange ? onLogoSizeChange : (size) => {
+            if (onEdit) {
+              onEdit('header.logoSize', size.toString());
+            }
+          }}
+          presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
+        />
+      )}
     </header>
     </>
   );

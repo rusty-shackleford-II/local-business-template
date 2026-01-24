@@ -74,13 +74,13 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
     setIsModalOpen(false);
   };
 
-  const nextModalImage = () => {
+  const nextModalImage = React.useCallback(() => {
     setModalImageIndex((prev) => (prev + 1) % images.length);
-  };
+  }, [images.length]);
 
-  const prevModalImage = () => {
+  const prevModalImage = React.useCallback(() => {
     setModalImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  }, [images.length]);
 
   // Handle keyboard navigation in modal
   useEffect(() => {
@@ -94,7 +94,7 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isModalOpen]);
+  }, [isModalOpen, nextModalImage, prevModalImage]);
 
   // Render product gallery with Swiper
   const renderGallery = () => {

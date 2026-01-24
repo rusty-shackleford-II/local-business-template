@@ -5,7 +5,9 @@ export type ColorPalette = {
 
 export type HeaderColors = { brandText?: string; navText?: string; businessNameColor?: string; background?: string };
 export type Header = { 
-  showLogo?: boolean; 
+  showLogo?: boolean; // Toggle logo visibility (default: true when undefined for backwards compatibility)
+  showBusinessName?: boolean; // Toggle header business name visibility (default: true when undefined for backwards compatibility)
+  brandText?: string; // Custom header business name text (defaults to businessInfo.businessName when undefined for backwards compatibility)
   colors?: HeaderColors;
   logoSize?: number; // Logo size multiplier (0.5 to 3.0, default 1.0)
   expandableHeader?: boolean; // Whether header should expand when logo gets too large
@@ -98,6 +100,23 @@ export type Hero = {
   buttonsPosition?: { x: number; y: number }; // Position of buttons group (x, y as percentages 0-100)
   // Social links positioning for fullwidth overlay
   socialLinksPosition?: { x: number; y: number }; // Position of social links (x, y as percentages 0-100)
+  // Standard layout: position buttons/social anywhere in the hero section
+  // Position is stored as pixel offset from top-left of the hero section
+  standardButtonsPosition?: { x: number; y: number }; // Pixel position in hero section (LEGACY - deprecated)
+  standardSocialLinksPosition?: { x: number; y: number }; // Pixel position in hero section (LEGACY - deprecated)
+  // Minimum height for hero section when elements are positioned below content
+  standardHeroMinHeight?: number;
+  
+  // NEW: Relative horizontal positioning for standard layout (0-1 scale)
+  // 0 = left button left-aligned with left edge of hero text
+  // 0.5 = centered with respect to the hero section
+  // 1 = right side of rightmost button/icon aligns with right edge of hero image
+  // Note: On mobile, these are ignored and elements are centered
+  standardButtonsHorizontalAlign?: number;
+  standardSocialLinksHorizontalAlign?: number;
+  // Vertical offset in pixels from the default position (positive = down)
+  standardButtonsVerticalOffset?: number;
+  standardSocialLinksVerticalOffset?: number;
 };
 
 export type AboutStatistic = {
@@ -208,6 +227,11 @@ export type UpcomingEventItem = {
   imageUrl?: string;
   alt?: string;
   inquireUrl?: string; // External URL for inquire button instead of contact form
+  // Button customization (backwards compatible - defaults to hardcoded values when undefined)
+  detailsButtonLabel?: string; // Default: "See More Details"
+  inquireButtonLabel?: string; // Default: "Inquire About This Event"
+  detailsButtonAction?: 'modal' | 'external'; // Default: 'modal' (opens details modal)
+  detailsButtonUrl?: string; // URL when detailsButtonAction is 'external'
   // Optional thumbnail URL for cropped version (backwards compatible)
   thumbnailUrl?: string;
   // Recurring event fields
@@ -240,12 +264,30 @@ export type UpcomingEventItem = {
   }>;
 };
 
+// Global button styling options for the upcoming events buttons
+export type EventsButtonStyles = {
+  fontSize?: number;      // Font size in px (default: 14 for buttons)
+  borderRadius?: number;  // Border radius in px (default: 8)
+  fontFamily?: string;    // Font family (default: inherit)
+  fontWeight?: number;    // Font weight (default: 500)
+  // Colors apply to all buttons in the section
+  backgroundColor?: string;     // Primary button background (default: colorPalette.primary or #10B981)
+  textColor?: string;           // Primary button text color (default: #ffffff)
+  secondaryBackgroundColor?: string;  // Secondary button background (default: #f3f4f6)
+  secondaryTextColor?: string;        // Secondary button text color (default: #1f2937)
+  // Button visibility (backwards compatible - undefined means enabled)
+  primaryButtonEnabled?: boolean;     // Show primary button (default: true)
+  secondaryButtonEnabled?: boolean;   // Show secondary button (default: true)
+};
+
 export type UpcomingEvents = {
   title: string;
   titleTextSize?: number;
   subtitle: string;
   subtitleTextSize?: number;
   items: UpcomingEventItem[];
+  // Global button styling for all event buttons
+  buttonStyles?: EventsButtonStyles;
 };
 
 // Menu types
@@ -312,6 +354,14 @@ export type Menu = {
   items?: MenuItem[]; // Keep for backward compatibility
 };
 
+// Custom social link with optional custom icon
+export type CustomSocialLink = {
+  id: string;
+  url: string;
+  label: string;
+  iconUrl?: string; // Custom uploaded icon image URL
+};
+
 export type SocialMedia = {
   facebook?: string;
   twitter?: string;
@@ -328,6 +378,8 @@ export type SocialMedia = {
   postmates?: string;
   instacart?: string;
   toast?: string;
+  // Custom external links with custom icons
+  customLinks?: CustomSocialLink[];
 };
 
 // Centralized social links configuration
@@ -396,11 +448,14 @@ export type Footer = {
   textSize?: number; // Business name text size multiplier (0.5 to 2.0, default 1.0)
   navLinkSize?: number; // Nav link text size multiplier (0.75 to 1.5, default 1.0)
   hidevLogoSize?: number; // Hi Dev logo size multiplier (0.4 to 1.0, default 1.0 = max size)
+  showLogo?: boolean; // Toggle footer logo visibility (default: true when undefined for backwards compatibility)
+  showBusinessName?: boolean; // Toggle footer business name visibility (default: true when undefined for backwards compatibility)
+  brandText?: string; // Custom footer business name text (defaults to businessInfo.businessName when undefined for backwards compatibility)
   showPrivacyPolicy?: boolean | string; // Toggle privacy policy link visibility (stored as string in editor)
   privacyPolicyText?: string; // Privacy policy content (supports text/HTML)
   showTermsAndConditions?: boolean | string; // Toggle terms and conditions link visibility (stored as string in editor)
   termsAndConditionsText?: string; // Terms and conditions content (supports text/HTML)
-  colors?: { background?: string }; // Footer color customization
+  colors?: { background?: string; textColor?: string }; // Footer color customization
 };
 
 export type SEO = {

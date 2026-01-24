@@ -13,7 +13,8 @@ import {
   FaLinkedinIn, 
   FaTiktok,
   FaYelp,
-  FaGoogle
+  FaGoogle,
+  FaExternalLinkAlt
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton, SocialLinksConfig, ButtonGridLayout } from '../types';
@@ -130,6 +131,16 @@ type Props = {
   socialLinks?: SocialLinksConfig;
 };
 
+// Helper function to check if there are any social links (handles both string values and customLinks array)
+const hasSocialLinks = (links?: SocialLinksConfig['links']): boolean => {
+  if (!links) return false;
+  const hasStandardLinks = Object.entries(links).some(([key, value]) => 
+    key !== 'customLinks' && typeof value === 'string' && value.trim()
+  );
+  const hasCustomLinks = links.customLinks?.some(link => link.url?.trim());
+  return hasStandardLinks || !!hasCustomLinks;
+};
+
 // Social Links Row component for Hero section
 const HeroSocialLinks: React.FC<{ 
   socialLinks?: SocialLinksConfig; 
@@ -144,8 +155,7 @@ const HeroSocialLinks: React.FC<{
   if (!socialLinks?.showInHero || !links) return null;
   
   // Check if there are any social links to display
-  const hasLinks = Object.values(links).some(url => url && url.trim());
-  if (!hasLinks) return null;
+  if (!hasSocialLinks(links)) return null;
   
   const justifyClass = isFullwidthOverlay 
     ? 'justify-center' 
@@ -260,6 +270,30 @@ const HeroSocialLinks: React.FC<{
           <FaGoogle className={iconSize} />
         </a>
       )}
+      {/* Custom external links with custom icons */}
+      {links.customLinks?.map((customLink) => (
+        customLink.url && (
+          <a
+            key={customLink.id}
+            href={customLink.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`${iconClass} rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center overflow-hidden`}
+            aria-label={customLink.label || 'External Link'}
+          >
+            {customLink.iconUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img 
+                src={customLink.iconUrl} 
+                alt={customLink.label || 'Custom icon'} 
+                className={`${iconSize} object-contain`}
+              />
+            ) : (
+              <FaExternalLinkAlt className={iconSize} />
+            )}
+          </a>
+        )
+      ))}
     </div>
   );
 };
@@ -932,7 +966,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     const percentDeltaX = (deltaX / containerRect.width) * 100;
     const percentDeltaY = (deltaY / containerRect.height) * 100;
     
-    const newX = Math.max(10, Math.min(90, currentX + percentDeltaX));
+    const newX = Math.max(5, Math.min(95, currentX + percentDeltaX));
     const newY = Math.max(10, Math.min(95, currentY + percentDeltaY));
     
     onEdit('hero.buttonsPosition', { x: newX, y: newY } as any);
@@ -969,28 +1003,54 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
   }, [editable, isFullwidthOverlay]);
 
+  // Social links position drag handlers (for standard layout floating mode)
+  const handleStandardSocialLinksDragStart = useCallback((e: ReactMouseEvent) => {
+    if (!editable) return;
+    
+    // Don't drag if clicking on actual links
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'A' || target.closest('a')) {
+      return;
+    }
+    
+    e.preventDefault();
+    setIsDraggingSocialLinks(true);
+    setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
+  }, [editable]);
+
   const handleSocialLinksDragMove = useCallback((e: MouseEvent) => {
     if (!isDraggingSocialLinks || !onEdit) return;
     
-    const heroContainer = socialLinksFloatingRef.current?.closest('.relative.w-full') as HTMLElement;
-    if (!heroContainer) return;
+    // Find the appropriate container based on layout type
+    let container: HTMLElement | null = null;
     
-    const containerRect = heroContainer.getBoundingClientRect();
+    if (isFullwidthOverlay) {
+      // For fullwidth, use the hero media container
+      container = socialLinksFloatingRef.current?.closest('.relative.w-full') as HTMLElement;
+    } else {
+      // For standard layout, use the grid container
+      container = socialLinksFloatingRef.current?.closest('.grid') as HTMLElement;
+    }
+    
+    if (!container) return;
+    
+    const containerRect = container.getBoundingClientRect();
     const deltaX = e.clientX - socialLinksDragStartPos.x;
     const deltaY = e.clientY - socialLinksDragStartPos.y;
     
-    const currentX = hero?.socialLinksPosition?.x ?? 50;
-    const currentY = hero?.socialLinksPosition?.y ?? 92;
+    const currentX = hero?.socialLinksPosition?.x ?? (isFullwidthOverlay ? 50 : 25);
+    const currentY = hero?.socialLinksPosition?.y ?? (isFullwidthOverlay ? 92 : 85);
     
     const percentDeltaX = (deltaX / containerRect.width) * 100;
     const percentDeltaY = (deltaY / containerRect.height) * 100;
     
-    const newX = Math.max(10, Math.min(90, currentX + percentDeltaX));
-    const newY = Math.max(10, Math.min(98, currentY + percentDeltaY));
+    const maxY = isFullwidthOverlay ? 98 : 95;
+    const newX = Math.max(5, Math.min(95, currentX + percentDeltaX));
+    const newY = Math.max(10, Math.min(maxY, currentY + percentDeltaY));
     
     onEdit('hero.socialLinksPosition', { x: newX, y: newY } as any);
     setSocialLinksDragStartPos({ x: e.clientX, y: e.clientY });
-  }, [isDraggingSocialLinks, socialLinksDragStartPos, hero?.socialLinksPosition, onEdit]);
+  }, [isDraggingSocialLinks, socialLinksDragStartPos, hero?.socialLinksPosition, onEdit, isFullwidthOverlay]);
 
   const handleSocialLinksDragEnd = useCallback(() => {
     setIsDraggingSocialLinks(false);
@@ -1040,6 +1100,347 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   }, [hero?.mediaType, videoEmbedSrc, hero?.heroLargeImageUrl]);
   
 
+  // Standard layout: check if buttons/social have custom positions
+  // LEGACY: pixel-based positioning (deprecated but kept for backward compatibility)
+  const hasStandardButtonsPosition = hero?.standardButtonsPosition != null;
+  const hasStandardSocialLinksPosition = hero?.standardSocialLinksPosition != null;
+  
+  // NEW: relative horizontal alignment (0-1 scale)
+  // Takes precedence over legacy pixel positioning when set
+  const hasStandardButtonsHorizontalAlign = hero?.standardButtonsHorizontalAlign != null;
+  const hasStandardSocialLinksHorizontalAlign = hero?.standardSocialLinksHorizontalAlign != null;
+  
+  // Ref for the hero section to calculate drag positions
+  const heroSectionRef = useRef<HTMLElement>(null);
+  // Refs for measuring button/social element heights for min-height calculation
+  const standardButtonsRef = useRef<HTMLDivElement>(null);
+  const standardSocialRef = useRef<HTMLDivElement>(null);
+  const standardButtonsDraggableRef = useRef<HTMLDivElement>(null);
+  const standardSocialDraggableRef = useRef<HTMLDivElement>(null);
+  // Ref for the inner container (to calculate positioning bounds)
+  const heroInnerContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Drag state for standard layout positioning - simple pixel-based dragging
+  const [isDraggingStandardButtons, setIsDraggingStandardButtons] = useState(false);
+  const [isDraggingStandardSocial, setIsDraggingStandardSocial] = useState(false);
+  const [dragStartMouse, setDragStartMouse] = useState({ x: 0, y: 0 });
+  const [dragStartElementLeft, setDragStartElementLeft] = useState(0);
+  const [dragStartElementTop, setDragStartElementTop] = useState(0);
+  // Live pixel position during drag (to avoid round-trip conversion issues)
+  const [liveButtonsLeft, setLiveButtonsLeft] = useState<number | null>(null);
+  const [liveButtonsTop, setLiveButtonsTop] = useState<number | null>(null);
+  const [liveSocialLeft, setLiveSocialLeft] = useState<number | null>(null);
+  const [liveSocialTop, setLiveSocialTop] = useState<number | null>(null);
+  const draggedElementRef = useRef<HTMLDivElement | null>(null);
+  
+  // Calculate min-height for hero section based on positioned elements
+  // Uses stored value from drag operations, which is recalculated during drag
+  const standardHeroMinHeight = useMemo(() => {
+    // For new alignment system, we don't need extra min-height since elements
+    // are positioned within the text column flow
+    if (hasStandardButtonsHorizontalAlign || hasStandardSocialLinksHorizontalAlign) {
+      return 0;
+    }
+    
+    // LEGACY: Use stored value for pixel-based positioning
+    const storedHeight = hero?.standardHeroMinHeight || 0;
+    if (storedHeight > 0) return storedHeight;
+    
+    // Fallback calculation if no stored value
+    let maxBottom = 0;
+    if (hero?.standardButtonsPosition) {
+      maxBottom = Math.max(maxBottom, hero.standardButtonsPosition.y + 120);
+    }
+    if (hero?.standardSocialLinksPosition) {
+      maxBottom = Math.max(maxBottom, hero.standardSocialLinksPosition.y + 80);
+    }
+    // Only apply min-height if elements are positioned below ~500px
+    return maxBottom > 500 ? maxBottom : 0;
+  }, [hero?.standardButtonsPosition, hero?.standardSocialLinksPosition, hero?.standardHeroMinHeight, hasStandardButtonsHorizontalAlign, hasStandardSocialLinksHorizontalAlign]);
+  
+  // Helper to parse value as number
+  const parseNum = (value: number | string | undefined, fallback: number = 0): number => {
+    if (value === undefined || value === null) return fallback;
+    const num = typeof value === 'number' ? value : parseFloat(value);
+    return isNaN(num) ? fallback : num;
+  };
+  
+  // Simple drag handler - element follows mouse EXACTLY within container bounds
+  const handleStandardButtonsDragStart = useCallback((e: ReactMouseEvent, elementRef: HTMLDivElement) => {
+    if (!editable || isMobile) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    draggedElementRef.current = elementRef;
+    setDragStartMouse({ x: e.clientX, y: e.clientY });
+    
+    // Get current element position
+    const rect = elementRef.getBoundingClientRect();
+    const containerRect = standardButtonsRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      const currentLeft = rect.left - containerRect.left;
+      const currentTop = rect.top - containerRect.top;
+      setDragStartElementLeft(currentLeft);
+      setDragStartElementTop(currentTop);
+      // Initialize live position
+      setLiveButtonsLeft(currentLeft);
+      setLiveButtonsTop(currentTop);
+    }
+    
+    setIsDraggingStandardButtons(true);
+  }, [editable, isMobile]);
+  
+  const handleStandardButtonsDragMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingStandardButtons || !standardButtonsRef.current || !draggedElementRef.current) return;
+    
+    const containerRect = standardButtonsRef.current.getBoundingClientRect();
+    const elementRect = draggedElementRef.current.getBoundingClientRect();
+    if (containerRect.width === 0) return;
+    
+    // Calculate new position (element follows mouse EXACTLY)
+    const deltaX = e.clientX - dragStartMouse.x;
+    const deltaY = e.clientY - dragStartMouse.y;
+    
+    let newLeft = dragStartElementLeft + deltaX;
+    let newTop = dragStartElementTop + deltaY;
+    
+    // Constrain left edge (can't go negative)
+    newLeft = Math.max(0, newLeft);
+    // Constrain right edge (element's right edge can't go past container's right edge)
+    const maxLeft = containerRect.width - elementRect.width;
+    if (maxLeft > 0) {
+      newLeft = Math.min(maxLeft, newLeft);
+    }
+    
+    // Constrain vertically: allow some movement up/down
+    newTop = Math.max(-100, Math.min(200, newTop));
+    
+    // Update live position (used directly for rendering during drag)
+    setLiveButtonsLeft(newLeft);
+    setLiveButtonsTop(newTop);
+  }, [isDraggingStandardButtons, dragStartMouse, dragStartElementLeft, dragStartElementTop]);
+  
+  const handleStandardButtonsDragEnd = useCallback(() => {
+    // Store left position as percentage of container width (simple, doesn't depend on element width)
+    if (onEdit && standardButtonsRef.current && liveButtonsLeft !== null) {
+      const containerRect = standardButtonsRef.current.getBoundingClientRect();
+      // Store as percentage of container width (0 = left edge, 1 = 100% from left)
+      const leftPercent = containerRect.width > 0 ? liveButtonsLeft / containerRect.width : 0;
+      
+      onEdit('hero.standardButtonsHorizontalAlign', leftPercent as any);
+      onEdit('hero.standardButtonsVerticalOffset', liveButtonsTop as any);
+    }
+    
+    setIsDraggingStandardButtons(false);
+    setLiveButtonsLeft(null);
+    setLiveButtonsTop(null);
+    draggedElementRef.current = null;
+  }, [onEdit, liveButtonsLeft, liveButtonsTop]);
+  
+  // Social links drag handlers
+  const handleStandardSocialDragStart = useCallback((e: ReactMouseEvent, elementRef: HTMLDivElement) => {
+    if (!editable || isMobile) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    draggedElementRef.current = elementRef;
+    setDragStartMouse({ x: e.clientX, y: e.clientY });
+    
+    const rect = elementRef.getBoundingClientRect();
+    const containerRect = standardSocialRef.current?.getBoundingClientRect();
+    if (containerRect) {
+      const currentLeft = rect.left - containerRect.left;
+      const currentTop = rect.top - containerRect.top;
+      setDragStartElementLeft(currentLeft);
+      setDragStartElementTop(currentTop);
+      setLiveSocialLeft(currentLeft);
+      setLiveSocialTop(currentTop);
+    }
+    
+    setIsDraggingStandardSocial(true);
+  }, [editable, isMobile]);
+  
+  const handleStandardSocialDragMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingStandardSocial || !standardSocialRef.current || !draggedElementRef.current) return;
+    
+    const containerRect = standardSocialRef.current.getBoundingClientRect();
+    const elementRect = draggedElementRef.current.getBoundingClientRect();
+    if (containerRect.width === 0) return;
+    
+    const deltaX = e.clientX - dragStartMouse.x;
+    const deltaY = e.clientY - dragStartMouse.y;
+    
+    let newLeft = dragStartElementLeft + deltaX;
+    let newTop = dragStartElementTop + deltaY;
+    
+    // Constrain left edge (can't go negative)
+    newLeft = Math.max(0, newLeft);
+    // Constrain right edge (element's right edge can't go past container's right edge)
+    const maxLeft = containerRect.width - elementRect.width;
+    if (maxLeft > 0) {
+      newLeft = Math.min(maxLeft, newLeft);
+    }
+    newTop = Math.max(-100, Math.min(200, newTop));
+    
+    setLiveSocialLeft(newLeft);
+    setLiveSocialTop(newTop);
+  }, [isDraggingStandardSocial, dragStartMouse, dragStartElementLeft, dragStartElementTop]);
+  
+  const handleStandardSocialDragEnd = useCallback(() => {
+    // Store left position as percentage of container width
+    if (onEdit && standardSocialRef.current && liveSocialLeft !== null) {
+      const containerRect = standardSocialRef.current.getBoundingClientRect();
+      const leftPercent = containerRect.width > 0 ? liveSocialLeft / containerRect.width : 0;
+      
+      onEdit('hero.standardSocialLinksHorizontalAlign', leftPercent as any);
+      onEdit('hero.standardSocialLinksVerticalOffset', liveSocialTop as any);
+    }
+    
+    setIsDraggingStandardSocial(false);
+    setLiveSocialLeft(null);
+    setLiveSocialTop(null);
+    draggedElementRef.current = null;
+  }, [onEdit, liveSocialLeft, liveSocialTop]);
+  
+  // LEGACY: Drag handlers for pixel-based positioning (kept for backward compatibility)
+  const [legacyDragOffset, setLegacyDragOffset] = useState({ x: 0, y: 0 });
+  
+  const handleLegacyButtonsDragStart = useCallback((e: ReactMouseEvent) => {
+    if (!editable) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    
+    setLegacyDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+    setIsDraggingStandardButtons(true);
+  }, [editable]);
+  
+  const handleLegacyButtonsDragMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingStandardButtons || !onEdit || !heroSectionRef.current) return;
+    
+    const sectionRect = heroSectionRef.current.getBoundingClientRect();
+    
+    const newX = e.clientX - sectionRect.left - legacyDragOffset.x;
+    const newY = e.clientY - sectionRect.top - legacyDragOffset.y;
+    
+    const clampedX = Math.max(0, Math.min(sectionRect.width - 100, newX));
+    const clampedY = Math.max(0, newY);
+    
+    onEdit('hero.standardButtonsPosition', { x: Math.round(clampedX), y: Math.round(clampedY) } as any);
+    
+    const buttonsBottom = clampedY + 120;
+    const socialY = hero?.standardSocialLinksPosition?.y || 0;
+    const socialBottom = socialY > 0 ? socialY + 80 : 0;
+    const neededHeight = Math.max(buttonsBottom, socialBottom);
+    const minHeightValue = neededHeight > 500 ? neededHeight : 0;
+    onEdit('hero.standardHeroMinHeight', minHeightValue.toString());
+  }, [isDraggingStandardButtons, legacyDragOffset, hero?.standardSocialLinksPosition, onEdit]);
+  
+  const handleLegacyButtonsDragEnd = useCallback(() => {
+    setIsDraggingStandardButtons(false);
+  }, []);
+  
+  const handleLegacySocialDragStart = useCallback((e: ReactMouseEvent) => {
+    if (!editable) return;
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    
+    setLegacyDragOffset({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    });
+    setIsDraggingStandardSocial(true);
+  }, [editable]);
+  
+  const handleLegacySocialDragMove = useCallback((e: MouseEvent) => {
+    if (!isDraggingStandardSocial || !onEdit || !heroSectionRef.current) return;
+    
+    const sectionRect = heroSectionRef.current.getBoundingClientRect();
+    
+    const newX = e.clientX - sectionRect.left - legacyDragOffset.x;
+    const newY = e.clientY - sectionRect.top - legacyDragOffset.y;
+    
+    const clampedX = Math.max(0, Math.min(sectionRect.width - 100, newX));
+    const clampedY = Math.max(0, newY);
+    
+    onEdit('hero.standardSocialLinksPosition', { x: Math.round(clampedX), y: Math.round(clampedY) } as any);
+    
+    const socialBottom = clampedY + 80;
+    const buttonsY = hero?.standardButtonsPosition?.y || 0;
+    const buttonsBottom = buttonsY > 0 ? buttonsY + 120 : 0;
+    const neededHeight = Math.max(socialBottom, buttonsBottom);
+    const minHeightValue = neededHeight > 500 ? neededHeight : 0;
+    onEdit('hero.standardHeroMinHeight', minHeightValue.toString());
+  }, [isDraggingStandardSocial, legacyDragOffset, hero?.standardButtonsPosition, onEdit]);
+  
+  const handleLegacySocialDragEnd = useCallback(() => {
+    setIsDraggingStandardSocial(false);
+  }, []);
+  
+  // Determine which drag handlers to use based on positioning mode
+  const isUsingNewAlignSystem = hasStandardButtonsHorizontalAlign || hasStandardSocialLinksHorizontalAlign;
+  const isUsingLegacySystem = (hasStandardButtonsPosition || hasStandardSocialLinksPosition) && !isUsingNewAlignSystem;
+  
+  // Effect for buttons drag (selects between new and legacy handlers)
+  useEffect(() => {
+    if (isDraggingStandardButtons) {
+      const moveHandler = isUsingLegacySystem ? handleLegacyButtonsDragMove : handleStandardButtonsDragMove;
+      const endHandler = isUsingLegacySystem ? handleLegacyButtonsDragEnd : handleStandardButtonsDragEnd;
+      
+      document.addEventListener('mousemove', moveHandler);
+      document.addEventListener('mouseup', endHandler);
+      return () => {
+        document.removeEventListener('mousemove', moveHandler);
+        document.removeEventListener('mouseup', endHandler);
+      };
+    }
+  }, [isDraggingStandardButtons, isUsingLegacySystem, handleLegacyButtonsDragMove, handleLegacyButtonsDragEnd, handleStandardButtonsDragMove, handleStandardButtonsDragEnd]);
+  
+  // Effect for social drag (selects between new and legacy handlers)
+  useEffect(() => {
+    if (isDraggingStandardSocial) {
+      const moveHandler = isUsingLegacySystem ? handleLegacySocialDragMove : handleStandardSocialDragMove;
+      const endHandler = isUsingLegacySystem ? handleLegacySocialDragEnd : handleStandardSocialDragEnd;
+      
+      document.addEventListener('mousemove', moveHandler);
+      document.addEventListener('mouseup', endHandler);
+      return () => {
+        document.removeEventListener('mousemove', moveHandler);
+        document.removeEventListener('mouseup', endHandler);
+      };
+    }
+  }, [isDraggingStandardSocial, isUsingLegacySystem, handleLegacySocialDragMove, handleLegacySocialDragEnd, handleStandardSocialDragMove, handleStandardSocialDragEnd]);
+  
+  // Calculate pixel position from stored percentage
+  // align: percentage of container width where left edge should be (0 = left edge, 0.5 = center, etc)
+  const getPositionStyle = (
+    align: number, 
+    verticalOffset: number, 
+    containerRef: React.RefObject<HTMLDivElement | null>
+  ) => {
+    const safeAlign = isNaN(align) ? 0 : Math.max(0, align);
+    const safeVertical = isNaN(verticalOffset) ? 0 : verticalOffset;
+    
+    // Get container width
+    const containerWidth = containerRef.current?.getBoundingClientRect().width || 0;
+    
+    // Simple: left position = percentage * container width
+    const left = safeAlign * containerWidth;
+    
+    return {
+      left: `${left}px`,
+      top: `${safeVertical}px`,
+    };
+  };
+
   // Render standard two-column layout
   if (!isFullwidthOverlay) {
     return (
@@ -1051,8 +1452,17 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           </Head>
         )}
         
-        <section id={sectionId} className={`relative ${backgroundClass} ${isPreview ? '' : 'body-padding'} overflow-hidden`}>
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <section 
+          ref={heroSectionRef}
+          id={sectionId} 
+          className={`relative ${backgroundClass} ${isPreview ? '' : 'body-padding'}`}
+          style={{
+            // Ensure section is tall enough for positioned elements
+            minHeight: standardHeroMinHeight > 0 ? `${standardHeroMinHeight}px` : undefined
+          }}
+        >
+          <div ref={heroInnerContainerRef} className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          {/* Main content grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
             <div className="order-2 lg:order-1 text-left relative">
@@ -1116,79 +1526,6 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 showFontPicker={true}
               />
                 
-                {/* CTA Buttons - repositionable container for standard layout */}
-                <div 
-                  ref={buttonsFloatingRef}
-                  className={`relative ${editable ? 'cursor-move' : ''} ${isDraggingButtons ? 'select-none opacity-80' : ''}`}
-                  style={{
-                    // For standard layout, use relative positioning by default
-                    // If buttonsPosition is set, use absolute positioning within the text column
-                    ...(hero?.buttonsPosition ? {
-                      position: 'absolute' as const,
-                      left: `${hero.buttonsPosition.x}%`,
-                      top: `${hero.buttonsPosition.y}%`,
-                      transform: 'translate(-50%, -50%)',
-                      zIndex: 20,
-                    } : {})
-                  }}
-                  onMouseDown={handleButtonsDragStart}
-                  onClick={(e) => {
-                    if (e.target === e.currentTarget) {
-                      e.stopPropagation();
-                    }
-                  }}
-                >
-                  {/* Move handle indicator for editor */}
-                  {editable && !isMobile && (
-                    <div 
-                      className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                      </svg>
-                      Move Buttons
-                      {/* Reset button - only show when position has been customized */}
-                      {hero?.buttonsPosition && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (onEdit) {
-                              onEdit('hero.buttonsPosition', null as any);
-                            }
-                          }}
-                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
-                          title="Reset to default position"
-                        >
-                          Reset
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  <ButtonGridEditor
-                    buttons={ctaButtons}
-                    gridLayout={effectiveGridLayout}
-                    onLayoutChange={handleGridLayoutChange}
-                    onButtonClick={onButtonClick}
-                    editable={editable}
-                    colorPalette={colorPalette}
-                    defaultCtaBg={hero?.colors?.ctaBackground}
-                    defaultCtaText={hero?.colors?.ctaText}
-                    getButtonStyles={getButtonStyles}
-                    ctaButtons={hero?.ctaButtons}
-                    onEdit={onEdit}
-                    payment={payment}
-                    isFullwidthOverlay={false}
-                    isMobile={isMobile}
-                    buttonStyles={hero?.buttonStyles}
-                    onButtonStylesChange={handleButtonStylesChange}
-                  />
-                </div>
-                
-                {/* Social Links - smaller and left aligned to match button grid */}
-                <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} />
               </div>
             </div>
 
@@ -1322,6 +1659,375 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               </div>
             </div>
           </div>
+          
+          {/* 
+            Buttons and Social Links Positioning for Standard Layout
+            Priority order:
+            1. NEW alignment system (0-1 scale) - most flexible
+            2. LEGACY pixel positioning - backward compatibility
+            3. Inline default - when nothing is configured
+            On mobile: always centered, ignoring desktop settings
+          */}
+          
+          {/* CTA Buttons */}
+          {(() => {
+            // Determine rendering mode
+            const useNewAlign = hasStandardButtonsHorizontalAlign && !hasStandardButtonsPosition;
+            const useLegacyPixel = hasStandardButtonsPosition && !hasStandardButtonsHorizontalAlign;
+            const useInline = !hasStandardButtonsHorizontalAlign && !hasStandardButtonsPosition;
+            
+            // On mobile: always render centered, ignoring desktop settings
+            if (isMobile) {
+              return (
+                <div className="mt-8 flex justify-center" ref={standardButtonsRef}>
+                  <div className="inline-block">
+                    <ButtonGridEditor
+                      buttons={ctaButtons}
+                      gridLayout={effectiveGridLayout}
+                      onLayoutChange={handleGridLayoutChange}
+                      onButtonClick={onButtonClick}
+                      editable={editable}
+                      colorPalette={colorPalette}
+                      defaultCtaBg={hero?.colors?.ctaBackground}
+                      defaultCtaText={hero?.colors?.ctaText}
+                      getButtonStyles={getButtonStyles}
+                      ctaButtons={hero?.ctaButtons}
+                      onEdit={onEdit}
+                      payment={payment}
+                      isFullwidthOverlay={false}
+                      isMobile={isMobile}
+                      buttonStyles={hero?.buttonStyles}
+                      onButtonStylesChange={handleButtonStylesChange}
+                    />
+                  </div>
+                </div>
+              );
+            }
+            
+            // NEW: Simple drag positioning - element follows mouse EXACTLY within bounds
+            if (useNewAlign) {
+              const align = parseNum(hero?.standardButtonsHorizontalAlign, 0);
+              const verticalOffset = parseNum(hero?.standardButtonsVerticalOffset, 0);
+              
+              // During drag: use live pixel position directly
+              // Not dragging: calculate from stored 0-1 alignment
+              const posStyle = (isDraggingStandardButtons && liveButtonsLeft !== null) 
+                ? { left: `${liveButtonsLeft}px`, top: `${liveButtonsTop}px` }
+                : getPositionStyle(align, verticalOffset, standardButtonsRef);
+              
+              return (
+                <div className="mt-8 w-full relative" ref={standardButtonsRef} style={{ minHeight: '80px' }}>
+                  {/* Draggable content */}
+                  <div 
+                    ref={standardButtonsDraggableRef}
+                    className={`absolute ${editable ? 'cursor-move' : ''} ${isDraggingStandardButtons ? '' : ''}`}
+                    style={posStyle}
+                    onMouseDown={(e) => standardButtonsDraggableRef.current && handleStandardButtonsDragStart(e, standardButtonsDraggableRef.current)}
+                  >
+                    {/* Drag handle for editor */}
+                    {editable && (
+                      <div 
+                        className="absolute -top-6 left-1/2 -translate-x-1/2 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Drag to position
+                        {/* Reset button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit) {
+                              onEdit('hero.standardButtonsHorizontalAlign', null as any);
+                              onEdit('hero.standardButtonsVerticalOffset', null as any);
+                            }
+                          }}
+                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                          title="Reset to default position"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    )}
+                    <ButtonGridEditor
+                      buttons={ctaButtons}
+                      gridLayout={effectiveGridLayout}
+                      onLayoutChange={handleGridLayoutChange}
+                      onButtonClick={onButtonClick}
+                      editable={editable}
+                      colorPalette={colorPalette}
+                      defaultCtaBg={hero?.colors?.ctaBackground}
+                      defaultCtaText={hero?.colors?.ctaText}
+                      getButtonStyles={getButtonStyles}
+                      ctaButtons={hero?.ctaButtons}
+                      onEdit={onEdit}
+                      payment={payment}
+                      isFullwidthOverlay={false}
+                      isMobile={isMobile}
+                      buttonStyles={hero?.buttonStyles}
+                      onButtonStylesChange={handleButtonStylesChange}
+                      alignToStart={true}
+                    />
+                  </div>
+                </div>
+              );
+            }
+            
+            // LEGACY: Pixel-based absolute positioning (backward compatibility)
+            if (useLegacyPixel && hero?.standardButtonsPosition) {
+              return (
+                <div 
+                  className={`absolute z-30 ${editable ? 'cursor-grab' : ''} ${isDraggingStandardButtons ? 'cursor-grabbing opacity-70' : ''}`}
+                  style={{
+                    left: `${hero.standardButtonsPosition.x}px`,
+                    top: `${hero.standardButtonsPosition.y}px`,
+                  }}
+                  onMouseDown={handleLegacyButtonsDragStart}
+                  ref={standardButtonsRef}
+                >
+                  {/* Drag handle for editor */}
+                  {editable && (
+                    <div 
+                      className="absolute -top-6 left-0 bg-purple-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap cursor-grab"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      Drag Buttons (Legacy)
+                      {/* Reset button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onEdit) {
+                            onEdit('hero.standardButtonsPosition', null as any);
+                            onEdit('hero.standardHeroMinHeight', null as any);
+                          }
+                        }}
+                        className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                        title="Reset to inline position"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  )}
+                  <ButtonGridEditor
+                    buttons={ctaButtons}
+                    gridLayout={effectiveGridLayout}
+                    onLayoutChange={handleGridLayoutChange}
+                    onButtonClick={onButtonClick}
+                    editable={editable}
+                    colorPalette={colorPalette}
+                    defaultCtaBg={hero?.colors?.ctaBackground}
+                    defaultCtaText={hero?.colors?.ctaText}
+                    getButtonStyles={getButtonStyles}
+                    ctaButtons={hero?.ctaButtons}
+                    onEdit={onEdit}
+                    payment={payment}
+                    isFullwidthOverlay={false}
+                    isMobile={isMobile}
+                    buttonStyles={hero?.buttonStyles}
+                    onButtonStylesChange={handleButtonStylesChange}
+                  />
+                </div>
+              );
+            }
+            
+            // DEFAULT: Inline rendering (no positioning - click to enable positioning)
+            return (
+              <div 
+                className="mt-8"
+                ref={standardButtonsRef}
+              >
+                <div 
+                  ref={standardButtonsDraggableRef}
+                  className={`inline-block relative ${editable ? 'cursor-pointer' : ''}`}
+                  onClick={(e) => {
+                    if (!editable) return;
+                    // Initialize positioning when clicked
+                    if (onEdit) {
+                      onEdit('hero.standardButtonsHorizontalAlign', 0 as any);
+                      onEdit('hero.standardButtonsVerticalOffset', 0 as any);
+                    }
+                  }}
+                >
+                  {/* Click hint for editor to enable positioning */}
+                  {editable && (
+                    <div 
+                      className="absolute -top-6 left-0 bg-gray-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                      </svg>
+                      Click to enable positioning
+                    </div>
+                  )}
+                  <ButtonGridEditor
+                    buttons={ctaButtons}
+                    gridLayout={effectiveGridLayout}
+                    onLayoutChange={handleGridLayoutChange}
+                    onButtonClick={onButtonClick}
+                    editable={editable}
+                    colorPalette={colorPalette}
+                    defaultCtaBg={hero?.colors?.ctaBackground}
+                    defaultCtaText={hero?.colors?.ctaText}
+                    getButtonStyles={getButtonStyles}
+                    ctaButtons={hero?.ctaButtons}
+                    onEdit={onEdit}
+                    payment={payment}
+                    isFullwidthOverlay={false}
+                    isMobile={isMobile}
+                    buttonStyles={hero?.buttonStyles}
+                    onButtonStylesChange={handleButtonStylesChange}
+                    alignToStart={true}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+          
+          {/* Social Links */}
+          {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (() => {
+            // Determine rendering mode
+            const useNewAlign = hasStandardSocialLinksHorizontalAlign && !hasStandardSocialLinksPosition;
+            const useLegacyPixel = hasStandardSocialLinksPosition && !hasStandardSocialLinksHorizontalAlign;
+            const useInline = !hasStandardSocialLinksHorizontalAlign && !hasStandardSocialLinksPosition;
+            
+            // On mobile: always render centered
+            if (isMobile) {
+              return (
+                <div className="mt-4 flex justify-center" ref={standardSocialRef}>
+                  <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={false} compact={true} />
+                </div>
+              );
+            }
+            
+            // NEW: Simple drag positioning - element follows mouse EXACTLY within bounds
+            if (useNewAlign) {
+              const align = parseNum(hero?.standardSocialLinksHorizontalAlign, 0);
+              const verticalOffset = parseNum(hero?.standardSocialLinksVerticalOffset, 0);
+              
+              // During drag: use live pixel position directly
+              // Not dragging: calculate from stored 0-1 alignment
+              const posStyle = (isDraggingStandardSocial && liveSocialLeft !== null) 
+                ? { left: `${liveSocialLeft}px`, top: `${liveSocialTop}px` }
+                : getPositionStyle(align, verticalOffset, standardSocialRef);
+              
+              return (
+                <div className="mt-4 w-full relative" ref={standardSocialRef} style={{ minHeight: '50px' }}>
+                  {/* Draggable content */}
+                  <div 
+                    ref={standardSocialDraggableRef}
+                    className={`absolute ${editable ? 'cursor-move' : ''}`}
+                    style={posStyle}
+                    onMouseDown={(e) => standardSocialDraggableRef.current && handleStandardSocialDragStart(e, standardSocialDraggableRef.current)}
+                  >
+                    {/* Drag handle for editor */}
+                    {editable && (
+                      <div 
+                        className="absolute -top-6 left-1/2 -translate-x-1/2 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        Drag to position
+                        {/* Reset button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onEdit) {
+                              onEdit('hero.standardSocialLinksHorizontalAlign', null as any);
+                              onEdit('hero.standardSocialLinksVerticalOffset', null as any);
+                            }
+                          }}
+                          className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                          title="Reset to default position"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    )}
+                    <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} className="!mt-0" />
+                  </div>
+                </div>
+              );
+            }
+            
+            // LEGACY: Pixel-based absolute positioning (backward compatibility)
+            if (useLegacyPixel && hero?.standardSocialLinksPosition) {
+              return (
+                <div 
+                  className={`absolute z-30 ${editable ? 'cursor-grab' : ''} ${isDraggingStandardSocial ? 'cursor-grabbing opacity-70' : ''}`}
+                  style={{
+                    left: `${hero.standardSocialLinksPosition.x}px`,
+                    top: `${hero.standardSocialLinksPosition.y}px`,
+                  }}
+                  onMouseDown={handleLegacySocialDragStart}
+                  ref={standardSocialRef}
+                >
+                  {/* Drag handle for editor */}
+                  {editable && (
+                    <div 
+                      className="absolute -top-6 left-0 bg-indigo-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap cursor-grab"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                      </svg>
+                      Drag Social (Legacy)
+                      {/* Reset button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onEdit) {
+                            onEdit('hero.standardSocialLinksPosition', null as any);
+                          }
+                        }}
+                        className="ml-2 px-1.5 py-0.5 bg-white/20 hover:bg-white/30 rounded text-[10px] transition-colors"
+                        title="Reset to inline position"
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  )}
+                  <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} />
+                </div>
+              );
+            }
+            
+            // DEFAULT: Inline rendering (no positioning - click to enable positioning)
+            return (
+              <div className="mt-4" ref={standardSocialRef}>
+                <div 
+                  ref={standardSocialDraggableRef}
+                  className={`inline-block relative ${editable ? 'cursor-pointer' : ''}`}
+                  onClick={(e) => {
+                    if (!editable) return;
+                    // Initialize positioning when clicked
+                    if (onEdit) {
+                      onEdit('hero.standardSocialLinksHorizontalAlign', 0 as any);
+                      onEdit('hero.standardSocialLinksVerticalOffset', 0 as any);
+                    }
+                  }}
+                >
+                  {/* Click hint for editor to enable positioning */}
+                  {editable && (
+                    <div 
+                      className="absolute -top-6 left-0 bg-gray-500/90 text-white text-xs px-2 py-1 rounded-t flex items-center gap-1 whitespace-nowrap z-10"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                      </svg>
+                      Click to enable positioning
+                    </div>
+                  )}
+                  <HeroSocialLinks socialLinks={socialLinks} align="left" isFullwidthOverlay={false} compact={true} className="!mt-0" />
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
           {/* Background decorative elements */}
@@ -1765,7 +2471,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                         onButtonStylesChange={handleButtonStylesChange}
                       />
                       {/* Social links for legacy layout (mobile and desktop) */}
-                      {socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                      {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
                         <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-6" />
                       )}
                     </div>
@@ -1778,7 +2484,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               {/* Floating Social Links - positioned separately (when NOT using blur overlay, non-legacy) */}
               {/* On mobile, social links appear after buttons in the flow */}
               {/* Legacy layouts render social links inline with buttons above */}
-              {!hero?.overlayBlur && !isLegacyFullwidthLayout && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && !isMobile && (
+              {!hero?.overlayBlur && !isLegacyFullwidthLayout && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && !isMobile && (
                 <div 
                   ref={socialLinksFloatingRef}
                   className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}
@@ -1887,7 +2593,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   />
                   
                   {/* Mobile social links - rendered after buttons in the flow */}
-                  {isMobile && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+                  {isMobile && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
                     <div className="mt-4 flex justify-center">
                       <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
                     </div>
@@ -1897,7 +2603,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               
               {/* Floating Social Links - positioned separately from buttons (only when using blur overlay, desktop only) */}
               {/* On mobile, social links are rendered inside the button container above */}
-              {hero?.overlayBlur && !isMobile && socialLinks?.showInHero && socialLinks?.links && Object.values(socialLinks.links).some(url => url && url.trim()) && (
+              {hero?.overlayBlur && !isMobile && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
                 <div 
                   ref={socialLinksFloatingRef}
                   className={`absolute z-30 ${editable ? 'cursor-move' : ''} ${isDraggingSocialLinks ? 'select-none opacity-80' : ''}`}

@@ -1,13 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import type { Swiper as SwiperType } from 'swiper';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import type { UpcomingEvents, Contact, BusinessInfo, ColorPalette } from '../types';
+import type { UpcomingEvents, Contact, BusinessInfo, ColorPalette, EventsButtonStyles } from '../types';
 import { getAllFutureEventInstances, type EventInstance } from '../utils/recurringEvents';
 import EventDetailsModal from './EventDetailsModal';
+import EventButtonEditor from './EventButtonEditor';
 import EditableText from './EditableText';
 import TimeSelector from './TimeSelector';
 import DateSelector from './DateSelector';
@@ -29,8 +30,45 @@ const UpcomingEventsSection: React.FC<Props> = ({ upcomingEvents: upcomingEvents
   const swiperRef = useRef<SwiperType | null>(null);
   const [selectedEventInstance, setSelectedEventInstance] = useState<EventInstance | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingButton, setEditingButton] = useState<{ eventIndex: number; buttonType: 'secondary' | 'primary' } | null>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Get button styles with defaults for backwards compatibility - memoized to prevent useCallback dependency changes
+  const buttonStyles = useMemo(() => 
+    upcomingEventsProp?.buttonStyles || {},
+    [upcomingEventsProp?.buttonStyles]
+  );
+  
+  // Check if buttons are enabled (default to true for backwards compatibility)
+  const primaryButtonEnabled = buttonStyles.primaryButtonEnabled !== false;
+  const secondaryButtonEnabled = buttonStyles.secondaryButtonEnabled !== false;
+  
+  // Compute button styles for primary buttons
+  const getPrimaryButtonStyle = useCallback((): React.CSSProperties => {
+    const defaultBgColor = colorPalette?.primary || '#10B981';
+    return {
+      backgroundColor: buttonStyles.backgroundColor || defaultBgColor,
+      color: buttonStyles.textColor || '#ffffff',
+      borderRadius: buttonStyles.borderRadius !== undefined ? `${buttonStyles.borderRadius}px` : '0.5rem',
+      fontSize: buttonStyles.fontSize !== undefined ? `${buttonStyles.fontSize}px` : undefined,
+      fontFamily: buttonStyles.fontFamily || undefined,
+      fontWeight: buttonStyles.fontWeight || 500,
+    };
+  }, [buttonStyles, colorPalette]);
+  
+  // Compute button styles for secondary buttons
+  const getSecondaryButtonStyle = useCallback((): React.CSSProperties => {
+    return {
+      backgroundColor: buttonStyles.secondaryBackgroundColor || '#f3f4f6',
+      color: buttonStyles.secondaryTextColor || '#1f2937',
+      borderRadius: buttonStyles.borderRadius !== undefined ? `${buttonStyles.borderRadius}px` : '0.5rem',
+      fontSize: buttonStyles.fontSize !== undefined ? `${buttonStyles.fontSize}px` : undefined,
+      fontFamily: buttonStyles.fontFamily || undefined,
+      fontWeight: buttonStyles.fontWeight || 500,
+      border: '1px solid #d1d5db',
+    };
+  }, [buttonStyles]);
   
   // Update Swiper when events change to recalculate slide widths
   useEffect(() => {
@@ -410,121 +448,144 @@ Thank you!`;
 
                           {/* Action Buttons */}
                           <div className="space-y-2">
-                            {/* See More Details Button */}
-                            <button 
-                              onClick={() => {
-                                setSelectedEventInstance(eventInstance);
-                                setIsModalOpen(true);
-                              }}
-                              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200 border border-gray-300"
-                            >
-                              See More Details
-                            </button>
+                            {/* Secondary Button (e.g., See More Details) */}
+                            {(secondaryButtonEnabled || editable) && (
+                              editable ? (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingButton({ eventIndex, buttonType: 'secondary' });
+                                  }}
+                                  className={`w-full font-medium py-2 px-4 transition-colors duration-200 relative group hover:opacity-90 ${!secondaryButtonEnabled ? 'opacity-40' : ''}`}
+                                  style={getSecondaryButtonStyle()}
+                                >
+                                  {event.detailsButtonLabel || 'See More Details'}
+                                  {/* Edit indicator */}
+                                  <span className="absolute inset-0 flex items-center justify-center bg-blue-500/90 text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                    Edit Button
+                                  </span>
+                                  {!secondaryButtonEnabled && (
+                                    <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-[10px] px-1 rounded">OFF</span>
+                                  )}
+                                </button>
+                              ) : secondaryButtonEnabled && event.detailsButtonAction === 'external' && event.detailsButtonUrl ? (
+                                <a 
+                                  href={event.detailsButtonUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full font-medium py-2 px-4 transition-colors duration-200 inline-block text-center hover:opacity-90"
+                                  style={getSecondaryButtonStyle()}
+                                >
+                                  {event.detailsButtonLabel || 'See More Details'}
+                                </a>
+                              ) : secondaryButtonEnabled ? (
+                                <button 
+                                  onClick={() => {
+                                    setSelectedEventInstance(eventInstance);
+                                    setIsModalOpen(true);
+                                  }}
+                                  className="w-full font-medium py-2 px-4 transition-colors duration-200 hover:opacity-90"
+                                  style={getSecondaryButtonStyle()}
+                                >
+                                  {event.detailsButtonLabel || 'See More Details'}
+                                </button>
+                              ) : null
+                            )}
 
-                            {/* Inquire Button */}
-                            {event.inquireUrl ? (
-                              <a 
-                                href={event.inquireUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 inline-block text-center"
-                                style={{
-                                  backgroundColor: colorPalette?.primary || '#10B981'
-                                }}
-                                onMouseEnter={(e) => {
-                                  const target = e.target as HTMLAnchorElement;
-                                  const color = colorPalette?.primary || '#10B981';
-                                  const darkerColor = color.replace('#', '');
-                                  const r = parseInt(darkerColor.substr(0, 2), 16);
-                                  const g = parseInt(darkerColor.substr(2, 2), 16);
-                                  const b = parseInt(darkerColor.substr(4, 2), 16);
-                                  const darkerR = Math.max(0, Math.floor(r * 0.8));
-                                  const darkerG = Math.max(0, Math.floor(g * 0.8));
-                                  const darkerB = Math.max(0, Math.floor(b * 0.8));
-                                  target.style.backgroundColor = `rgb(${darkerR}, ${darkerG}, ${darkerB})`;
-                                }}
-                                onMouseLeave={(e) => {
-                                  const target = e.target as HTMLAnchorElement;
-                                  target.style.backgroundColor = colorPalette?.primary || '#10B981';
-                                }}
-                              >
-                                Inquire About This Event
-                              </a>
-                            ) : (
-                              <button 
-                                onClick={() => {
-                                // Scroll to contact section
-                                const contactSection = document.getElementById('contact');
-                                if (contactSection) {
-                                  // Calculate header height offset using the dynamic header height
-                                  const dynamicHeaderHeight = document.documentElement.style.getPropertyValue('--dynamic-header-height');
-                                  let headerOffset = 80; // Default fallback
-                                  
-                                  if (dynamicHeaderHeight) {
-                                    // Convert rem to pixels (assuming 1rem = 16px)
-                                    const remValue = parseFloat(dynamicHeaderHeight.replace('rem', ''));
-                                    headerOffset = remValue * 16;
-                                  } else {
-                                    // Fallback to responsive values if dynamic height not set
-                                    const isMobile = window.innerWidth < 768;
-                                    headerOffset = isMobile ? 80 : 96;
-                                  }
-                                  
-                                  const elementPosition = contactSection.offsetTop - headerOffset;
-                                  
-                                  window.scrollTo({
-                                    top: elementPosition,
-                                    behavior: 'smooth'
-                                  });
-                                  
-                                  // Wait for scroll to complete, then prefill form
-                                  setTimeout(() => {
-                                    const messageTextarea = document.querySelector('textarea[name="message"]') as HTMLTextAreaElement;
-                                    
-                                    if (messageTextarea) {
-                                      const eventDate = eventInstance.date ? ` on ${formatDate(eventInstance.date)}` : '';
-                                      const eventTime = eventInstance.time ? ` at ${formatTime(eventInstance.time)}` : '';
-                                      const inquiryMessage = `Hello, I'd like to inquire about your "${event.title}" event${eventDate}${eventTime}. Could you please provide more information about availability, pricing, and what's included?
+                            {/* Primary Button (e.g., Inquire About This Event) */}
+                            {(primaryButtonEnabled || editable) && (
+                              editable ? (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingButton({ eventIndex, buttonType: 'primary' });
+                                  }}
+                                  className={`w-full font-medium py-2 px-4 transition-colors duration-200 relative group hover:opacity-90 ${!primaryButtonEnabled ? 'opacity-40' : ''}`}
+                                  style={getPrimaryButtonStyle()}
+                                >
+                                  {event.inquireButtonLabel || 'Inquire About This Event'}
+                                  {/* Edit indicator */}
+                                  <span className="absolute inset-0 flex items-center justify-center bg-blue-500/90 text-white text-sm font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                    Edit Button
+                                  </span>
+                                  {!primaryButtonEnabled && (
+                                    <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-[10px] px-1 rounded">OFF</span>
+                                  )}
+                                </button>
+                              ) : primaryButtonEnabled && event.inquireUrl ? (
+                                <a 
+                                  href={event.inquireUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full font-medium py-2 px-4 transition-colors duration-200 inline-block text-center hover:opacity-90"
+                                  style={getPrimaryButtonStyle()}
+                                >
+                                  {event.inquireButtonLabel || 'Inquire About This Event'}
+                                </a>
+                              ) : primaryButtonEnabled ? (
+                                <button 
+                                  onClick={() => {
+                                    // Scroll to contact section
+                                    const contactSection = document.getElementById('contact');
+                                    if (contactSection) {
+                                      // Calculate header height offset using the dynamic header height
+                                      const dynamicHeaderHeight = document.documentElement.style.getPropertyValue('--dynamic-header-height');
+                                      let headerOffset = 80; // Default fallback
+                                      
+                                      if (dynamicHeaderHeight) {
+                                        // Convert rem to pixels (assuming 1rem = 16px)
+                                        const remValue = parseFloat(dynamicHeaderHeight.replace('rem', ''));
+                                        headerOffset = remValue * 16;
+                                      } else {
+                                        // Fallback to responsive values if dynamic height not set
+                                        const isMobile = window.innerWidth < 768;
+                                        headerOffset = isMobile ? 80 : 96;
+                                      }
+                                      
+                                      const elementPosition = contactSection.offsetTop - headerOffset;
+                                      
+                                      window.scrollTo({
+                                        top: elementPosition,
+                                        behavior: 'smooth'
+                                      });
+                                      
+                                      // Wait for scroll to complete, then prefill form
+                                      setTimeout(() => {
+                                        const messageTextarea = document.querySelector('textarea[name="message"]') as HTMLTextAreaElement;
+                                        
+                                        if (messageTextarea) {
+                                          const eventDate = eventInstance.date ? ` on ${formatDate(eventInstance.date)}` : '';
+                                          const eventTime = eventInstance.time ? ` at ${formatTime(eventInstance.time)}` : '';
+                                          const inquiryMessage = `Hello, I'd like to inquire about your "${event.title}" event${eventDate}${eventTime}. Could you please provide more information about availability, pricing, and what's included?
 
 Thank you!`;
-                                      
-                                      messageTextarea.value = inquiryMessage;
-                                      messageTextarea.focus();
-                                      
-                                      // Trigger React's onChange event
-                                      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
-                                      if (nativeInputValueSetter) {
-                                        nativeInputValueSetter.call(messageTextarea, inquiryMessage);
-                                      }
-                                      messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                          
+                                          messageTextarea.value = inquiryMessage;
+                                          messageTextarea.focus();
+                                          
+                                          // Trigger React's onChange event
+                                          const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+                                          if (nativeInputValueSetter) {
+                                            nativeInputValueSetter.call(messageTextarea, inquiryMessage);
+                                          }
+                                          messageTextarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                        }
+                                      }, 800);
                                     }
-                                  }, 800);
-                                }
-                              }}
-                              className="w-full text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                              style={{
-                                backgroundColor: colorPalette?.primary || '#10B981'
-                              }}
-                              onMouseEnter={(e) => {
-                                const target = e.target as HTMLButtonElement;
-                                const color = colorPalette?.primary || '#10B981';
-                                const darkerColor = color.replace('#', '');
-                                const r = parseInt(darkerColor.substr(0, 2), 16);
-                                const g = parseInt(darkerColor.substr(2, 2), 16);
-                                const b = parseInt(darkerColor.substr(4, 2), 16);
-                                const darkerR = Math.max(0, Math.floor(r * 0.8));
-                                const darkerG = Math.max(0, Math.floor(g * 0.8));
-                                const darkerB = Math.max(0, Math.floor(b * 0.8));
-                                target.style.backgroundColor = `rgb(${darkerR}, ${darkerG}, ${darkerB})`;
-                              }}
-                              onMouseLeave={(e) => {
-                                const target = e.target as HTMLButtonElement;
-                                target.style.backgroundColor = colorPalette?.primary || '#10B981';
-                              }}
-                            >
-                              Inquire About This Event
-                            </button>
-                          )}
+                                  }}
+                                  className="w-full font-medium py-2 px-4 transition-colors duration-200 hover:opacity-90"
+                                  style={getPrimaryButtonStyle()}
+                                >
+                                  {event.inquireButtonLabel || 'Inquire About This Event'}
+                                </button>
+                              ) : null
+                            )}
                           </div>
                         </div>
                       </div>
@@ -590,6 +651,33 @@ Thank you!`;
           }}
           eventInstance={selectedEventInstance}
           onInquire={handleModalInquiry}
+        />
+      )}
+
+      {/* Event Button Editor Modal */}
+      {editingButton && onEdit && (
+        <EventButtonEditor
+          buttonType={editingButton.buttonType}
+          label={
+            editingButton.buttonType === 'secondary'
+              ? upcomingEvents.items[editingButton.eventIndex]?.detailsButtonLabel || ''
+              : upcomingEvents.items[editingButton.eventIndex]?.inquireButtonLabel || ''
+          }
+          actionType={
+            editingButton.buttonType === 'secondary'
+              ? upcomingEvents.items[editingButton.eventIndex]?.detailsButtonAction || 'modal'
+              : upcomingEvents.items[editingButton.eventIndex]?.inquireUrl ? 'external' : 'contact'
+          }
+          url={
+            editingButton.buttonType === 'secondary'
+              ? upcomingEvents.items[editingButton.eventIndex]?.detailsButtonUrl || ''
+              : upcomingEvents.items[editingButton.eventIndex]?.inquireUrl || ''
+          }
+          eventIndex={editingButton.eventIndex}
+          onClose={() => setEditingButton(null)}
+          onEdit={onEdit}
+          colorPalette={colorPalette}
+          buttonStyles={buttonStyles}
         />
       )}
     </section>

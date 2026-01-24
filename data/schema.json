@@ -260,6 +260,46 @@
             "y": { "type": "number", "minimum": 0, "maximum": 100 }
           },
           "description": "Position of overlay text as percentages"
+        },
+        "standardButtonsHorizontalAlign": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Horizontal alignment for buttons in standard layout (0=left-aligned with text, 0.5=centered, 1=right-aligned with image). Ignored on mobile where buttons are always centered."
+        },
+        "standardButtonsVerticalOffset": {
+          "type": "number",
+          "description": "Vertical offset in pixels for buttons from their default position (positive = down)."
+        },
+        "standardSocialLinksHorizontalAlign": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Horizontal alignment for social links in standard layout (0=left-aligned with text, 0.5=centered, 1=right-aligned with image). Ignored on mobile where social links are always centered."
+        },
+        "standardSocialLinksVerticalOffset": {
+          "type": "number",
+          "description": "Vertical offset in pixels for social links from their default position (positive = down)."
+        },
+        "standardButtonsPosition": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          },
+          "description": "DEPRECATED: Legacy pixel-based position for buttons. Use standardButtonsHorizontalAlign instead."
+        },
+        "standardSocialLinksPosition": {
+          "type": "object",
+          "properties": {
+            "x": { "type": "number" },
+            "y": { "type": "number" }
+          },
+          "description": "DEPRECATED: Legacy pixel-based position for social links. Use standardSocialLinksHorizontalAlign instead."
+        },
+        "standardHeroMinHeight": {
+          "type": "number",
+          "description": "DEPRECATED: Legacy minimum height for hero section when elements are pixel-positioned below content."
         }
       },
       "required": ["heroLargeImageUrl", "headline", "cta"]

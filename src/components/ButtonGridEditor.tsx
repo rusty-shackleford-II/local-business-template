@@ -213,6 +213,8 @@ type ButtonGridEditorProps = {
   isMobile?: boolean;
   buttonStyles?: ButtonStyles;
   onButtonStylesChange?: (styles: ButtonStyles) => void;
+  // When true, aligns grid to start (no centering, no minWidth) for precise positioning
+  alignToStart?: boolean;
 };
 
 // ============================================================================
@@ -236,6 +238,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   isMobile = false,
   buttonStyles = {},
   onButtonStylesChange,
+  alignToStart = false,
 }) => {
   // Drag state
   const [draggedButtonId, setDraggedButtonId] = useState<string | null>(null);
@@ -921,17 +924,17 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   
   return (
     <div className="relative">
-      {/* CSS Grid container - centered, clickable background for style editor */}
+      {/* CSS Grid container - centered or left-aligned, clickable background for style editor */}
       <div
-        className="grid gap-4 mx-auto p-4 -m-4 rounded-lg"
+        className={`grid gap-4 p-4 -m-4 rounded-lg ${alignToStart ? '' : 'mx-auto'}`}
         onMouseDown={handleGridMouseDown}
         onClick={handleGridBackgroundClick}
         style={{
           gridTemplateColumns: `repeat(${gridBounds.totalCols}, minmax(auto, 1fr))`,
           gridTemplateRows: `repeat(${gridBounds.totalRows}, auto)`,
-          justifyContent: 'center',
+          justifyContent: alignToStart ? 'start' : 'center',
           width: 'fit-content',
-          minWidth: gridBounds.totalCols === 1 ? '180px' : gridBounds.totalCols === 2 ? '360px' : gridBounds.totalCols === 3 ? '540px' : '720px',
+          minWidth: alignToStart ? undefined : (gridBounds.totalCols === 1 ? '180px' : gridBounds.totalCols === 2 ? '360px' : gridBounds.totalCols === 3 ? '540px' : '720px'),
           transition: isDragging ? 'none' : 'all 0.2s ease',
           cursor: editable && !isDragging ? 'pointer' : undefined,
           backgroundColor: editable && !isDragging ? 'rgba(59, 130, 246, 0.05)' : undefined,

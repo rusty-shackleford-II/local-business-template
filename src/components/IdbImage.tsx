@@ -94,7 +94,7 @@ const IdbImage: React.FC<IdbImageProps> = ({
         URL.revokeObjectURL(objectUrl);
       }
     };
-  }, [src]);
+  }, [src, isValidSrc]);
 
   // Call onError when hasError becomes true (from idb load failure)
   useEffect(() => {
@@ -130,11 +130,13 @@ const IdbImage: React.FC<IdbImageProps> = ({
   // For blob URLs, use regular img tag since Next.js Image might not support them
   if (imageSrc && typeof imageSrc === 'string' && imageSrc.startsWith('blob:')) {
     return (
+      // eslint-disable-next-line @next/next/no-img-element
       <img
         src={imageSrc}
         alt={alt}
         className={className}
         style={fill ? { 
+          display: 'block', // Prevents grey/black border below transparent images
           position: 'absolute', 
           inset: 0, 
           width: '100%', 
@@ -142,6 +144,7 @@ const IdbImage: React.FC<IdbImageProps> = ({
           objectFit: (className && className.includes('object-contain')) ? 'contain' : (className && className.includes('object-cover')) ? 'cover' : 'cover',
           ...style 
         } : { 
+          display: 'block', // Prevents grey/black border below transparent images
           width, 
           height, 
           ...style 

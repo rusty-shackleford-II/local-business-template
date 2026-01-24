@@ -50,9 +50,12 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   enabled = true,
   persistLanguage = true
 }) => {
-  const normalizedLanguages = Array.isArray(availableLanguages) && availableLanguages.length > 0
-    ? availableLanguages
-    : ['en'];
+  const normalizedLanguages = useMemo(() => 
+    Array.isArray(availableLanguages) && availableLanguages.length > 0
+      ? availableLanguages
+      : ['en'],
+    [availableLanguages]
+  );
   const safeDefaultLanguage = normalizedLanguages.includes(defaultLanguage)
     ? defaultLanguage
     : normalizedLanguages[0];

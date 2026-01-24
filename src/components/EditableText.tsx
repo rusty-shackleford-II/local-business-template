@@ -242,6 +242,7 @@ export default function EditableText({
     });
     
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [effectiveEditable, path, onEdit, onChange, multiline]);
 
   const handleFocus = useCallback(() => {
@@ -250,6 +251,7 @@ export default function EditableText({
       // eslint-disable-next-line no-console
       console.log('[MenuDebug EditableText] onFocus', { path });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleBlur = useCallback(() => {
@@ -317,6 +319,7 @@ export default function EditableText({
     if (onBlur) {
       onBlur();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, onEdit, onChange, onBlur, multiline, effectiveEditable]);
 
   const handleClick = useCallback(
@@ -575,6 +578,7 @@ export default function EditableText({
     }
     
     return translatedText;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [internal, path, i18nContext, value]);
 
   // For contentEditable elements, we use ref to control the DOM directly
