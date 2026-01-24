@@ -3112,7 +3112,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   style={isMobile ? {} : {
                     left: hero?.buttonsPosition?.x !== undefined ? `${hero.buttonsPosition.x}%` : '50%',
                     top: hero?.buttonsPosition?.y !== undefined ? `${hero.buttonsPosition.y}%` : '85%',
-                    transform: 'translate(-50%, -50%)',
+                    transform: 'translateX(-50%)',
                   }}
                   onMouseDown={isMobile ? undefined : handleButtonsDragStart}
                   onClick={(e) => {
@@ -3152,25 +3152,29 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     </div>
                   )}
                   
-                  {/* CTA Buttons Grid - visual drag-and-drop editor */}
-                  <ButtonGridEditor
-                    buttons={ctaButtons}
-                    gridLayout={effectiveGridLayout}
-                    onLayoutChange={handleGridLayoutChange}
-                    onButtonClick={onButtonClick}
-                    editable={editable}
-                    colorPalette={colorPalette}
-                    defaultCtaBg={hero?.colors?.ctaBackground}
-                    defaultCtaText={hero?.colors?.ctaText}
-                    getButtonStyles={getButtonStyles}
-                    ctaButtons={hero?.ctaButtons}
-                    onEdit={onEdit}
-                    payment={payment}
-                    isFullwidthOverlay={true}
-                    isMobile={isMobile}
-                    buttonStyles={hero?.buttonStyles}
-                    onButtonStylesChange={handleButtonStylesChange}
-                  />
+                  {/* Inner wrapper for buttons only - translateY centers just the buttons, not the editor UI */}
+                  {/* Only apply on desktop; mobile uses flow layout with mt-auto */}
+                  <div style={isMobile ? {} : { transform: 'translateY(-50%)' }}>
+                    {/* CTA Buttons Grid - visual drag-and-drop editor */}
+                    <ButtonGridEditor
+                      buttons={ctaButtons}
+                      gridLayout={effectiveGridLayout}
+                      onLayoutChange={handleGridLayoutChange}
+                      onButtonClick={onButtonClick}
+                      editable={editable}
+                      colorPalette={colorPalette}
+                      defaultCtaBg={hero?.colors?.ctaBackground}
+                      defaultCtaText={hero?.colors?.ctaText}
+                      getButtonStyles={getButtonStyles}
+                      ctaButtons={hero?.ctaButtons}
+                      onEdit={onEdit}
+                      payment={payment}
+                      isFullwidthOverlay={true}
+                      isMobile={isMobile}
+                      buttonStyles={hero?.buttonStyles}
+                      onButtonStylesChange={handleButtonStylesChange}
+                    />
+                  </div>
                   
                   {/* Mobile social links - rendered after buttons in the flow */}
                   {isMobile && socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
