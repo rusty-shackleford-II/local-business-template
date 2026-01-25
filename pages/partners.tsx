@@ -34,8 +34,8 @@ export default function PartnersPage() {
         )}
         
         {/* Additional SEO */}
-        <meta name="keywords" content={`local business partners, ${(site as any)?.businessInfo?.address?.addressLocality || 'local'} services, trusted businesses, BuildVM network`} />
-        <meta name="author" content="BuildVM" />
+        <meta name="keywords" content={`local business partners, ${(site as any)?.businessInfo?.address?.addressLocality || 'local'} services, trusted businesses, Instant network`} />
+        <meta name="author" content="Instant" />
         
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
@@ -69,7 +69,7 @@ export default function PartnersPage() {
                   Our Trusted Local Partners
                 </h1>
                 <p className="mt-6 max-w-3xl mx-auto text-xl text-gray-600">
-                  These trusted partners in the BuildVM network have earned our recommendation through their commitment to excellence and customer satisfaction. We&apos;re confident they&apos;ll provide you with quality service. -- The BuildVM team.
+                  These trusted partners in the Instant network have earned our recommendation through their commitment to excellence and customer satisfaction. We&apos;re confident they&apos;ll provide you with quality service. -- The Instant team.
                 </p>
               </div>
             </div>

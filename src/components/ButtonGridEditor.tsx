@@ -318,11 +318,18 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   const DRAG_THRESHOLD = 5; // pixels of movement before drag activates
   
   const handleMouseDown = useCallback((e: React.MouseEvent, buttonId: string) => {
-    if (!editable || buttons.length <= 1) return;
     if (e.button !== 0) return; // Left click only
     
+    // ALWAYS stop propagation to prevent parent drag handlers from triggering
+    // This prevents the Hero component from starting its "move button group" drag
     e.preventDefault();
     e.stopPropagation();
+    
+    // Track position for click detection (even if not starting a drag)
+    buttonMouseDownRef.current = { x: e.clientX, y: e.clientY, buttonId };
+    
+    // Only set up drag if editable and multiple buttons
+    if (!editable || buttons.length <= 1) return;
     
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     
@@ -334,9 +341,6 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
       offsetX: e.clientX - rect.left,
       offsetY: e.clientY - rect.top,
     };
-    
-    // Track position for click detection
-    buttonMouseDownRef.current = { x: e.clientX, y: e.clientY, buttonId };
   }, [editable, buttons.length]);
   
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -521,35 +525,37 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   }, [draggedButtonId, getValidDropPositions]);
 
   // ──────────────────────────────────────────────────────────────────────────
-  // CALCULATE GRID BOUNDS (including drop zones when dragging)
+  // CALCULATE GRID BOUNDS (stays fixed - drop zones positioned absolutely)
   // ──────────────────────────────────────────────────────────────────────────
 
   const gridBounds = useMemo(() => {
-    // Start with button positions
-    let minCol = 0, maxCol = cols - 1;
-    let minRow = 0, maxRow = rows - 1;
-    
-    // Expand to include drop zone positions when dragging
-    if (isDragging && dropPositions.length > 0) {
-      for (const dp of dropPositions) {
-        minCol = Math.min(minCol, dp.col);
-        maxCol = Math.max(maxCol, dp.col);
-        minRow = Math.min(minRow, dp.row);
-        maxRow = Math.max(maxRow, dp.row);
-      }
-    }
-    
+    // Grid bounds are ONLY based on button positions - never expand for drop zones
+    // This keeps buttons stable during drag, preventing jarring jumps
     return {
-      minCol,
-      maxCol,
-      minRow,
-      maxRow,
-      totalCols: maxCol - minCol + 1,
-      totalRows: maxRow - minRow + 1,
-      colOffset: -minCol, // How much to offset grid column indices
-      rowOffset: -minRow, // How much to offset grid row indices
+      minCol: 0,
+      maxCol: cols - 1,
+      minRow: 0,
+      maxRow: rows - 1,
+      totalCols: cols,
+      totalRows: rows,
+      colOffset: 0,
+      rowOffset: 0,
     };
-  }, [cols, rows, isDragging, dropPositions]);
+  }, [cols, rows]);
+  
+  // Track button element refs for positioning drop zones
+  const buttonRefsMap = useRef<Map<string, HTMLDivElement>>(new Map());
+  const gridRef = useRef<HTMLDivElement>(null);
+  
+  // Force a re-render after drag starts to ensure drop zone positions are calculated
+  // (refs may not be read correctly on the first render pass)
+  const [dropZoneKey, setDropZoneKey] = useState(0);
+  useEffect(() => {
+    if (isDragging) {
+      // Small delay to ensure refs are populated
+      requestAnimationFrame(() => setDropZoneKey(k => k + 1));
+    }
+  }, [isDragging]);
 
   // ──────────────────────────────────────────────────────────────────────────
   // BUTTON RENDERER
@@ -659,6 +665,8 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   const handleGridMouseDown = useCallback((e: React.MouseEvent) => {
     // Only track if clicking directly on the grid (not on buttons inside)
     if (e.target === e.currentTarget) {
+      // Stop propagation to prevent parent drag handlers (e.g., Hero's move button group)
+      e.stopPropagation();
       mouseDownPosRef.current = { x: e.clientX, y: e.clientY };
     }
   }, []);
@@ -724,12 +732,8 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     }
   }, [editable, onEdit]);
   
-  // Modified mouse down to track position for click detection
+  // Modified mouse down to handle drag initiation (position tracking is done in handleMouseDown)
   const handleButtonMouseDown = useCallback((e: React.MouseEvent, buttonId: string) => {
-    // Track position for click detection
-    buttonMouseDownRef.current = { x: e.clientX, y: e.clientY, buttonId };
-    
-    // Also handle drag initiation
     handleMouseDown(e, buttonId);
   }, [handleMouseDown]);
   
@@ -754,6 +758,11 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     return (
       <div
         key={button.id}
+        ref={(el) => {
+          if (el) buttonRefsMap.current.set(button.id, el);
+          else buttonRefsMap.current.delete(button.id);
+        }}
+        data-button-id={button.id}
         data-drop-zone={isDragging && !isDraggedButton ? "true" : undefined}
         data-target-id={isDragging && !isDraggedButton ? button.id : undefined}
         data-direction={isDragging && !isDraggedButton ? "swap" : undefined}
@@ -829,44 +838,86 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   };
   
   // ──────────────────────────────────────────────────────────────────────────
-  // DROP ZONE CELL RENDERER
+  // DROP ZONE OVERLAY RENDERER (positioned absolutely relative to buttons)
   // ──────────────────────────────────────────────────────────────────────────
   
-  const renderDropZone = (dropPos: typeof dropPositions[0], gridCol: number, gridRow: number) => {
-    const isActive = activeDropTarget?.targetButtonId === dropPos.targetButtonId && 
-                     activeDropTarget?.direction === dropPos.direction;
+  const DropZoneOverlays = () => {
+    if (!isDragging || dropPositions.length === 0 || !gridRef.current) return null;
+    
+    const gridRect = gridRef.current.getBoundingClientRect();
+    const gap = 16; // 1rem gap between grid cells
     
     return (
-      <div
-        key={`drop-${dropPos.col}-${dropPos.row}`}
-        data-drop-zone="true"
-        data-target-id={dropPos.targetButtonId}
-        data-direction={dropPos.direction}
-        style={{
-          gridColumn: gridCol + 1,
-          gridRow: gridRow + 1,
-          backgroundColor: isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.15)',
-          border: isActive ? '2px solid #3b82f6' : '2px dashed rgba(59, 130, 246, 0.4)',
-          borderRadius: '8px',
-          transition: 'all 0.15s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '56px',
-          transform: isActive ? 'scale(1.02)' : 'scale(1)',
-        }}
-      >
-        {isActive && (
-          <span style={{ 
-            color: '#3b82f6', 
-            fontSize: '24px',
-            fontWeight: 'bold',
-            opacity: 0.7,
-          }}>
-            +
-          </span>
-        )}
-      </div>
+      <>
+        {dropPositions.map(dropPos => {
+          const isActive = activeDropTarget?.targetButtonId === dropPos.targetButtonId && 
+                           activeDropTarget?.direction === dropPos.direction;
+          
+          // Find the target button element to position relative to it
+          const targetButtonEl = buttonRefsMap.current.get(dropPos.targetButtonId);
+          if (!targetButtonEl) return null;
+          
+          const buttonRect = targetButtonEl.getBoundingClientRect();
+          
+          // Calculate drop zone position relative to the grid container
+          let left = buttonRect.left - gridRect.left;
+          let top = buttonRect.top - gridRect.top;
+          const width = buttonRect.width;
+          const height = buttonRect.height;
+          
+          // Offset based on direction
+          switch (dropPos.direction) {
+            case 'left':
+              left -= width + gap;
+              break;
+            case 'right':
+              left += width + gap;
+              break;
+            case 'above':
+              top -= height + gap;
+              break;
+            case 'below':
+              top += height + gap;
+              break;
+          }
+          
+          return (
+            <div
+              key={`drop-${dropPos.col}-${dropPos.row}`}
+              data-drop-zone="true"
+              data-target-id={dropPos.targetButtonId}
+              data-direction={dropPos.direction}
+              style={{
+                position: 'absolute',
+                left,
+                top,
+                width,
+                height: Math.max(height, 56),
+                backgroundColor: isActive ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.15)',
+                border: isActive ? '2px solid #3b82f6' : '2px dashed rgba(59, 130, 246, 0.4)',
+                borderRadius: '8px',
+                transition: 'background-color 0.15s ease, border 0.15s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                pointerEvents: 'auto',
+              }}
+            >
+              {isActive && (
+                <span style={{ 
+                  color: '#3b82f6', 
+                  fontSize: '24px',
+                  fontWeight: 'bold',
+                  opacity: 0.7,
+                }}>
+                  +
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </>
     );
   };
   
@@ -1056,6 +1107,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     <div className="relative overflow-visible">
       {/* CSS Grid container - centered or left-aligned, clickable background for style editor */}
       <div
+        ref={gridRef}
         className={`grid gap-4 p-4 -m-4 rounded-lg ${alignToStart ? '' : 'mx-auto'}`}
         onMouseDown={handleGridMouseDown}
         onClick={handleGridBackgroundClick}
@@ -1069,19 +1121,19 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
           cursor: editable && !isDragging ? 'pointer' : undefined,
           backgroundColor: editable && !isDragging ? 'rgba(59, 130, 246, 0.05)' : undefined,
           border: editable && !isDragging ? '1px dashed rgba(59, 130, 246, 0.2)' : undefined,
+          position: 'relative', // For absolutely positioned drop zones
         }}
       >
-        {/* Render drop zones first (behind buttons) */}
-        {isDragging && dropPositions.map(dp => 
-          renderDropZone(dp, dp.col + gridBounds.colOffset, dp.row + gridBounds.rowOffset)
-        )}
-        
-        {/* Render buttons */}
+        {/* Render buttons (grid cells stay fixed, never shift during drag) */}
         {gridLayout.positions.map(pos => {
           const button = buttons.find(b => b.id === pos.buttonId);
           if (!button) return null;
           return renderButton(button, pos.col + gridBounds.colOffset, pos.row + gridBounds.rowOffset);
         })}
+        
+        {/* Render drop zones as absolute overlays (don't affect grid layout) */}
+        {/* Key forces re-render to recalculate positions after refs are populated */}
+        <DropZoneOverlays key={dropZoneKey} />
       </div>
       
       {/* Floating drag preview */}
