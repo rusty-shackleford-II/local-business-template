@@ -1,23 +1,66 @@
 /**
  * HeroImageEditor.tsx
  * 
- * A modal for managing hero section images (slideshow).
- * Allows adding, removing, reordering images, and configuring slideshow settings.
- * Uses a portal to render at document body level (prevents clipping).
+ * A comprehensive modal for managing hero section media (images/video).
+ * Allows toggling between photo and video modes, managing slideshow images,
+ * and configuring video settings.
+ * 
+ * Supports bulk image selection with crop-one-by-one flow.
  */
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { XMarkIcon, TrashIcon, PlusIcon, PhotoIcon, Bars3Icon } from '@heroicons/react/24/outline';
+import React, { useState, useCallback, useRef } from 'react';
+import { TrashIcon, PlusIcon, PhotoIcon, VideoCameraIcon, Bars3Icon, PlayIcon, Square2StackIcon, RectangleGroupIcon } from '@heroicons/react/24/outline';
 import IdbImage from './IdbImage';
 import Image from 'next/image';
+import { 
+  EditorModal, 
+  EditorSlider, 
+  EditorInput, 
+  EditorSelect, 
+  EditorToggle,
+  EditorInfoBox,
+  EditorImageCropper,
+  useImageCropper,
+  type ImageStorageAdapter,
+  type CropType,
+} from './editor-ui';
+
+// Video configuration type
+type VideoConfig = {
+  provider: 'youtube' | 'vimeo';
+  url: string;
+  autoplay?: boolean;
+  controls?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+};
+
+type LayoutStyle = 'standard' | 'fullwidth-overlay';
 
 type HeroImageEditorProps = {
+  isOpen: boolean;
+  // Layout style
+  layoutStyle?: LayoutStyle;
+  onLayoutStyleChange?: (style: LayoutStyle) => void;
+  // Overlay blur (for fullwidth-overlay)
+  overlayBlur?: boolean;
+  onOverlayBlurChange?: (enabled: boolean) => void;
+  // Media type
+  mediaType?: 'photo' | 'video';
+  onMediaTypeChange?: (type: 'photo' | 'video') => void;
+  // Images
   images: string[];
   slideshowInterval: number;
   onImagesChange: (images: string[]) => void;
   onSlideshowIntervalChange: (interval: number) => void;
-  onAddImage?: () => void; // Optional: Triggers the parent's image upload flow (with cropper)
+  /** @deprecated Use storage prop instead for built-in cropper */
+  onAddImage?: () => void;
+  // Storage adapter for built-in cropper (optional - enables multi-select + crop)
+  storage?: ImageStorageAdapter;
+  // Video
+  video?: VideoConfig;
+  onVideoChange?: (video: VideoConfig) => void;
+  // Modal
   onClose: () => void;
 };
 
@@ -26,37 +69,116 @@ const filterValidImageUrls = (urls: string[]): string[] => {
   return urls.filter(url => url && !url.startsWith('blob:'));
 };
 
+// Icon for the modal header
+const HeroIcon = () => (
+  <PhotoIcon className="w-3.5 h-3.5 text-white" />
+);
+
+// Slideshow speed presets
+const SPEED_PRESETS = [
+  { value: 3, label: '3s' },
+  { value: 5, label: '5s' },
+  { value: 7, label: '7s' },
+  { value: 10, label: '10s' },
+];
+
+// Video provider options
+const VIDEO_PROVIDERS = [
+  { value: 'youtube', label: 'YouTube' },
+  { value: 'vimeo', label: 'Vimeo' },
+];
+
 const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
+  isOpen,
+  layoutStyle = 'standard',
+  onLayoutStyleChange,
+  overlayBlur = false,
+  onOverlayBlurChange,
+  mediaType = 'photo',
+  onMediaTypeChange,
   images: rawImages,
   slideshowInterval,
   onImagesChange,
   onSlideshowIntervalChange,
   onAddImage,
+  storage,
+  video,
+  onVideoChange,
   onClose,
 }) => {
   // Filter out invalid blob URLs - they expire and cause errors
   const images = filterValidImageUrls(rawImages);
+  
+  // File input ref for direct upload (fallback when no storage)
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   // Drag state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const dragNodeRef = useRef<HTMLDivElement | null>(null);
   
   // Image loading states
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [failedImages, setFailedImages] = useState<Set<number>>(new Set());
   
+  // Upload state (for fallback data URL mode)
+  const [isUploading, setIsUploading] = useState(false);
+  
   // Convert interval ms to seconds for display
   const intervalSeconds = slideshowInterval / 1000;
+  
+  // Determine crop type based on layout
+  const cropType: CropType = layoutStyle === 'fullwidth-overlay' ? 'hero-fullwidth' : 'hero';
+  
+  // Use the image cropper hook when storage is provided
+  const cropper = useImageCropper({
+    cropType,
+    targetKey: 'hero-image',
+    storage: storage || {
+      // Dummy adapter if none provided - won't be used
+      saveBlob: async () => {},
+      generateImageKey: () => '',
+    },
+    multiple: true,
+    onComplete: (imageKey) => {
+      // Add each cropped image to the list
+      const newImages = [...images, imageKey].slice(0, 10);
+      onImagesChange(newImages);
+    },
+  });
+  
+  // Handle media type change
+  const handleMediaTypeChange = useCallback((type: 'photo' | 'video') => {
+    onMediaTypeChange?.(type);
+    // Initialize video config if switching to video and none exists
+    if (type === 'video' && !video && onVideoChange) {
+      onVideoChange({
+        provider: 'youtube',
+        url: '',
+        autoplay: true,
+        controls: false,
+        loop: true,
+        muted: true,
+      });
+    }
+  }, [onMediaTypeChange, video, onVideoChange]);
+  
+  // Handle video field changes
+  const handleVideoFieldChange = useCallback((field: keyof VideoConfig, value: unknown) => {
+    if (!onVideoChange) return;
+    onVideoChange({
+      ...video,
+      provider: video?.provider || 'youtube',
+      url: video?.url || '',
+      [field]: value,
+    });
+  }, [video, onVideoChange]);
   
   // Handle drag start
   const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
-    setIsDragging(true);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', index.toString());
-    
-    // Create a custom drag image
     if (dragNodeRef.current) {
       e.dataTransfer.setDragImage(dragNodeRef.current, 50, 50);
     }
@@ -75,22 +197,18 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
   const handleDragEnd = useCallback(() => {
     setDraggedIndex(null);
     setDragOverIndex(null);
-    setIsDragging(false);
   }, []);
   
   // Handle drop - reorder images
   const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
     if (draggedIndex === null || draggedIndex === dropIndex) {
       handleDragEnd();
       return;
     }
-    
     const newImages = [...images];
     const [draggedImage] = newImages.splice(draggedIndex, 1);
     newImages.splice(dropIndex, 0, draggedImage);
-    
     onImagesChange(newImages);
     handleDragEnd();
   }, [draggedIndex, images, onImagesChange, handleDragEnd]);
@@ -101,7 +219,7 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
     onImagesChange(newImages);
   }, [images, onImagesChange]);
   
-  // Move image up
+  // Move image up/down
   const handleMoveUp = useCallback((index: number) => {
     if (index === 0) return;
     const newImages = [...images];
@@ -109,7 +227,6 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
     onImagesChange(newImages);
   }, [images, onImagesChange]);
   
-  // Move image down
   const handleMoveDown = useCallback((index: number) => {
     if (index === images.length - 1) return;
     const newImages = [...images];
@@ -117,112 +234,224 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
     onImagesChange(newImages);
   }, [images, onImagesChange]);
   
-  // Close on escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [onClose]);
-  
-  // Mark image as loaded
+  // Mark image as loaded/failed
   const handleImageLoad = useCallback((index: number) => {
     setLoadedImages(prev => new Set([...Array.from(prev), index]));
-    setFailedImages(prev => {
-      const next = new Set(prev);
-      next.delete(index);
-      return next;
-    });
+    setFailedImages(prev => { const next = new Set(prev); next.delete(index); return next; });
   }, []);
   
-  // Mark image as failed
   const handleImageError = useCallback((index: number) => {
     setFailedImages(prev => new Set([...Array.from(prev), index]));
-    setLoadedImages(prev => new Set([...Array.from(prev), index])); // Stop loading animation
+    setLoadedImages(prev => new Set([...Array.from(prev), index]));
   }, []);
   
-  // Handle add image - triggers parent's cropper flow
-  const handleAddImageClick = useCallback(() => {
-    if (onAddImage) {
-      onClose(); // Close modal - cropper will open
-      onAddImage();
-    }
-  }, [onAddImage, onClose]);
-  
-  // Stop click propagation
-  const stopClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-  };
-  
-  const modalContent = (
-    <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/70 z-[9998]"
-        onClick={onClose}
-      />
+  // Handle direct file upload (fallback when no parent handler provided)
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsUploading(true);
+    
+    try {
+      const newImageUrls: string[] = [];
       
-      {/* Modal */}
-      <div
-        className="fixed z-[9999] bg-gray-900 rounded-xl shadow-2xl border border-gray-700"
-        style={{
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '680px',
-          maxWidth: '95vw',
-          maxHeight: '90vh',
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-        onClick={stopClick}
-        onMouseDown={stopClick}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-700">
-          <div>
-            <h3 className="text-white font-semibold text-lg flex items-center gap-2">
-              <PhotoIcon className="w-5 h-5 text-blue-400" />
-              Hero Images
-            </h3>
-            <p className="text-gray-400 text-sm mt-1">
-              {images.length === 0 
-                ? 'Add images to create a slideshow'
-                : images.length === 1 
-                  ? '1 image • Add more for a slideshow'
-                  : `${images.length} images • Drag to reorder`
-              }
-            </p>
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        // Convert to data URL for preview
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        newImageUrls.push(dataUrl);
+      }
+      
+      // Add to existing images (max 10)
+      const combinedImages = [...images, ...newImageUrls].slice(0, 10);
+      onImagesChange(combinedImages);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+    } finally {
+      setIsUploading(false);
+      // Reset input
+      e.target.value = '';
+    }
+  }, [images, onImagesChange]);
+
+  return (
+    <>
+    {/* Hidden file inputs - rendered outside modal so they're always in DOM */}
+    {storage ? (
+      <input ref={cropper.fileInputRef} {...cropper.fileInputProps} />
+    ) : (
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+        multiple
+        className="hidden"
+        onChange={handleFileSelect}
+      />
+    )}
+    
+    <EditorModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Hero Settings"
+      icon={<HeroIcon />}
+      width="lg"
+      backdropOpacity={0}
+    >
+      {/* Layout Style Selection */}
+      {onLayoutStyleChange && (
+        <>
+          <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+            Layout Style
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            {/* Standard Layout Card */}
+            <button
+              onClick={() => onLayoutStyleChange('standard')}
+              className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                layoutStyle === 'standard'
+                  ? 'border-indigo-500 bg-indigo-500/10'
+                  : 'border-white/10 bg-gray-800/30 hover:border-white/20 hover:bg-gray-800/50'
+              }`}
+            >
+              {/* Mini preview */}
+              <div className="flex gap-2 mb-2">
+                <div className="flex-1 space-y-1">
+                  <div className="h-1.5 w-3/4 bg-gray-500/50 rounded" />
+                  <div className="h-1 w-1/2 bg-gray-600/50 rounded" />
+                  <div className="h-2 w-8 bg-indigo-500/30 rounded mt-1.5" />
+                </div>
+                <div className="w-10 h-8 bg-gray-600/50 rounded" />
+              </div>
+              <p className="text-xs font-medium text-white">Standard</p>
+              <p className="text-[10px] text-gray-500 mt-0.5">Text beside image</p>
+              {layoutStyle === 'standard' && (
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500" />
+              )}
+            </button>
+            
+            {/* Fullwidth Overlay Card */}
+            <button
+              onClick={() => onLayoutStyleChange('fullwidth-overlay')}
+              className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                layoutStyle === 'fullwidth-overlay'
+                  ? 'border-indigo-500 bg-indigo-500/10'
+                  : 'border-white/10 bg-gray-800/30 hover:border-white/20 hover:bg-gray-800/50'
+              }`}
+            >
+              {/* Mini preview */}
+              <div className="relative mb-2">
+                <div className="w-full h-8 bg-gray-600/50 rounded" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="h-1.5 w-8 bg-white/70 rounded mb-0.5" />
+                  <div className="h-1 w-6 bg-white/40 rounded" />
+                </div>
+              </div>
+              <p className="text-xs font-medium text-white">Fullwidth</p>
+              <p className="text-[10px] text-gray-500 mt-0.5">Text over image</p>
+              {layoutStyle === 'fullwidth-overlay' && (
+                <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500" />
+              )}
+            </button>
           </div>
+          
+          {/* Overlay Options - only for fullwidth */}
+          {layoutStyle === 'fullwidth-overlay' && onOverlayBlurChange && (
+            <div className="p-3 bg-gray-800/30 rounded-lg border border-white/5">
+              <EditorToggle
+                label="Dark Text Background"
+                description="Adds a translucent box behind text for better readability"
+                checked={overlayBlur}
+                onChange={onOverlayBlurChange}
+                compact
+              />
+            </div>
+          )}
+          
+          <div className="border-t border-white/10 -mx-4" />
+        </>
+      )}
+      
+      {/* Media Type Toggle */}
+      {onMediaTypeChange && (
+        <div className="flex gap-2 p-1 bg-gray-800/50 rounded-lg">
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800"
+            onClick={() => handleMediaTypeChange('photo')}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
+              mediaType === 'photo'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
           >
-            <XMarkIcon className="h-5 w-5" />
+            <PhotoIcon className="w-4 h-4" />
+            Photo
+          </button>
+          <button
+            onClick={() => handleMediaTypeChange('video')}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-all ${
+              mediaType === 'video'
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <VideoCameraIcon className="w-4 h-4" />
+            Video
           </button>
         </div>
-        
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {/* Images Grid */}
+      )}
+      
+      {/* Photo Mode */}
+      {mediaType === 'photo' && (
+        <>
+          {/* Add Images Button - Always at top when in photo mode */}
+          {images.length < 10 && (
+            <button
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (storage) {
+                  cropper.openFilePicker();
+                } else if (onAddImage) {
+                  onAddImage();
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }}
+              disabled={isUploading || cropper.isProcessing}
+              className="w-full flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-indigo-500/20 to-purple-600/20 hover:from-indigo-500/30 hover:to-purple-600/30 border border-indigo-500/30 hover:border-indigo-500/50 rounded-lg text-indigo-300 hover:text-white transition-all text-sm font-medium disabled:opacity-50"
+            >
+              {isUploading || cropper.isProcessing ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-indigo-300 border-t-transparent rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <PlusIcon className="w-5 h-5" />
+                  {images.length === 0 ? 'Add Hero Images' : 'Add More Images'}
+                </>
+              )}
+            </button>
+          )}
+          
+          {/* Images List */}
           {images.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center mb-4">
-                <PhotoIcon className="w-10 h-10 text-gray-600" />
+            <div className="flex flex-col items-center justify-center py-6 text-center">
+              <div className="w-12 h-12 rounded-full bg-gray-800/50 flex items-center justify-center mb-2">
+                <PhotoIcon className="w-6 h-6 text-gray-500" />
               </div>
-              <p className="text-gray-400 mb-4">No hero images yet</p>
-              <button
-                onClick={handleAddImageClick}
-                disabled={!onAddImage}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
-              >
-                <PlusIcon className="w-5 h-5" />
-                Add First Image
-              </button>
+              <p className="text-gray-500 text-xs">No images added yet</p>
+              <p className="text-gray-600 text-[10px] mt-1">Click the button above to upload</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
+              <p className="text-[10px] text-gray-500">
+                {images.length === 1 ? '1 image • Add more for slideshow' : `${images.length} images • Drag to reorder`}
+              </p>
               {images.map((imageUrl, index) => {
                 const isIdbUrl = imageUrl.startsWith('idb://');
                 const ImageComponent = isIdbUrl ? IdbImage : Image;
@@ -238,97 +467,77 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
                     onDragEnd={handleDragEnd}
                     onDrop={(e) => handleDrop(e, index)}
                     className={`
-                      relative flex items-center gap-4 p-3 rounded-xl border-2 transition-all
+                      flex items-center gap-2 p-2 rounded-lg border transition-all cursor-grab
                       ${isBeingDragged 
-                        ? 'opacity-50 border-blue-500 bg-blue-500/10' 
+                        ? 'opacity-50 border-indigo-500 bg-indigo-500/10' 
                         : isDraggedOver 
-                          ? 'border-blue-400 bg-blue-500/20 scale-[1.02]' 
-                          : 'border-gray-700 bg-gray-800/50 hover:border-gray-600'
+                          ? 'border-indigo-400 bg-indigo-500/20' 
+                          : 'border-white/10 bg-gray-800/30 hover:border-white/20'
                       }
                     `}
-                    style={{ cursor: 'grab' }}
                   >
                     {/* Drag handle */}
-                    <div className="flex-shrink-0 text-gray-500 hover:text-gray-300 transition-colors cursor-grab active:cursor-grabbing">
-                      <Bars3Icon className="w-5 h-5" />
-                    </div>
+                    <Bars3Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     
-                    {/* Image thumbnail */}
-                    <div className="relative w-24 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-700">
-                      {!loadedImages.has(index) && (
-                        <div className="absolute inset-0 animate-pulse bg-gray-700" />
-                      )}
+                    {/* Thumbnail */}
+                    <div className="relative w-14 h-9 rounded overflow-hidden flex-shrink-0 bg-gray-800/50 border border-white/5">
+                      {!loadedImages.has(index) && <div className="absolute inset-0 animate-pulse bg-gray-800" />}
                       {failedImages.has(index) ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-red-900/50">
-                          <span className="text-red-300 text-xs text-center px-1">Failed to load</span>
+                        <div className="absolute inset-0 flex items-center justify-center bg-red-500/20">
+                          <span className="text-red-400 text-[8px]">Error</span>
                         </div>
                       ) : (
                         <ImageComponent
                           src={imageUrl}
-                          alt={`Hero image ${index + 1}`}
+                          alt={`Hero ${index + 1}`}
                           fill
                           className="object-cover"
-                          sizes="96px"
+                          sizes="56px"
                           onLoad={() => handleImageLoad(index)}
                           onError={() => handleImageError(index)}
                         />
                       )}
                     </div>
                     
-                    {/* Image info */}
+                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium text-sm">
-                        Image {index + 1}
-                        {index === 0 && (
-                          <span className="ml-2 text-xs text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded">
-                            Primary
-                          </span>
+                      <p className="text-white text-xs font-medium">
+                        {index === 0 ? (
+                          <span className="text-indigo-300">Primary</span>
+                        ) : (
+                          `Image ${index + 1}`
                         )}
-                      </p>
-                      <p className="text-gray-500 text-xs truncate mt-0.5" title={imageUrl}>
-                        {isIdbUrl ? 'Local upload' : imageUrl.split('/').pop()?.substring(0, 40)}
                       </p>
                     </div>
                     
                     {/* Actions */}
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {/* Move up/down buttons */}
+                    <div className="flex items-center gap-0.5 flex-shrink-0" onMouseDown={(e) => e.stopPropagation()}>
                       <button
-                        onClick={() => handleMoveUp(index)}
+                        onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
                         disabled={index === 0}
-                        className={`p-2 rounded-lg transition-colors ${
-                          index === 0 
-                            ? 'text-gray-600 cursor-not-allowed' 
-                            : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                        }`}
+                        className={`p-1.5 rounded transition-colors ${index === 0 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/10 active:bg-white/20'}`}
                         title="Move up"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                         </svg>
                       </button>
                       <button
-                        onClick={() => handleMoveDown(index)}
+                        onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
                         disabled={index === images.length - 1}
-                        className={`p-2 rounded-lg transition-colors ${
-                          index === images.length - 1 
-                            ? 'text-gray-600 cursor-not-allowed' 
-                            : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                        }`}
+                        className={`p-1.5 rounded transition-colors ${index === images.length - 1 ? 'text-gray-600 cursor-not-allowed' : 'text-gray-400 hover:text-white hover:bg-white/10 active:bg-white/20'}`}
                         title="Move down"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </button>
-                      
-                      {/* Delete button */}
                       <button
-                        onClick={() => handleRemoveImage(index)}
-                        className="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        title="Remove image"
+                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(index); }}
+                        className="p-1.5 rounded text-gray-400 hover:text-red-400 hover:bg-red-500/10 active:bg-red-500/20 transition-colors"
+                        title="Remove"
                       >
-                        <TrashIcon className="w-4 h-4" />
+                        <TrashIcon className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
@@ -337,90 +546,127 @@ const HeroImageEditor: React.FC<HeroImageEditorProps> = ({
             </div>
           )}
           
-          {/* Add Image Button */}
-          {images.length > 0 && images.length < 10 && onAddImage && (
-            <button
-              onClick={handleAddImageClick}
-              className="mt-4 w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-700 hover:border-blue-500 rounded-xl text-gray-400 hover:text-blue-400 transition-all hover:bg-blue-500/5"
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Another Image</span>
-              <span className="text-gray-600 text-sm">({10 - images.length} remaining)</span>
-            </button>
+          {/* Max images message */}
+          {images.length >= 10 && (
+            <p className="text-center text-amber-400/70 text-[10px] py-2">Maximum 10 images reached</p>
           )}
           
-          {images.length >= 10 && (
-            <p className="mt-4 text-center text-gray-500 text-sm">
-              Maximum of 10 images reached
-            </p>
+          {/* Slideshow Speed - only show when multiple images */}
+          {images.length > 1 && (
+            <>
+              <div className="border-t border-white/10 -mx-4" />
+              <EditorSlider
+                label="Slideshow Speed"
+                value={intervalSeconds}
+                onChange={(v) => onSlideshowIntervalChange(v * 1000)}
+                min={2}
+                max={10}
+                step={0.5}
+                presets={SPEED_PRESETS}
+                formatValue={(v) => `${v}s`}
+                hideMinMax
+              />
+            </>
           )}
-        </div>
-        
-        {/* Footer - Slideshow Settings */}
-        {images.length > 1 && (
-          <div className="border-t border-gray-700 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <label className="text-white font-medium text-sm block">
-                  Slideshow Speed
-                </label>
-                <p className="text-gray-500 text-xs mt-0.5">
-                  Time between image transitions
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  type="range"
-                  min="2"
-                  max="10"
-                  step="0.5"
-                  value={intervalSeconds}
-                  onChange={(e) => onSlideshowIntervalChange(parseFloat(e.target.value) * 1000)}
-                  className="w-32 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                  style={{
-                    background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((intervalSeconds - 2) / 8) * 100}%, #374151 ${((intervalSeconds - 2) / 8) * 100}%, #374151 100%)`,
-                  }}
-                />
-                <span className="text-white font-mono text-sm w-12 text-right">
-                  {intervalSeconds}s
-                </span>
-              </div>
+        </>
+      )}
+      
+      {/* Video Mode */}
+      {mediaType === 'video' && onVideoChange && (
+        <>
+          {/* Video Provider */}
+          <EditorSelect
+            label="Video Provider"
+            value={video?.provider || 'youtube'}
+            onChange={(v) => handleVideoFieldChange('provider', v)}
+            options={VIDEO_PROVIDERS}
+          />
+          
+          {/* Video URL */}
+          <EditorInput
+            label="Video URL"
+            value={video?.url || ''}
+            onChange={(v) => handleVideoFieldChange('url', v)}
+            type="url"
+            placeholder={video?.provider === 'vimeo' 
+              ? 'https://vimeo.com/123456789' 
+              : 'https://youtube.com/watch?v=...'
+            }
+            description="Paste the video URL or embed code"
+            multiline
+            rows={2}
+          />
+          
+          {/* Video preview hint */}
+          {video?.url && (
+            <div className="flex items-center gap-2 p-2 bg-gray-800/30 rounded-lg border border-white/5">
+              <PlayIcon className="w-5 h-5 text-indigo-400" />
+              <p className="text-xs text-gray-400 flex-1">
+                Video configured. Preview in the main editor.
+              </p>
+            </div>
+          )}
+          
+          <div className="border-t border-white/10 -mx-4" />
+          
+          {/* Video Options */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+              Playback Options
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <EditorToggle
+                label="Autoplay"
+                checked={video?.autoplay ?? true}
+                onChange={(v) => handleVideoFieldChange('autoplay', v)}
+                compact
+              />
+              <EditorToggle
+                label="Loop"
+                checked={video?.loop ?? true}
+                onChange={(v) => handleVideoFieldChange('loop', v)}
+                compact
+              />
+              <EditorToggle
+                label="Muted"
+                checked={video?.muted ?? true}
+                onChange={(v) => handleVideoFieldChange('muted', v)}
+                compact
+              />
+              <EditorToggle
+                label="Show Controls"
+                checked={video?.controls ?? false}
+                onChange={(v) => handleVideoFieldChange('controls', v)}
+                compact
+              />
             </div>
           </div>
-        )}
-        
-        {/* Close Button */}
-        <div className="border-t border-gray-700 p-4 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium"
-          >
-            Done
-          </button>
-        </div>
-      </div>
+          
+          <EditorInfoBox variant="tip">
+            For best results as a background video: keep Autoplay, Loop, and Muted enabled with Controls hidden
+          </EditorInfoBox>
+        </>
+      )}
       
-      {/* Hidden drag ghost element */}
-      <div
-        ref={dragNodeRef}
-        style={{
-          position: 'fixed',
-          top: -1000,
-          left: -1000,
-          width: 100,
-          height: 100,
-          pointerEvents: 'none',
-        }}
+      {/* Hidden drag ghost */}
+      <div ref={dragNodeRef} style={{ position: 'fixed', top: -1000, left: -1000, width: 100, height: 100, pointerEvents: 'none' }} />
+    </EditorModal>
+    
+    {/* Built-in Image Cropper - rendered outside main modal */}
+    {storage && cropper.isOpen && (
+      <EditorImageCropper
+        isOpen={cropper.isOpen}
+        imageSrc={cropper.imageSrc}
+        cropType={cropType}
+        onCropComplete={cropper.handleCropComplete}
+        onCancel={cropper.handleCancel}
+        onSkip={cropper.handleSkip}
+        bulkProgress={cropper.bulkProgress}
+        title="Crop Hero Image"
       />
-    </>
+    )}
+  </>
   );
-  
-  // Use portal to render at document body level
-  if (typeof document !== 'undefined') {
-    return createPortal(modalContent, document.body);
-  }
-  
-  return modalContent;
 };
 
 export default HeroImageEditor;

@@ -330,8 +330,8 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
                               className="object-cover"
                             />
                           ) : (
-                            <div className="absolute inset-0 flex items-center justify-center bg-primary-100 text-primary-600 font-semibold text-sm">
-                              {review.author_name.split(' ').map(name => name[0]).join('').toUpperCase().slice(0, 2)}
+                            <div className="absolute inset-0 flex items-center justify-center bg-primary-100 text-primary-600 font-semibold text-lg">
+                              {review.author_name.charAt(0).toUpperCase()}
                             </div>
                           )}
                         </div>

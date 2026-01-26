@@ -28,6 +28,11 @@ type Props = {
   onShowBusinessNameChange?: (show: boolean) => void;
   onLogoSizeChange?: (size: number) => void;
   colorPalette?: ColorPalette;
+  /** Storage adapter for built-in image cropper */
+  imageStorage?: {
+    saveBlob: (key: string, blob: Blob, filename: string) => Promise<void>;
+    generateImageKey: (prefix?: string) => string;
+  };
 };
 
 // Navigation link with optional sections for dropdown
@@ -46,7 +51,7 @@ type NavLink = {
   }>;
 };
 
-const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, colorPalette }) => {
+const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, colorPalette, imageStorage }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [expandedMobileNav, setExpandedMobileNav] = useState<string | null>(null);
@@ -539,7 +544,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
                   fontSize: `${textSize}rem`
                 }}
               >
-                {displayBusinessName || 'Business Name'}
+                {displayBusinessName || 'Logo Text'}
               </span>
             )}
             {/* Show placeholder when both are hidden */}
@@ -730,6 +735,12 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           }}
           onLogoUpload={onLogoClick}
           logoUrl={logoUrl}
+          storage={imageStorage}
+          onLogoChange={(logoKey) => {
+            if (onEdit) {
+              onEdit('logoUrl', logoKey);
+            }
+          }}
           showBusinessName={showBusinessName}
           onShowBusinessNameChange={(show) => {
             if (onShowBusinessNameChange) {

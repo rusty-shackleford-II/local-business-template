@@ -276,48 +276,59 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 z-[9998]"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div
         ref={popoverRef}
-        className="fixed z-[9999] bg-gray-900 rounded-xl shadow-2xl border border-gray-700 p-6"
+        className="fixed z-[9999] w-full max-w-xl bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '580px',
           maxWidth: '95vw',
           maxHeight: '90vh',
-          overflowY: 'auto',
         }}
         onClick={stopClick}
         onMouseDown={stopClick}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-white font-semibold text-lg">Button Style</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-white">Button Style</h2>
+              <p className="text-xs text-gray-400">Global styling for all buttons</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-800"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="w-5 h-5 text-gray-400" />
           </button>
         </div>
         
+        {/* Content */}
+        <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+        
         {/* Subtitle explaining scope */}
-        <p className="text-blue-400/90 text-sm mb-5 flex items-center gap-2">
-          <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <div className="flex items-center gap-2 px-3 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
+          <svg className="w-4 h-4 flex-shrink-0 text-indigo-400" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z" />
           </svg>
-          Edits ALL buttons at once — click a button to edit just that one
-        </p>
+          <p className="text-indigo-400/90 text-xs">Edits ALL buttons at once — click a button to edit just that one</p>
+        </div>
         
         {/* Mock Button Preview - Resizable - WIDE container */}
         <div 
-          className="mb-6 flex justify-center items-center py-8 bg-gray-800/50 rounded-lg overflow-visible"
+          className="flex justify-center items-center py-8 bg-gray-800/30 border border-white/5 rounded-xl overflow-visible"
           style={{ minHeight: '120px' }}
         >
           <div className="relative inline-block">
@@ -390,31 +401,31 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
           </div>
         </div>
         
-        <p className="text-xs text-gray-500 text-center mb-5">
+        <p className="text-xs text-gray-500 text-center">
           Drag the <span className="text-blue-400">blue</span>, <span className="text-green-400">green</span>, or <span className="text-purple-400">purple</span> handles to resize
         </p>
         
         {/* Color Pickers Row */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4">
           {/* Background Color */}
           <div 
-            className={`p-3 rounded-lg transition-all ${focusedColorField === 'background' ? 'bg-blue-500/10 ring-2 ring-blue-500/50' : 'bg-gray-800/30'}`}
+            className={`p-3 rounded-xl transition-all cursor-pointer ${focusedColorField === 'background' ? 'bg-indigo-500/10 ring-2 ring-indigo-500/50' : 'bg-gray-800/50 border border-white/5'}`}
             onClick={() => setFocusedColorField('background')}
           >
             <div className="flex items-center justify-between mb-2">
-              <label className={`text-sm font-medium ${focusedColorField === 'background' ? 'text-blue-400' : 'text-gray-300'}`}>
+              <label className={`text-xs font-medium uppercase tracking-wider ${focusedColorField === 'background' ? 'text-indigo-400' : 'text-gray-300'}`}>
                 Background {focusedColorField === 'background' && <span className="text-xs opacity-60">●</span>}
               </label>
               <div className="flex gap-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); setBgColorMode('hex'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'hex' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'hex' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
                 >
                   HEX
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setBgColorMode('rgba'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'rgba' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'rgba' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
                 >
                   RGBA
                 </button>
@@ -434,7 +445,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
                   }
                 }}
                 onFocus={() => setFocusedColorField('background')}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-600 hover:border-gray-500 transition-colors flex-shrink-0"
+                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
                 style={{ backgroundColor }}
               />
               {bgColorMode === 'hex' ? (
@@ -443,7 +454,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
                   value={backgroundColor.startsWith('#') ? backgroundColor : rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
                   onChange={(e) => onBackgroundColorChange?.(e.target.value)}
                   onFocus={() => setFocusedColorField('background')}
-                  className="flex-1 bg-gray-800 text-white text-sm px-2 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none font-mono text-xs"
+                  className="flex-1 bg-gray-800/50 text-white text-sm px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono text-xs"
                   placeholder="#000000"
                 />
               ) : (
@@ -451,25 +462,25 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
                   <input type="number" min="0" max="255" value={bgParsed.r}
                     onChange={(e) => onBackgroundColorChange?.(toRgbaString(parseInt(e.target.value) || 0, bgParsed.g, bgParsed.b, bgParsed.a))}
                     onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Red (0-255)"
                   />
                   <input type="number" min="0" max="255" value={bgParsed.g}
                     onChange={(e) => onBackgroundColorChange?.(toRgbaString(bgParsed.r, parseInt(e.target.value) || 0, bgParsed.b, bgParsed.a))}
                     onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Green (0-255)"
                   />
                   <input type="number" min="0" max="255" value={bgParsed.b}
                     onChange={(e) => onBackgroundColorChange?.(toRgbaString(bgParsed.r, bgParsed.g, parseInt(e.target.value) || 0, bgParsed.a))}
                     onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Blue (0-255)"
                   />
                   <input type="number" min="0" max="1" step="0.01" value={bgParsed.a.toFixed(2)}
                     onChange={(e) => onBackgroundColorChange?.(toRgbaString(bgParsed.r, bgParsed.g, bgParsed.b, parseFloat(e.target.value) || 0))}
                     onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Alpha (0-1)"
                   />
                 </div>
@@ -499,23 +510,23 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
           
           {/* Text Color */}
           <div 
-            className={`p-3 rounded-lg transition-all ${focusedColorField === 'text' ? 'bg-blue-500/10 ring-2 ring-blue-500/50' : 'bg-gray-800/30'}`}
+            className={`p-3 rounded-xl transition-all cursor-pointer ${focusedColorField === 'text' ? 'bg-indigo-500/10 ring-2 ring-indigo-500/50' : 'bg-gray-800/50 border border-white/5'}`}
             onClick={() => setFocusedColorField('text')}
           >
             <div className="flex items-center justify-between mb-2">
-              <label className={`text-sm font-medium ${focusedColorField === 'text' ? 'text-blue-400' : 'text-gray-300'}`}>
+              <label className={`text-xs font-medium uppercase tracking-wider ${focusedColorField === 'text' ? 'text-indigo-400' : 'text-gray-300'}`}>
                 Text {focusedColorField === 'text' && <span className="text-xs opacity-60">●</span>}
               </label>
               <div className="flex gap-1">
                 <button
                   onClick={(e) => { e.stopPropagation(); setTextColorMode('hex'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'hex' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'hex' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
                 >
                   HEX
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setTextColorMode('rgba'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'rgba' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'rgba' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
                 >
                   RGBA
                 </button>
@@ -535,7 +546,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
                   }
                 }}
                 onFocus={() => setFocusedColorField('text')}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-600 hover:border-gray-500 transition-colors flex-shrink-0"
+                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
                 style={{ backgroundColor: textColor }}
               />
               {textColorMode === 'hex' ? (
@@ -544,7 +555,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
                   value={textColor.startsWith('#') ? textColor : rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
                   onChange={(e) => onTextColorChange?.(e.target.value)}
                   onFocus={() => setFocusedColorField('text')}
-                  className="flex-1 bg-gray-800 text-white text-sm px-2 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none font-mono text-xs"
+                  className="flex-1 bg-gray-800/50 text-white text-sm px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono text-xs"
                   placeholder="#ffffff"
                 />
               ) : (
@@ -552,25 +563,25 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
                   <input type="number" min="0" max="255" value={textParsed.r}
                     onChange={(e) => onTextColorChange?.(toRgbaString(parseInt(e.target.value) || 0, textParsed.g, textParsed.b, textParsed.a))}
                     onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Red (0-255)"
                   />
                   <input type="number" min="0" max="255" value={textParsed.g}
                     onChange={(e) => onTextColorChange?.(toRgbaString(textParsed.r, parseInt(e.target.value) || 0, textParsed.b, textParsed.a))}
                     onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Green (0-255)"
                   />
                   <input type="number" min="0" max="255" value={textParsed.b}
                     onChange={(e) => onTextColorChange?.(toRgbaString(textParsed.r, textParsed.g, parseInt(e.target.value) || 0, textParsed.a))}
                     onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Blue (0-255)"
                   />
                   <input type="number" min="0" max="1" step="0.01" value={textParsed.a.toFixed(2)}
                     onChange={(e) => onTextColorChange?.(toRgbaString(textParsed.r, textParsed.g, textParsed.b, parseFloat(e.target.value) || 0))}
                     onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                     title="Alpha (0-1)"
                   />
                 </div>
@@ -600,10 +611,10 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
         </div>
         
         {/* Preset Colors - applies to whichever field is focused */}
-        <div className="mb-5 p-3 bg-gray-800/30 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">
-              Presets → <span className={focusedColorField === 'background' ? 'text-blue-400' : 'text-blue-400'}>{focusedColorField === 'background' ? 'Background' : 'Text'}</span>
+        <div className="p-4 bg-gray-800/50 border border-white/5 rounded-xl">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-medium text-gray-300 uppercase tracking-wider">
+              Presets → <span className="text-indigo-400">{focusedColorField === 'background' ? 'Background' : 'Text'}</span>
             </span>
             <span className="text-xs text-gray-500">Click to apply</span>
           </div>
@@ -612,7 +623,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
               <button
                 key={i}
                 onClick={() => applyPresetColor(preset.color)}
-                className="w-8 h-8 rounded-md border-2 border-gray-600 hover:border-white hover:scale-110 transition-all relative group"
+                className="w-8 h-8 rounded-lg border-2 border-white/20 hover:border-white hover:scale-110 transition-all relative group"
                 style={{ 
                   backgroundColor: preset.color,
                   boxShadow: preset.color === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' : undefined,
@@ -629,13 +640,13 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
         </div>
         
         {/* Font Controls */}
-        <div className="grid grid-cols-2 gap-4 mb-5">
-          <div>
-            <label className="text-sm text-gray-300 block mb-2 font-medium">Font Family</label>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Font Family</label>
             <select
               value={fontFamily}
               onChange={(e) => updateStyles({ fontFamily: e.target.value })}
-              className="w-full bg-gray-800 text-white text-sm px-3 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+              className="w-full bg-gray-800/50 text-white text-sm px-3 py-2.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none"
             >
               {FONT_OPTIONS.map(opt => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -643,12 +654,12 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
             </select>
           </div>
           
-          <div>
-            <label className="text-sm text-gray-300 block mb-2 font-medium">Font Weight</label>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Font Weight</label>
             <select
               value={fontWeight}
               onChange={(e) => updateStyles({ fontWeight: parseInt(e.target.value) })}
-              className="w-full bg-gray-800 text-white text-sm px-3 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+              className="w-full bg-gray-800/50 text-white text-sm px-3 py-2.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none"
             >
               <option value={400}>Normal</option>
               <option value={500}>Medium</option>
@@ -664,7 +675,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
           {/* Font Size */}
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-sm text-gray-300 font-medium">Font Size</label>
+              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Font Size</label>
               <span className="text-sm text-gray-400">{fontSize}px</span>
             </div>
             <input
@@ -673,9 +684,9 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
               max="28"
               value={fontSize}
               onChange={(e) => updateStyles({ fontSize: parseInt(e.target.value) })}
-              className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
               style={{
-                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${((fontSize - 12) / 16) * 100}%, #374151 ${((fontSize - 12) / 16) * 100}%, #374151 100%)`,
+                background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${((fontSize - 12) / 16) * 100}%, #374151 ${((fontSize - 12) / 16) * 100}%, #374151 100%)`,
               }}
             />
           </div>
@@ -683,7 +694,7 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
           {/* Border Radius */}
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-sm text-gray-300 font-medium">Border Radius</label>
+              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Border Radius</label>
               <span className="text-sm text-gray-400">{borderRadius}px</span>
             </div>
             <input
@@ -692,12 +703,23 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
               max="32"
               value={borderRadius}
               onChange={(e) => updateStyles({ borderRadius: parseInt(e.target.value) })}
-              className="w-full h-3 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
               style={{
-                background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${(borderRadius / 32) * 100}%, #374151 ${(borderRadius / 32) * 100}%, #374151 100%)`,
+                background: `linear-gradient(to right, #6366f1 0%, #6366f1 ${(borderRadius / 32) * 100}%, #374151 ${(borderRadius / 32) * 100}%, #374151 100%)`,
               }}
             />
           </div>
+        </div>
+        </div>
+        
+        {/* Footer */}
+        <div className="flex items-center justify-end px-5 py-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg shadow-lg shadow-indigo-500/25 transition-all"
+          >
+            Done
+          </button>
         </div>
       </div>
       

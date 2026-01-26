@@ -176,46 +176,54 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 z-[9998]"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
         onClick={onClose}
       />
       
       {/* Modal - wider to accommodate styling options */}
       <div
         ref={popoverRef}
-        className="fixed z-[9999] bg-gray-900 rounded-xl shadow-2xl border border-gray-700 p-6"
+        className="fixed z-[9999] w-full max-w-2xl bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '640px',
           maxWidth: '95vw',
           maxHeight: '90vh',
-          overflowY: 'auto',
         }}
         onClick={stopClick}
         onMouseDown={stopClick}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-white font-semibold text-lg">
-            Edit {isSecondaryButton ? 'Secondary' : 'Primary'} Button
-          </h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-white">
+                Edit {isSecondaryButton ? 'Secondary' : 'Primary'} Button
+              </h2>
+              <p className="text-xs text-gray-400">
+                Configure this button for this event
+              </p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-gray-800"
+            className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
           >
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="w-5 h-5 text-gray-400" />
           </button>
         </div>
         
-        {/* Subtitle */}
-        <p className="text-gray-400 text-sm mb-5">
-          Configure this button for this event. Styling options apply to all event buttons.
-        </p>
+        {/* Content */}
+        <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
         
         {/* Button Preview - show both buttons */}
-        <div className="mb-6 py-5 bg-gray-800/50 rounded-lg">
+        <div className="py-5 bg-gray-800/30 border border-white/5 rounded-xl">
           <p className="text-xs text-gray-500 text-center mb-3">Preview</p>
           <div className="flex flex-col gap-2 items-center px-6">
             {secondaryButtonEnabled && (
@@ -252,33 +260,33 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
         <div className="grid grid-cols-2 gap-6">
           {/* Left column - This Button (per-event settings) */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-blue-400 uppercase tracking-wide border-b border-gray-700 pb-2">
+            <h4 className="text-xs font-semibold text-indigo-400 uppercase tracking-wider border-b border-white/10 pb-2">
               This Event&apos;s Button
             </h4>
             
             {/* Button Label */}
-            <div>
-              <label className="text-sm text-gray-300 block mb-2 font-medium">Button Text</label>
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Button Text</label>
               <input
                 type="text"
                 value={label}
                 onChange={(e) => handleLabelChange(e.target.value)}
-                className="w-full bg-gray-800 text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                className="w-full bg-gray-800/50 text-white text-sm px-3 py-2.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none"
                 placeholder={getDefaultLabel()}
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500">
                 Default: &quot;{getDefaultLabel()}&quot;
               </p>
             </div>
             
             {/* Action Type - Secondary button */}
             {isSecondaryButton && (
-              <div>
-                <label className="text-sm text-gray-300 block mb-2 font-medium">Button Action</label>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Button Action</label>
                 <select
                   value={actionType}
                   onChange={(e) => handleActionChange(e.target.value)}
-                  className="w-full bg-gray-800 text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-gray-800/50 text-white text-sm px-3 py-2.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none"
                 >
                   <option value="modal">Open Event Details Modal</option>
                   <option value="external">Open External Link</option>
@@ -288,8 +296,8 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
             
             {/* Action Type - Primary button */}
             {!isSecondaryButton && (
-              <div>
-                <label className="text-sm text-gray-300 block mb-2 font-medium">Button Action</label>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Button Action</label>
                 <select
                   value={url ? 'external' : 'contact'}
                   onChange={(e) => {
@@ -297,7 +305,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                       handleUrlChange('');
                     }
                   }}
-                  className="w-full bg-gray-800 text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-gray-800/50 text-white text-sm px-3 py-2.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none"
                 >
                   <option value="contact">Scroll to Contact Form</option>
                   <option value="external">Open External Link</option>
@@ -307,47 +315,47 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
             
             {/* URL field - shown when external link is selected */}
             {((isSecondaryButton && actionType === 'external') || (!isSecondaryButton && currentActionType === 'external')) && (
-              <div>
-                <label className="text-sm text-gray-300 block mb-2 font-medium">Link URL</label>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Link URL</label>
                 <input
                   type="text"
                   value={url}
                   onChange={(e) => handleUrlChange(e.target.value)}
-                  className="w-full bg-gray-800 text-white text-sm px-3 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-gray-800/50 text-white text-sm px-3 py-2.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none"
                   placeholder="https://example.com"
                 />
-                <p className="text-xs text-gray-500 mt-1">Opens in new tab</p>
+                <p className="text-xs text-gray-500">Opens in new tab</p>
               </div>
             )}
           </div>
           
           {/* Right column - Global Styling */}
           <div className="space-y-4">
-            <h4 className="text-sm font-semibold text-purple-400 uppercase tracking-wide border-b border-gray-700 pb-2">
+            <h4 className="text-xs font-semibold text-purple-400 uppercase tracking-wider border-b border-white/10 pb-2">
               All Buttons Styling
             </h4>
             
             {/* Button Enable/Disable */}
-            <div className="p-3 bg-gray-800/50 rounded-lg space-y-2">
+            <div className="p-3 bg-gray-800/30 rounded-xl border border-white/5 space-y-2">
               <label className="text-xs text-gray-400 block font-medium mb-2">Show Buttons</label>
               <div className="flex items-center gap-3">
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={secondaryButtonEnabled}
                     onChange={(e) => updateButtonStyles({ secondaryButtonEnabled: e.target.checked })}
-                    className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
+                    className="rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500/50"
                   />
-                  Secondary
+                  <span className="group-hover:text-white transition-colors">Secondary</span>
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-300">
+                <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer group">
                   <input
                     type="checkbox"
                     checked={primaryButtonEnabled}
                     onChange={(e) => updateButtonStyles({ primaryButtonEnabled: e.target.checked })}
-                    className="rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500"
+                    className="rounded border-gray-600 bg-gray-800 text-indigo-500 focus:ring-indigo-500/50"
                   />
-                  Primary
+                  <span className="group-hover:text-white transition-colors">Primary</span>
                 </label>
               </div>
             </div>
@@ -363,7 +371,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                     max="20"
                     value={fontSize}
                     onChange={(e) => updateButtonStyles({ fontSize: parseInt(e.target.value) })}
-                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                   />
                   <span className="text-xs text-gray-400 w-8">{fontSize}px</span>
                 </div>
@@ -377,7 +385,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                     max="20"
                     value={borderRadius}
                     onChange={(e) => updateButtonStyles({ borderRadius: parseInt(e.target.value) })}
-                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    className="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                   />
                   <span className="text-xs text-gray-400 w-8">{borderRadius}px</span>
                 </div>
@@ -391,7 +399,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                 <select
                   value={fontFamily}
                   onChange={(e) => updateButtonStyles({ fontFamily: e.target.value })}
-                  className="w-full bg-gray-800 text-white text-xs px-2 py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-gray-800/50 text-white text-xs px-2 py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                 >
                   {FONT_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -403,7 +411,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                 <select
                   value={fontWeight}
                   onChange={(e) => updateButtonStyles({ fontWeight: parseInt(e.target.value) })}
-                  className="w-full bg-gray-800 text-white text-xs px-2 py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
+                  className="w-full bg-gray-800/50 text-white text-xs px-2 py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
                 >
                   <option value={400}>Normal</option>
                   <option value={500}>Medium</option>
@@ -422,7 +430,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                     type="color"
                     value={rgbaToHex(parseColor(backgroundColor).r, parseColor(backgroundColor).g, parseColor(backgroundColor).b)}
                     onChange={(e) => updateButtonStyles({ backgroundColor: e.target.value })}
-                    className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+                    className="w-8 h-8 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
                   />
                   <span className="text-xs text-gray-500">Background</span>
                 </div>
@@ -431,7 +439,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                     type="color"
                     value={rgbaToHex(parseColor(textColor).r, parseColor(textColor).g, parseColor(textColor).b)}
                     onChange={(e) => updateButtonStyles({ textColor: e.target.value })}
-                    className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+                    className="w-8 h-8 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
                   />
                   <span className="text-xs text-gray-500">Text</span>
                 </div>
@@ -447,7 +455,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                     type="color"
                     value={rgbaToHex(parseColor(secondaryBackgroundColor).r, parseColor(secondaryBackgroundColor).g, parseColor(secondaryBackgroundColor).b)}
                     onChange={(e) => updateButtonStyles({ secondaryBackgroundColor: e.target.value })}
-                    className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+                    className="w-8 h-8 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
                   />
                   <span className="text-xs text-gray-500">Background</span>
                 </div>
@@ -456,7 +464,7 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
                     type="color"
                     value={rgbaToHex(parseColor(secondaryTextColor).r, parseColor(secondaryTextColor).g, parseColor(secondaryTextColor).b)}
                     onChange={(e) => updateButtonStyles({ secondaryTextColor: e.target.value })}
-                    className="w-8 h-8 rounded cursor-pointer border border-gray-600"
+                    className="w-8 h-8 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors"
                   />
                   <span className="text-xs text-gray-500">Text</span>
                 </div>
@@ -464,12 +472,10 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
             </div>
           </div>
         </div>
+        </div>
         
-        {/* Footer info */}
-        <div className="mt-6 pt-4 border-t border-gray-700 flex items-center justify-between">
-          <p className="text-xs text-gray-500">
-            Styling changes apply to all event buttons
-          </p>
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-4 border-t border-white/10 bg-black/20">
           <button
             onClick={() => updateButtonStyles({
               fontSize: undefined,
@@ -483,9 +489,15 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
               primaryButtonEnabled: undefined,
               secondaryButtonEnabled: undefined,
             })}
-            className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded border border-gray-700 hover:border-gray-600 transition-colors"
+            className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-colors"
           >
             Reset Styles
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg shadow-lg shadow-indigo-500/25 transition-all"
+          >
+            Done
           </button>
         </div>
       </div>

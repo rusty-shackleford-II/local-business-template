@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import EditableText from './EditableText';
 import BusinessHoursEditor from './BusinessHoursEditor';
+import SocialLinksEditorPopup from './SocialLinksEditorPopup';
 import { useI18nContext } from './I18nProvider';
 import { 
   FaInstagram, 
@@ -39,7 +40,7 @@ type Props = {
   businessInfo?: BusinessInfo; 
   backgroundClass?: string;
   editable?: boolean;
-  onEdit?: (path: string, value: string | { open: string; close: string }) => void;
+  onEdit?: (path: string, value: any) => void;
   colorPalette?: ColorPalette;
   siteUrl?: string;
   sectionId?: string;
@@ -135,6 +136,10 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
+  
+  // Social links editor popup state
+  const [showSocialLinksPopup, setShowSocialLinksPopup] = useState(false);
+  const socialLinksTargetRef = useRef<HTMLDivElement>(null);
 
   // Backward compatibility: migrate old single license to array format
   const licenses = useMemo(() => {
@@ -678,6 +683,15 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   // Fall back to contact.social for backward compatibility
                   const showInContact = socialLinks?.showInContact ?? true;
                   const social = socialLinks?.links || contact?.social;
+                  // Icon size multiplier - defaults to 1.0 for backward compatibility
+                  const iconSize = socialLinks?.contactSocialIconSize ?? 1.0;
+                  // Base sizes in pixels
+                  const containerBaseSize = 48; // w-12 h-12
+                  const iconBaseSize = 20; // h-5 w-5
+                  const containerPx = Math.round(containerBaseSize * iconSize);
+                  const iconPx = Math.round(iconBaseSize * iconSize);
+                  const grubhubIconPx = Math.round(32 * iconSize); // h-8 w-8 for grubhub
+                  const toastImagePx = Math.round(32 * iconSize);
                   // Check for social links - handle both string values and customLinks array
                   const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
                     key !== 'customLinks' && typeof value === 'string' && value.trim()
@@ -688,7 +702,17 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   if (!showInContact || !hasSocialLinks || !social) return null;
                   
                   return (
-                    <div className="border-t border-gray-300 pt-6 px-4 sm:px-0 mb-4">
+                    <div 
+                      ref={socialLinksTargetRef}
+                      className={`border-t border-gray-300 pt-6 px-4 sm:px-0 mb-4 ${editable ? 'p-2 -m-2 rounded cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-dashed' : ''}`}
+                      onClick={(e) => {
+                        if (!editable) return;
+                        // Don't open popup if clicking on an actual link
+                        if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                        e.stopPropagation();
+                        setShowSocialLinksPopup(true);
+                      }}
+                    >
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">
                         {t('contact.followUs', 'Follow Us')}
                       </h4>
@@ -698,10 +722,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.facebook}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Follow us on Facebook"
                           >
-                            <FaFacebookF className="h-5 w-5" />
+                            <FaFacebookF style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.twitter && (
@@ -709,10 +734,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.twitter}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Follow us on X (Twitter)"
                           >
-                            <FaXTwitter className="h-5 w-5" />
+                            <FaXTwitter style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.instagram && (
@@ -720,10 +746,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.instagram}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-pink-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-pink-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Follow us on Instagram"
                           >
-                            <FaInstagram className="h-5 w-5" />
+                            <FaInstagram style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.linkedin && (
@@ -731,10 +758,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.linkedin}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-700 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-700 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Connect with us on LinkedIn"
                           >
-                            <FaLinkedinIn className="h-5 w-5" />
+                            <FaLinkedinIn style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.youtube && (
@@ -742,10 +770,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.youtube}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Follow us on YouTube"
                           >
-                            <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                            <svg style={{ width: iconPx, height: iconPx }} fill="currentColor" viewBox="0 0 24 24">
                               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
                             </svg>
                           </a>
@@ -755,10 +784,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.tiktok}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Follow us on TikTok"
                           >
-                            <FaTiktok className="h-5 w-5" />
+                            <FaTiktok style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.yelp && (
@@ -766,10 +796,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.yelp}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Review us on Yelp"
                           >
-                            <FaYelp className="h-5 w-5" />
+                            <FaYelp style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.googleBusinessProfile && (
@@ -777,10 +808,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.googleBusinessProfile}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="View our Google Business Profile"
                           >
-                            <FaGoogle className="h-5 w-5" />
+                            <FaGoogle style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.other && (
@@ -788,10 +820,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.other}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Visit our other social link"
                           >
-                            <FaStar className="h-5 w-5" />
+                            <FaStar style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.doordash && (
@@ -799,10 +832,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.doordash}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-500 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-500 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Order from us on DoorDash"
                           >
-                            <SiDoordash className="h-5 w-5" />
+                            <SiDoordash style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.ubereats && (
@@ -810,10 +844,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.ubereats}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Order from us on Uber Eats"
                           >
-                            <SiUbereats className="h-5 w-5" />
+                            <SiUbereats style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.grubhub && (
@@ -821,10 +856,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.grubhub}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 p-1 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-orange-600 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-orange-600 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx, padding: Math.round(4 * iconSize) }}
                             aria-label="Order from us on Grubhub"
                           >
-                            <SiGrubhub className="h-8 w-8" />
+                            <SiGrubhub style={{ width: grubhubIconPx, height: grubhubIconPx }} />
                           </a>
                         )}
                         {social.postmates && (
@@ -832,10 +868,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.postmates}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Order from us on Postmates"
                           >
-                            <SiPostmates className="h-5 w-5" />
+                            <SiPostmates style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.instacart && (
@@ -843,10 +880,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.instacart}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-500 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-500 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx }}
                             aria-label="Order from us on Instacart"
                           >
-                            <SiInstacart className="h-5 w-5" />
+                            <SiInstacart style={{ width: iconPx, height: iconPx }} />
                           </a>
                         )}
                         {social.toast && (
@@ -854,14 +892,15 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             href={social.toast}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-12 h-12 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx, padding: Math.round(8 * iconSize) }}
                             aria-label="Order from us on Toast"
                           >
                             <Image 
                               src="/toast-logo.png" 
                               alt="Toast" 
-                              width={32}
-                              height={32}
+                              width={toastImagePx}
+                              height={toastImagePx}
                               loading="lazy"
                               className="object-contain"
                             />
@@ -875,7 +914,8 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                               href={customLink.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center overflow-hidden"
+                              className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center overflow-hidden"
+                              style={{ width: containerPx, height: containerPx }}
                               aria-label={customLink.label || 'External Link'}
                             >
                               {customLink.iconUrl ? (
@@ -883,10 +923,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                                 <img 
                                   src={customLink.iconUrl} 
                                   alt={customLink.label || 'Custom icon'} 
-                                  className="h-5 w-5 object-contain"
+                                  style={{ width: iconPx, height: iconPx }}
+                                  className="object-contain"
                                 />
                               ) : (
-                                <FaExternalLinkAlt className="h-5 w-5" />
+                                <FaExternalLinkAlt style={{ width: iconPx, height: iconPx }} />
                               )}
                             </a>
                           )
@@ -901,6 +942,17 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
           </div>
         </div>
       </div>
+      
+      {/* Social Links Editor Popup */}
+      {editable && (
+        <SocialLinksEditorPopup
+          isOpen={showSocialLinksPopup}
+          onClose={() => setShowSocialLinksPopup(false)}
+          socialLinks={socialLinks}
+          onEdit={onEdit}
+          targetElement={socialLinksTargetRef.current}
+        />
+      )}
     </section>
   );
 };

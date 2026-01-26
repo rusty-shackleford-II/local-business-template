@@ -391,6 +391,7 @@ export type SocialLinksConfig = {
   showInHero?: boolean;
   showInContact?: boolean;
   heroSocialIconSize?: number; // Size multiplier for social icons in hero (0.5 to 2.0, default 1.0)
+  contactSocialIconSize?: number; // Size multiplier for social icons in contact section (0.5 to 2.0, default 1.0)
 };
 
 export type BusinessHours = {
@@ -459,7 +460,7 @@ export type Footer = {
   privacyPolicyText?: string; // Privacy policy content (supports text/HTML)
   showTermsAndConditions?: boolean | string; // Toggle terms and conditions link visibility (stored as string in editor)
   termsAndConditionsText?: string; // Terms and conditions content (supports text/HTML)
-  colors?: { background?: string; textColor?: string }; // Footer color customization
+  colors?: { background?: string; textColor?: string; navText?: string }; // Footer color customization
 };
 
 export type SEO = {

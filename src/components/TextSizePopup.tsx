@@ -1,51 +1,67 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useMemo } from "react";
+import {
+  EditorModal,
+  EditorSlider,
+  EditorColorPicker,
+  EditorToggle,
+  EditorSelect,
+  EditorInfoBox,
+  buildColorPresets,
+  type ColorPreset,
+} from './editor-ui';
 
 // Font family presets - Google Fonts are loaded dynamically by the template
-const fontPresets = [
-  { value: '', label: 'Default', isSystem: true },
+const FONT_OPTIONS = [
+  { value: '', label: 'Default' },
   // Google Fonts - Sans Serif
-  { value: 'Inter, sans-serif', label: 'Inter', isSystem: false },
-  { value: 'Roboto, sans-serif', label: 'Roboto', isSystem: false },
-  { value: 'Open Sans, sans-serif', label: 'Open Sans', isSystem: false },
-  { value: 'Lato, sans-serif', label: 'Lato', isSystem: false },
-  { value: 'Montserrat, sans-serif', label: 'Montserrat', isSystem: false },
-  { value: 'Poppins, sans-serif', label: 'Poppins', isSystem: false },
-  { value: 'Raleway, sans-serif', label: 'Raleway', isSystem: false },
-  { value: 'Oswald, sans-serif', label: 'Oswald', isSystem: false },
-  { value: 'Nunito, sans-serif', label: 'Nunito', isSystem: false },
-  { value: 'Source Sans Pro, sans-serif', label: 'Source Sans Pro', isSystem: false },
+  { value: 'Inter, sans-serif', label: 'Inter' },
+  { value: 'Roboto, sans-serif', label: 'Roboto' },
+  { value: 'Open Sans, sans-serif', label: 'Open Sans' },
+  { value: 'Lato, sans-serif', label: 'Lato' },
+  { value: 'Montserrat, sans-serif', label: 'Montserrat' },
+  { value: 'Poppins, sans-serif', label: 'Poppins' },
+  { value: 'Raleway, sans-serif', label: 'Raleway' },
+  { value: 'Oswald, sans-serif', label: 'Oswald' },
+  { value: 'Nunito, sans-serif', label: 'Nunito' },
+  { value: 'Source Sans Pro, sans-serif', label: 'Source Sans Pro' },
   // Google Fonts - Serif
-  { value: 'Playfair Display, serif', label: 'Playfair Display', isSystem: false },
-  { value: 'Merriweather, serif', label: 'Merriweather', isSystem: false },
+  { value: 'Playfair Display, serif', label: 'Playfair Display' },
+  { value: 'Merriweather, serif', label: 'Merriweather' },
   // System Fonts (always available)
-  { value: 'Georgia, serif', label: 'Georgia', isSystem: true },
-  { value: 'Times New Roman, serif', label: 'Times New Roman', isSystem: true },
-  { value: 'Arial, sans-serif', label: 'Arial', isSystem: true },
-  { value: 'Verdana, sans-serif', label: 'Verdana', isSystem: true },
-  { value: 'Courier New, monospace', label: 'Courier New', isSystem: true },
+  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Times New Roman, serif', label: 'Times New Roman' },
+  { value: 'Arial, sans-serif', label: 'Arial' },
+  { value: 'Verdana, sans-serif', label: 'Verdana' },
+  { value: 'Courier New, monospace', label: 'Courier New' },
 ];
+
+// Icon for the modal header
+const TextStyleIcon = () => (
+  <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+  </svg>
+);
 
 type TextSizePopupProps = {
   isOpen: boolean;
   onClose: () => void;
   textSize: number;
   onTextSizeChange: (size: number) => void;
-  targetElement?: HTMLElement | null;
+  targetElement?: HTMLElement | null; // Kept for API compatibility
   label?: string;
   presetSizes?: number[];
   normalSize?: number;
   minSize?: number;
   maxSize?: number;
-  onInteractStart?: () => void;
-  onInteractEnd?: () => void;
+  onInteractStart?: () => void; // Kept for API compatibility
+  onInteractEnd?: () => void; // Kept for API compatibility
   // Color picker support
   textColor?: string;
   onTextColorChange?: (color: string) => void;
   showColorPicker?: boolean;
-  presetColors?: string[]; // Array of preset colors to display as quick options
+  presetColors?: string[];
   // Bold toggle support
   textBold?: boolean;
   onTextBoldChange?: (bold: boolean) => void;
@@ -65,14 +81,11 @@ export default function TextSizePopup({
   onClose,
   textSize,
   onTextSizeChange,
-  targetElement,
-  label = "Text Size",
+  label = "Text Style",
   presetSizes = [0.75, 1.0, 1.25, 1.5],
   normalSize = 1.0,
   minSize = 0.5,
   maxSize = 2.5,
-  onInteractStart,
-  onInteractEnd,
   textColor,
   onTextColorChange,
   showColorPicker = false,
@@ -87,352 +100,110 @@ export default function TextSizePopup({
   onFontFamilyChange,
   showFontPicker = false,
 }: TextSizePopupProps) {
-  const popupRef = useRef<HTMLDivElement>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [mounted, setMounted] = useState(false);
-  const [positionCalculated, setPositionCalculated] = useState(false);
-  const [measuring, setMeasuring] = useState(false);
+  // Build size presets from prop
+  const sizePresets = useMemo(() => 
+    presetSizes.map(size => ({
+      value: size,
+      label: size === normalSize ? 'Normal' : `${Math.round(size * 100)}%`
+    })),
+    [presetSizes, normalSize]
+  );
 
-  // Handle mounting for SSR compatibility
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Build color presets
+  const colorPresets: ColorPreset[] = useMemo(() => {
+    const presets = buildColorPresets({ includeBasics: true });
+    presetColors.forEach((color, i) => {
+      presets.push({ color, label: `Custom ${i + 1}`, category: 'site' });
+    });
+    return presets;
+  }, [presetColors]);
 
-  // Reset position calculation when popup opens/closes
-  useEffect(() => {
-    if (isOpen) {
-      setPositionCalculated(false);
-      setMeasuring(true);
-    }
-  }, [isOpen]);
-
-  // Simple positioning: below text by default, above if no space
-  useEffect(() => {
-    if (!isOpen || !targetElement || !mounted) return;
-
-    const updatePosition = () => {
-      const rect = targetElement.getBoundingClientRect();
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
-      
-      // Get actual popup dimensions
-      const popupElement = popupRef.current;
-      if (!popupElement) return;
-      
-      const popupWidth = popupElement.offsetWidth;
-      const popupHeight = popupElement.offsetHeight;
-      const gap = 16; // gap between text and popup
-      const screenMargin = 16; // margin from screen edges
-      
-      let top, left;
-      
-      // Center the popup horizontally relative to the text element
-      const textCenterX = rect.left + rect.width / 2;
-      left = textCenterX - popupWidth / 2;
-      
-      // Determine if text is in the bottom half of the screen
-      const screenMidpoint = window.innerHeight / 2;
-      const textVerticalCenter = rect.top + rect.height / 2;
-      const isInBottomHalf = textVerticalCenter > screenMidpoint;
-      
-      // Position vertically based on which half of screen the text is in
-      if (isInBottomHalf) {
-        // Text is in bottom half - position popup above the text
-        // popup bottom should be (gap) pixels above text top
-        // Use viewport coordinates since popup is position:fixed
-        top = rect.top - popupHeight - gap;
-      } else {
-        // Text is in top half - position popup below the text  
-        // popup top should be (gap) pixels below text bottom
-        // Use viewport coordinates since popup is position:fixed
-        top = rect.bottom + gap;
-      }
-      
-      // Adjust horizontal position to keep popup on screen
-      if (left + popupWidth > window.innerWidth - screenMargin) {
-        // Move popup to the left to fit on screen
-        left = window.innerWidth - popupWidth - screenMargin;
-      }
-      
-      // Ensure popup doesn't go off the left edge
-      if (left < screenMargin) {
-        left = screenMargin;
-      }
-      
-      console.log('Final position calculation:', {
-        isInBottomHalf,
-        textTop: rect.top,
-        textBottom: rect.bottom,
-        scrollY,
-        calculatedTop: top,
-        popupHeight,
-        gap,
-        screenMidpoint,
-        textVerticalCenter,
-        expectedTop: isInBottomHalf ? rect.top - popupHeight - gap : rect.bottom + gap,
-        calculation: isInBottomHalf ? `${rect.top} - ${popupHeight} - ${gap} = ${rect.top - popupHeight - gap}` : `${rect.bottom} + ${gap} = ${rect.bottom + gap}`,
-        popupWillSpan: `${top} to ${top + popupHeight}`,
-        textSpans: `${rect.top} to ${rect.bottom}`
-      });
-      
-      setPosition({ top, left });
-      setPositionCalculated(true);
-      setMeasuring(false);
-    };
-
-    updatePosition();
-    
-    // Update position on scroll/resize
-    const handleUpdate = () => updatePosition();
-    window.addEventListener('scroll', handleUpdate);
-    window.addEventListener('resize', handleUpdate);
-    
-    return () => {
-      window.removeEventListener('scroll', handleUpdate);
-      window.removeEventListener('resize', handleUpdate);
-    };
-  }, [isOpen, targetElement, mounted]);
-
-  // Measure popup dimensions after initial render
-  useEffect(() => {
-    if (measuring && popupRef.current && isOpen) {
-      // Small delay to ensure popup is fully rendered
-      const timer = setTimeout(() => {
-        if (popupRef.current) {
-          // Trigger position calculation now that we have dimensions
-          const updateEvent = new Event('resize');
-          window.dispatchEvent(updateEvent);
-        }
-      }, 10);
-      return () => clearTimeout(timer);
-    }
-  }, [measuring, isOpen]);
-
-  // Close on outside click
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node) &&
-        targetElement &&
-        !targetElement.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onClose, targetElement]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newSize = parseFloat(e.target.value);
-    onTextSizeChange(newSize);
-  };
-
-  const handlePresetClick = (size: number) => {
-    onTextSizeChange(size);
-  };
-
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (onTextColorChange) {
-      onTextColorChange(e.target.value);
-    }
-  };
-
-  const handlePresetColorClick = (color: string) => {
-    if (onTextColorChange) {
-      onTextColorChange(color);
-    }
-  };
-
-  if (!isOpen || !mounted) return null;
-
-  const popupContent = (
-    <>
-    {/* Backdrop to capture clicks and prevent pass-through */}
-    <div
-      className="fixed inset-0"
-      style={{ zIndex: 9998, background: 'transparent' }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        onClose();
-      }}
-    />
-    <div
-      ref={popupRef}
-      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 min-w-[300px]"
-      style={{
-        top: positionCalculated ? `${position.top}px` : '-9999px',
-        left: positionCalculated ? `${position.left}px` : '-9999px',
-        zIndex: 9999, // Very high z-index to ensure it's above everything
-        opacity: positionCalculated ? 1 : 0,
-        pointerEvents: 'auto',
-      }}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-        if (onInteractStart) onInteractStart();
-      }}
-      onMouseUp={(e) => {
-        e.stopPropagation();
-        if (onInteractEnd) onInteractEnd();
-      }}
+  return (
+    <EditorModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={label}
+      icon={<TextStyleIcon />}
+      width="sm"
+      backdropOpacity={0}
     >
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-gray-700">{label}</div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Preset buttons */}
-        <div className="flex gap-2">
-          {presetSizes.map((size) => (
-            <button
-              key={size}
-              onClick={() => handlePresetClick(size)}
-              className={`px-3 py-1 text-xs rounded-md border transition-all ${
-                Math.abs(textSize - size) < 0.05
-                  ? 'bg-blue-100 border-blue-300 text-blue-700'
-                  : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {size === normalSize ? 'Normal' : `${size}x`}
-            </button>
-          ))}
-        </div>
+      {/* Font Size Slider */}
+      <EditorSlider
+        label="Size"
+        value={textSize}
+        onChange={onTextSizeChange}
+        min={minSize}
+        max={maxSize}
+        step={0.05}
+        presets={sizePresets}
+        formatValue={(v) => `${Math.round(v * 100)}%`}
+        hideMinMax
+      />
 
-        {/* Slider */}
-        <div className="space-y-3">
-          <div className="relative">
-            <input
-              type="range"
-              min={minSize}
-              max={maxSize}
-              step="0.05"
-              value={textSize}
-              onChange={handleSliderChange}
-              onMouseDown={() => setIsDragging(true)}
-              onMouseUp={() => setIsDragging(false)}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-smooth"
-              style={{
-                background: `linear-gradient(to right, #e5e7eb 0%, #3b82f6 ${((textSize - minSize) / (maxSize - minSize)) * 100}%, #e5e7eb ${((textSize - minSize) / (maxSize - minSize)) * 100}%, #e5e7eb 100%)`
-              }}
+      {/* Font Family - only show if enabled */}
+      {showFontPicker && onFontFamilyChange && (
+        <>
+          <div className="border-t border-white/10 -mx-4" />
+          <div className="space-y-2">
+            <EditorSelect
+              label="Font"
+              value={fontFamily || ''}
+              onChange={onFontFamilyChange}
+              options={FONT_OPTIONS}
             />
+            {fontFamily && (
+              <p 
+                className="text-xs text-gray-400 p-2 bg-gray-800/30 rounded"
+                style={{ fontFamily }}
+              >
+                The quick brown fox jumps over the lazy dog
+              </p>
+            )}
           </div>
-          
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Small ({minSize}x)</span>
-            <span className="font-medium bg-gray-100 px-2 py-1 rounded">
-              {(textSize * 100).toFixed(0)}%
-            </span>
-            <span>Large ({maxSize}x)</span>
-          </div>
-        </div>
+        </>
+      )}
 
-        {/* Color Picker - only show if enabled */}
-        {showColorPicker && onTextColorChange && (
-          <div className="space-y-2 pt-2 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700">
-              Text Color
-            </label>
-            
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                value={textColor || '#000000'}
-                onChange={handleColorChange}
-                list="preset-colors"
-                className="h-10 w-20 rounded border border-gray-300 cursor-pointer"
-                onMouseDown={() => {
-                  if (onInteractStart) onInteractStart();
-                }}
-                onMouseUp={() => {
-                  if (onInteractEnd) onInteractEnd();
-                }}
-              />
-              {/* Datalist for preset colors in the native color picker */}
-              {presetColors.length > 0 && (
-                <datalist id="preset-colors">
-                  {presetColors.map((color) => (
-                    <option key={color} value={color} />
-                  ))}
-                </datalist>
-              )}
-              <input
-                type="text"
-                value={textColor || '#000000'}
-                onChange={handleColorChange}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded font-mono"
-                placeholder="#000000"
-                pattern="^#[0-9A-Fa-f]{6}$"
-              />
-            </div>
-          </div>
-        )}
+      {/* Color Picker - only show if enabled */}
+      {showColorPicker && onTextColorChange && (
+        <>
+          <div className="border-t border-white/10 -mx-4" />
+          <EditorColorPicker
+            label="Color"
+            value={textColor || '#000000'}
+            onChange={onTextColorChange}
+            presets={colorPresets}
+          />
+        </>
+      )}
 
-        {/* Bold Toggle - only show if enabled */}
-        {showBoldToggle && onTextBoldChange && (
-          <div className="pt-2 border-t border-gray-200">
-            <label className="flex items-center cursor-pointer group">
-              <input
-                type="checkbox"
-                checked={textBold}
-                onChange={(e) => {
-                  if (onInteractStart) onInteractStart();
-                  onTextBoldChange(e.target.checked);
-                  if (onInteractEnd) onInteractEnd();
-                }}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
-              />
-              <span className="ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                <strong>Bold</strong> text
-              </span>
-            </label>
-          </div>
-        )}
+      {/* Bold Toggle - only show if enabled */}
+      {showBoldToggle && onTextBoldChange && (
+        <>
+          <div className="border-t border-white/10 -mx-4" />
+          <EditorToggle
+            label="Bold Text"
+            checked={textBold}
+            onChange={onTextBoldChange}
+            compact
+          />
+        </>
+      )}
 
-        {/* Alignment Toggle - only show if enabled */}
-        {showAlignmentToggle && onTextAlignChange && (
-          <div className="pt-2 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Text Alignment
+      {/* Alignment Toggle - only show if enabled */}
+      {showAlignmentToggle && onTextAlignChange && (
+        <>
+          <div className="border-t border-white/10 -mx-4" />
+          <div className="space-y-2">
+            <label className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+              Alignment
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
-                onClick={() => {
-                  if (onInteractStart) onInteractStart();
-                  onTextAlignChange('left');
-                  if (onInteractEnd) onInteractEnd();
-                }}
-                className={`flex-1 px-3 py-2 text-sm rounded-md border transition-all ${
+                onClick={() => onTextAlignChange('left')}
+                className={`flex-1 px-3 py-2 rounded border transition-all ${
                   textAlign === 'left'
-                    ? 'bg-blue-100 border-blue-300 text-blue-700 font-medium'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                    : 'bg-gray-800/50 border-white/10 text-gray-400 hover:bg-white/10'
                 }`}
                 title="Align Left"
               >
@@ -441,15 +212,11 @@ export default function TextSizePopup({
                 </svg>
               </button>
               <button
-                onClick={() => {
-                  if (onInteractStart) onInteractStart();
-                  onTextAlignChange('center');
-                  if (onInteractEnd) onInteractEnd();
-                }}
-                className={`flex-1 px-3 py-2 text-sm rounded-md border transition-all ${
+                onClick={() => onTextAlignChange('center')}
+                className={`flex-1 px-3 py-2 rounded border transition-all ${
                   textAlign === 'center'
-                    ? 'bg-blue-100 border-blue-300 text-blue-700 font-medium'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                    : 'bg-gray-800/50 border-white/10 text-gray-400 hover:bg-white/10'
                 }`}
                 title="Align Center"
               >
@@ -458,15 +225,11 @@ export default function TextSizePopup({
                 </svg>
               </button>
               <button
-                onClick={() => {
-                  if (onInteractStart) onInteractStart();
-                  onTextAlignChange('right');
-                  if (onInteractEnd) onInteractEnd();
-                }}
-                className={`flex-1 px-3 py-2 text-sm rounded-md border transition-all ${
+                onClick={() => onTextAlignChange('right')}
+                className={`flex-1 px-3 py-2 rounded border transition-all ${
                   textAlign === 'right'
-                    ? 'bg-blue-100 border-blue-300 text-blue-700 font-medium'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                    ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                    : 'bg-gray-800/50 border-white/10 text-gray-400 hover:bg-white/10'
                 }`}
                 title="Align Right"
               >
@@ -476,88 +239,13 @@ export default function TextSizePopup({
               </button>
             </div>
           </div>
-        )}
+        </>
+      )}
 
-        {/* Font Family Picker - only show if enabled */}
-        {showFontPicker && onFontFamilyChange && (
-          <div className="pt-2 border-t border-gray-200">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Font Family
-            </label>
-            <select
-              value={fontFamily || ''}
-              onChange={(e) => {
-                if (onInteractStart) onInteractStart();
-                onFontFamilyChange(e.target.value);
-                if (onInteractEnd) onInteractEnd();
-              }}
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              style={{ fontFamily: fontFamily || 'inherit' }}
-            >
-              {fontPresets.map((preset) => (
-                <option
-                  key={preset.value || 'default'}
-                  value={preset.value}
-                  style={{ fontFamily: preset.value || 'inherit' }}
-                >
-                  {preset.label}
-                </option>
-              ))}
-            </select>
-            {fontFamily && (
-              <p 
-                className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded"
-                style={{ fontFamily }}
-              >
-                Preview: The quick brown fox jumps over the lazy dog
-              </p>
-            )}
-          </div>
-        )}
-
-        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-          💡 Click preset buttons for common sizes, or drag the slider for precise control
-        </div>
-      </div>
-
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        .slider-smooth {
-          transition: all 0.1s ease-out;
-        }
-        
-        .slider-smooth::-webkit-slider-thumb {
-          appearance: none;
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-          transition: all 0.1s ease-out;
-        }
-        
-        .slider-smooth::-webkit-slider-thumb:hover {
-          background: #2563eb;
-          transform: scale(1.1);
-        }
-        
-        .slider-smooth::-moz-range-thumb {
-          width: 20px;
-          height: 20px;
-          border-radius: 50%;
-          background: #3b82f6;
-          cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        `
-      }} />
-    </div>
-    </>
+      {/* Help Info */}
+      <EditorInfoBox variant="tip">
+        Use presets for common sizes or drag the slider for precise control
+      </EditorInfoBox>
+    </EditorModal>
   );
-
-  // Use portal to render at document body level to avoid clipping
-  return createPortal(popupContent, document.body);
 }

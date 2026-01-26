@@ -21,298 +21,7 @@ import {
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton, SocialLinksConfig, ButtonGridLayout, SocialMedia } from '../types';
-
-// Social Links Editor Popup Component
-const SocialLinksEditorPopup: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  socialLinks?: SocialLinksConfig;
-  onEdit?: (path: string, value: any) => void;
-  targetElement?: HTMLElement | null;
-}> = ({ isOpen, onClose, socialLinks, onEdit, targetElement }) => {
-  const popupRef = useRef<HTMLDivElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [position, setPosition] = useState({ top: 0, left: 0 });
-  const [positionCalculated, setPositionCalculated] = useState(false);
-  
-  // Local state for form values (synced with props)
-  const [localIconSize, setLocalIconSize] = useState(socialLinks?.heroSocialIconSize ?? 1.0);
-  const [localLinks, setLocalLinks] = useState<Record<string, string>>({});
-  const [localShowInHero, setLocalShowInHero] = useState(socialLinks?.showInHero !== false);
-  
-  // Sync local state with props when popup opens
-  useEffect(() => {
-    if (isOpen) {
-      setLocalIconSize(socialLinks?.heroSocialIconSize ?? 1.0);
-      setLocalLinks({
-        facebook: socialLinks?.links?.facebook || '',
-        instagram: socialLinks?.links?.instagram || '',
-        twitter: socialLinks?.links?.twitter || '',
-        linkedin: socialLinks?.links?.linkedin || '',
-        youtube: socialLinks?.links?.youtube || '',
-        tiktok: socialLinks?.links?.tiktok || '',
-        yelp: socialLinks?.links?.yelp || '',
-        googleBusinessProfile: socialLinks?.links?.googleBusinessProfile || '',
-      });
-      setLocalShowInHero(socialLinks?.showInHero !== false);
-    }
-  }, [isOpen, socialLinks]);
-
-  // Handle mounting for SSR compatibility
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Reset position calculation when popup opens/closes
-  useEffect(() => {
-    if (isOpen) {
-      setPositionCalculated(false);
-    }
-  }, [isOpen]);
-
-  // Position the popup
-  useEffect(() => {
-    if (!isOpen || !targetElement || !mounted) return;
-
-    const updatePosition = () => {
-      const rect = targetElement.getBoundingClientRect();
-      const popupElement = popupRef.current;
-      if (!popupElement) return;
-      
-      const popupWidth = popupElement.offsetWidth;
-      const popupHeight = popupElement.offsetHeight;
-      const gap = 16;
-      const screenMargin = 16;
-      
-      // Center horizontally relative to target
-      let left = rect.left + rect.width / 2 - popupWidth / 2;
-      
-      // Position above or below based on screen position
-      const screenMidpoint = window.innerHeight / 2;
-      const isInBottomHalf = rect.top + rect.height / 2 > screenMidpoint;
-      let top = isInBottomHalf 
-        ? rect.top - popupHeight - gap 
-        : rect.bottom + gap;
-      
-      // Keep on screen horizontally
-      if (left + popupWidth > window.innerWidth - screenMargin) {
-        left = window.innerWidth - popupWidth - screenMargin;
-      }
-      if (left < screenMargin) {
-        left = screenMargin;
-      }
-      
-      // Keep on screen vertically
-      if (top < screenMargin) {
-        top = screenMargin;
-      }
-      if (top + popupHeight > window.innerHeight - screenMargin) {
-        top = window.innerHeight - popupHeight - screenMargin;
-      }
-      
-      setPosition({ top, left });
-      setPositionCalculated(true);
-    };
-
-    // Small delay to ensure popup is rendered
-    setTimeout(updatePosition, 10);
-    
-    window.addEventListener('scroll', updatePosition);
-    window.addEventListener('resize', updatePosition);
-    
-    return () => {
-      window.removeEventListener('scroll', updatePosition);
-      window.removeEventListener('resize', updatePosition);
-    };
-  }, [isOpen, targetElement, mounted]);
-
-  // Close on Escape
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
-  // Close on click outside
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    // Use setTimeout to avoid closing immediately when opening
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleClickOutside);
-    }, 100);
-    
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen || !mounted) return null;
-
-  const handleSizeChange = (size: number) => {
-    setLocalIconSize(size);
-    if (onEdit) {
-      onEdit('socialLinks.heroSocialIconSize', size);
-    }
-  };
-
-  const handleLinkChange = (platform: string, value: string) => {
-    setLocalLinks(prev => ({ ...prev, [platform]: value }));
-    if (onEdit) {
-      onEdit(`socialLinks.links.${platform}`, value);
-    }
-  };
-  
-  const handleShowInHeroChange = (checked: boolean) => {
-    setLocalShowInHero(checked);
-    if (onEdit) {
-      onEdit('socialLinks.showInHero', checked);
-    }
-  };
-
-  // Social platform configurations
-  const platforms = [
-    { key: 'facebook', label: 'Facebook', icon: FaFacebookF, color: 'text-blue-600', placeholder: 'https://facebook.com/yourpage' },
-    { key: 'instagram', label: 'Instagram', icon: FaInstagram, color: 'text-pink-600', placeholder: 'https://instagram.com/yourprofile' },
-    { key: 'twitter', label: 'X (Twitter)', icon: FaXTwitter, color: 'text-black', placeholder: 'https://x.com/yourhandle' },
-    { key: 'linkedin', label: 'LinkedIn', icon: FaLinkedinIn, color: 'text-blue-700', placeholder: 'https://linkedin.com/company/yourcompany' },
-    { key: 'youtube', label: 'YouTube', icon: FaYoutube, color: 'text-red-600', placeholder: 'https://youtube.com/@yourchannel' },
-    { key: 'tiktok', label: 'TikTok', icon: FaTiktok, color: 'text-black', placeholder: 'https://tiktok.com/@yourprofile' },
-    { key: 'yelp', label: 'Yelp', icon: FaYelp, color: 'text-red-600', placeholder: 'https://yelp.com/biz/yourbusiness' },
-    { key: 'googleBusinessProfile', label: 'Google Business', icon: FaGoogle, color: 'text-blue-600', placeholder: 'https://g.page/yourbusiness' },
-  ];
-
-  const popupContent = (
-    <div
-      ref={popupRef}
-      className="fixed bg-white border border-gray-200 rounded-lg shadow-xl p-4 w-[380px] max-h-[80vh] overflow-y-auto"
-      style={{
-        top: positionCalculated ? `${position.top}px` : '50%',
-        left: positionCalculated ? `${position.left}px` : '50%',
-        transform: positionCalculated ? 'none' : 'translate(-50%, -50%)',
-        zIndex: 10000,
-        opacity: 1,
-      }}
-    >
-      <div className="space-y-4">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="text-sm font-medium text-gray-700">Social Links</div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Icon Size Slider */}
-        <div className="space-y-2 pb-3 border-b border-gray-200">
-          <label className="block text-xs font-medium text-gray-600">Icon Size</label>
-          <div className="flex gap-2">
-            {[0.75, 1.0, 1.25, 1.5].map((size) => (
-              <button
-                key={size}
-                onClick={() => handleSizeChange(size)}
-                className={`px-2 py-1 text-xs rounded-md border transition-all ${
-                  Math.abs(localIconSize - size) < 0.05
-                    ? 'bg-blue-100 border-blue-300 text-blue-700'
-                    : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                {size === 1.0 ? 'Normal' : `${size}x`}
-              </button>
-            ))}
-          </div>
-          <input
-            type="range"
-            min={0.5}
-            max={2.0}
-            step={0.05}
-            value={localIconSize}
-            onChange={(e) => handleSizeChange(parseFloat(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            style={{
-              background: `linear-gradient(to right, #3b82f6 ${((localIconSize - 0.5) / 1.5) * 100}%, #e5e7eb ${((localIconSize - 0.5) / 1.5) * 100}%)`
-            }}
-          />
-          <div className="flex justify-between text-xs text-gray-500">
-            <span>Small</span>
-            <span className="font-medium">{Math.round(localIconSize * 100)}%</span>
-            <span>Large</span>
-          </div>
-        </div>
-
-        {/* Social Link Inputs */}
-        <div className="space-y-3">
-          <label className="block text-xs font-medium text-gray-600">Social Links</label>
-          {platforms.map(({ key, label, icon: Icon, color, placeholder }) => (
-            <div key={key} className="flex items-center gap-2">
-              <div className={`w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 ${color}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <input
-                type="text"
-                value={localLinks[key] || ''}
-                onChange={(e) => handleLinkChange(key, e.target.value)}
-                placeholder={placeholder}
-                className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-              {localLinks[key] && (
-                <button
-                  onClick={() => handleLinkChange(key, '')}
-                  className="text-gray-400 hover:text-red-500 transition-colors"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Show in Hero Toggle */}
-        <div className="pt-3 border-t border-gray-200">
-          <label className="flex items-center cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={localShowInHero}
-              onChange={(e) => handleShowInHeroChange(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
-            />
-            <span className="ml-2 text-sm text-gray-700 group-hover:text-gray-900">
-              Show social icons in hero section
-            </span>
-          </label>
-        </div>
-
-        <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-          💡 Drag the icons to reposition them in the hero
-        </div>
-      </div>
-    </div>
-  );
-
-  return createPortal(popupContent, document.body);
-};
+import SocialLinksEditorPopup from './SocialLinksEditorPopup';
 
 // Video utility functions (copied from Videos component)
 function extractIframeSrc(input: string): string {
@@ -421,6 +130,11 @@ type Props = {
   onEdit?: (path: string, value: string) => void;
   onHeroImageClick?: () => void;
   onHeroImageAddClick?: () => void; // For adding images to the slideshow array (with cropper)
+  /** Storage adapter for built-in image cropper with bulk support */
+  imageStorage?: {
+    saveBlob: (key: string, blob: Blob, filename: string) => Promise<void>;
+    generateImageKey: (prefix?: string) => string;
+  };
   colorPalette?: ColorPalette;
   sectionId?: string;
   socialLinks?: SocialLinksConfig;
@@ -621,7 +335,7 @@ const HeroSocialLinks: React.FC<{
   );
 };
 
-const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, onHeroImageAddClick, colorPalette, sectionId = 'home', socialLinks }) => {
+const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, onHeroImageAddClick, imageStorage, colorPalette, sectionId = 'home', socialLinks }) => {
   const [videoLoading, setVideoLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -759,6 +473,76 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [onEdit]);
   
+  // Handle media type change (photo/video toggle)
+  const handleMediaTypeChange = useCallback((mediaType: 'photo' | 'video') => {
+    if (onEdit) {
+      onEdit('hero.mediaType', mediaType);
+    }
+  }, [onEdit]);
+  
+  // Handle video config change
+  const handleVideoChange = useCallback((video: { provider: 'youtube' | 'vimeo'; url: string; autoplay?: boolean; controls?: boolean; loop?: boolean; muted?: boolean }) => {
+    if (onEdit) {
+      onEdit('hero.video.provider', video.provider);
+      onEdit('hero.video.url', video.url);
+      if (video.autoplay !== undefined) onEdit('hero.video.autoplay', video.autoplay.toString());
+      if (video.controls !== undefined) onEdit('hero.video.controls', video.controls.toString());
+      if (video.loop !== undefined) onEdit('hero.video.loop', video.loop.toString());
+      if (video.muted !== undefined) onEdit('hero.video.muted', video.muted.toString());
+    }
+  }, [onEdit]);
+  
+  // Handle layout style change (standard vs fullwidth-overlay)
+  const handleLayoutStyleChange = useCallback((style: 'standard' | 'fullwidth-overlay') => {
+    if (onEdit) {
+      onEdit('hero.layoutStyle', style);
+      
+      if (style === 'fullwidth-overlay') {
+        // Switching to fullwidth overlay
+        // Auto-set white text colors for better visibility
+        onEdit('hero.colors.headline', '#ffffff');
+        onEdit('hero.colors.subheadline', '#ffffff');
+        // Only set fullwidth positions if they don't exist yet (preserve user's previous positioning)
+        if (!hero?.buttonsPosition) {
+          onEdit('hero.buttonsPosition', { x: 50, y: 85 } as any);
+        }
+        if (!hero?.socialLinksPosition) {
+          onEdit('hero.socialLinksPosition', { x: 50, y: 92 } as any);
+        }
+      } else {
+        // Switching to standard layout
+        // Auto-set dark text colors
+        onEdit('hero.colors.headline', '#000000');
+        onEdit('hero.colors.subheadline', '#000000');
+        // Clear legacy pixel positioning
+        onEdit('hero.standardButtonsPosition', null as any);
+        onEdit('hero.standardSocialLinksPosition', null as any);
+        
+        // Check if stored align values are valid (0-1 range). If not, clear them for reinitialization.
+        const btnAlign = hero?.standardButtonsHorizontalAlign;
+        const socialAlign = hero?.standardSocialLinksHorizontalAlign;
+        const btnAlignValid = typeof btnAlign === 'number' && btnAlign >= 0 && btnAlign <= 1;
+        const socialAlignValid = typeof socialAlign === 'number' && socialAlign >= 0 && socialAlign <= 1;
+        
+        if (!btnAlignValid) {
+          onEdit('hero.standardButtonsHorizontalAlign', null as any);
+          onEdit('hero.standardButtonsVerticalOffset', null as any);
+        }
+        if (!socialAlignValid) {
+          onEdit('hero.standardSocialLinksHorizontalAlign', null as any);
+          onEdit('hero.standardSocialLinksVerticalOffset', null as any);
+        }
+      }
+    }
+  }, [onEdit, hero?.buttonsPosition, hero?.socialLinksPosition, hero?.standardButtonsHorizontalAlign, hero?.standardSocialLinksHorizontalAlign]);
+  
+  // Handle overlay blur toggle
+  const handleOverlayBlurChange = useCallback((enabled: boolean) => {
+    if (onEdit) {
+      onEdit('hero.overlayBlur', enabled.toString());
+    }
+  }, [onEdit]);
+  
   // Helper to check if a URL is valid (not an expired blob URL)
   const isValidImageUrl = useCallback((url: string): boolean => {
     if (!url) return false;
@@ -814,8 +598,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       setAbsoluteImageLeft((imageRect.left - parentRect.left) / parentRect.width);
     };
     
-    // Measure immediately
-    measure();
+    // Measure after a brief delay to ensure DOM has updated after layout switch
+    const timeoutId = setTimeout(measure, 50);
     
     // Use ResizeObserver for reliable resize detection
     const resizeObserver = new ResizeObserver(() => {
@@ -828,8 +612,34 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     if (heroSubheadlineRef.current) resizeObserver.observe(heroSubheadlineRef.current);
     if (heroMediaContainerRef.current) resizeObserver.observe(heroMediaContainerRef.current);
     
-    return () => resizeObserver.disconnect();
-  }, [isMobile]);
+    return () => {
+      clearTimeout(timeoutId);
+      resizeObserver.disconnect();
+    };
+  }, [isMobile, isFullwidthOverlay]); // Re-run when layout changes
+  
+  // Initialize standard layout button positions AFTER anchors are calculated
+  // This runs when switching to standard layout and ensures buttons appear under subtitle
+  useEffect(() => {
+    // Only run for standard layout when anchors are valid and positions aren't set yet
+    const isStandard = !isFullwidthOverlay;
+    const anchorsValid = absoluteTextBottom > 50;
+    const buttonsNeedInit = hero?.standardButtonsHorizontalAlign == null;
+    const socialNeedInit = hero?.standardSocialLinksHorizontalAlign == null;
+    
+    if (isStandard && anchorsValid && onEdit) {
+      if (buttonsNeedInit) {
+        // Initialize buttons: left-aligned (0), 16px below subtitle anchor
+        onEdit('hero.standardButtonsHorizontalAlign', 0 as any);
+        onEdit('hero.standardButtonsVerticalOffset', 16 as any);
+      }
+      if (socialNeedInit) {
+        // Initialize social links: left-aligned (0), below buttons with spacing
+        onEdit('hero.standardSocialLinksHorizontalAlign', 0 as any);
+        onEdit('hero.standardSocialLinksVerticalOffset', 90 as any);
+      }
+    }
+  }, [isFullwidthOverlay, absoluteTextBottom, hero?.standardButtonsHorizontalAlign, hero?.standardSocialLinksHorizontalAlign, onEdit]);
   
   // Track video container dimensions for cover behavior calculation
   // Re-run when video mode is active to ensure we measure after the container is rendered
@@ -1133,6 +943,13 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       setImageLoading(true);
     }
   }, [hero?.mediaType, hero?.video?.url, hero?.heroLargeImageUrl]);
+  
+  // Reset slide index when images change (e.g., after deletion) to prevent out-of-bounds
+  useEffect(() => {
+    if (heroImages.length > 0 && currentSlideIndex >= heroImages.length) {
+      setCurrentSlideIndex(0);
+    }
+  }, [heroImages.length, currentSlideIndex]);
   
   // Slideshow auto-advance effect
   useEffect(() => {
@@ -2431,10 +2248,14 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 ? { left: `${liveButtonsLeft}px`, top: `${liveButtonsTop}px` }
                 : getPositionStyle(align, verticalOffset, storedWidth, standardButtonsRef);
               
+              // Key based on anchor values forces re-render when anchors change
+              const positionKey = `btns-${Math.round(absoluteTextBottom)}-${Math.round(absoluteImageBottom)}`;
+              
               return (
                 <div className="mt-8 w-full relative" ref={standardButtonsRef} style={{ minHeight: '80px' }}>
                   {/* Draggable content */}
                   <div 
+                    key={positionKey}
                     ref={standardButtonsDraggableRef}
                     className={`absolute ${editable ? 'cursor-move' : ''} ${isDraggingStandardButtons ? '' : ''}`}
                     style={posStyle}
@@ -2562,10 +2383,30 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                   className={`inline-block relative ${editable ? 'cursor-pointer' : ''}`}
                   onClick={(e) => {
                     if (!editable) return;
-                    // Initialize positioning when clicked
-                    if (onEdit) {
-                      onEdit('hero.standardButtonsHorizontalAlign', 0 as any);
-                      onEdit('hero.standardButtonsVerticalOffset', 0 as any);
+                    // Calculate current position so buttons don't jump when enabling positioning
+                    if (onEdit && standardButtonsRef.current && standardButtonsDraggableRef.current && heroInnerContainerRef.current) {
+                      const containerRect = standardButtonsRef.current.getBoundingClientRect();
+                      const parentRect = heroInnerContainerRef.current.getBoundingClientRect();
+                      const elementRect = standardButtonsDraggableRef.current.getBoundingClientRect();
+                      
+                      // Calculate current left position as percentage of container width
+                      const currentLeft = elementRect.left - containerRect.left;
+                      const leftPercent = containerRect.width > 0 ? currentLeft / containerRect.width : 0;
+                      const clampedPercent = Math.max(0, Math.min(1, leftPercent));
+                      
+                      // Calculate current top position relative to anchor
+                      const currentTop = elementRect.top - containerRect.top;
+                      const buttonWidthPercent = containerRect.width > 0 ? elementRect.width / containerRect.width : 0.25;
+                      const buttonRightPercent = clampedPercent + buttonWidthPercent;
+                      const isInTextZone = buttonRightPercent < absoluteImageLeft;
+                      const absoluteAnchor = isInTextZone ? absoluteTextBottom : absoluteImageBottom;
+                      const containerTop = containerRect.top - parentRect.top;
+                      const containerRelativeAnchor = absoluteAnchor - containerTop;
+                      const relativeOffset = currentTop - containerRelativeAnchor;
+                      
+                      onEdit('hero.standardButtonsHorizontalAlign', clampedPercent as any);
+                      onEdit('hero.standardButtonsVerticalOffset', relativeOffset as any);
+                      onEdit('hero.standardButtonsWidthPercent', buttonWidthPercent as any);
                     }
                   }}
                 >
@@ -2640,9 +2481,13 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 ? { left: `${liveSocialLeft}px`, top: `${liveSocialTop}px` }
                 : getPositionStyle(align, verticalOffset, storedWidth, standardSocialRef);
               
+              // Key based on anchor values forces re-render when anchors change
+              const positionKey = `social-${Math.round(absoluteTextBottom)}-${Math.round(absoluteImageBottom)}`;
+              
               return (
                 <div className="mt-4 w-full relative" ref={standardSocialRef} style={{ minHeight: '50px' }}>
                   <div 
+                    key={positionKey}
                     ref={standardSocialDraggableRef}
                     className={`absolute ${editable ? 'cursor-move' : ''} ${isDraggingStandardSocial ? 'opacity-70' : ''}`}
                     style={posStyle}
@@ -2714,10 +2559,30 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     if (!editable) return;
                     if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
                     e.stopPropagation();
-                    // Initialize positioning when clicked (like buttons)
-                    if (onEdit) {
-                      onEdit('hero.standardSocialLinksHorizontalAlign', 0 as any);
-                      onEdit('hero.standardSocialLinksVerticalOffset', 0 as any);
+                    // Calculate current position so social links don't jump when enabling positioning
+                    if (onEdit && standardSocialRef.current && standardSocialDraggableRef.current && heroInnerContainerRef.current) {
+                      const containerRect = standardSocialRef.current.getBoundingClientRect();
+                      const parentRect = heroInnerContainerRef.current.getBoundingClientRect();
+                      const elementRect = standardSocialDraggableRef.current.getBoundingClientRect();
+                      
+                      // Calculate current left position as percentage of container width
+                      const currentLeft = elementRect.left - containerRect.left;
+                      const leftPercent = containerRect.width > 0 ? currentLeft / containerRect.width : 0;
+                      const clampedPercent = Math.max(0, Math.min(1, leftPercent));
+                      
+                      // Calculate current top position relative to anchor
+                      const currentTop = elementRect.top - containerRect.top;
+                      const elementWidthPercent = containerRect.width > 0 ? elementRect.width / containerRect.width : 0.15;
+                      const elementRightPercent = clampedPercent + elementWidthPercent;
+                      const isInTextZone = elementRightPercent < absoluteImageLeft;
+                      const absoluteAnchor = isInTextZone ? absoluteTextBottom : absoluteImageBottom;
+                      const containerTop = containerRect.top - parentRect.top;
+                      const containerRelativeAnchor = absoluteAnchor - containerTop;
+                      const relativeOffset = currentTop - containerRelativeAnchor;
+                      
+                      onEdit('hero.standardSocialLinksHorizontalAlign', clampedPercent as any);
+                      onEdit('hero.standardSocialLinksVerticalOffset', relativeOffset as any);
+                      onEdit('hero.standardSocialLinksWidthPercent', elementWidthPercent as any);
                     }
                   }}
                 >
@@ -2747,13 +2612,23 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
         </section>
         
         {/* Hero Image Editor Modal */}
-        {showImageEditor && editable && (
+        {editable && (
           <HeroImageEditor
+            isOpen={showImageEditor}
+            layoutStyle={hero?.layoutStyle || 'standard'}
+            onLayoutStyleChange={handleLayoutStyleChange}
+            overlayBlur={hero?.overlayBlur || false}
+            onOverlayBlurChange={handleOverlayBlurChange}
+            mediaType={hero?.mediaType || 'photo'}
+            onMediaTypeChange={handleMediaTypeChange}
             images={heroImages}
             slideshowInterval={slideshowInterval}
             onImagesChange={handleHeroImagesChange}
             onSlideshowIntervalChange={handleSlideshowIntervalChange}
             onAddImage={onHeroImageAddClick}
+            storage={imageStorage}
+            video={hero?.video}
+            onVideoChange={handleVideoChange}
             onClose={() => setShowImageEditor(false)}
           />
         )}
@@ -3367,13 +3242,23 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       </section>
       
       {/* Hero Image Editor Modal */}
-      {showImageEditor && editable && (
+      {editable && (
         <HeroImageEditor
+          isOpen={showImageEditor}
+          layoutStyle={hero?.layoutStyle || 'standard'}
+          onLayoutStyleChange={handleLayoutStyleChange}
+          overlayBlur={hero?.overlayBlur || false}
+          onOverlayBlurChange={handleOverlayBlurChange}
+          mediaType={hero?.mediaType || 'photo'}
+          onMediaTypeChange={handleMediaTypeChange}
           images={heroImages}
           slideshowInterval={slideshowInterval}
           onImagesChange={handleHeroImagesChange}
           onSlideshowIntervalChange={handleSlideshowIntervalChange}
           onAddImage={onHeroImageAddClick}
+          storage={imageStorage}
+          video={hero?.video}
+          onVideoChange={handleVideoChange}
           onClose={() => setShowImageEditor(false)}
         />
       )}

@@ -67,9 +67,14 @@ type Props = {
   onTextSizeChange?: (size: number) => void;
   onTextColorChange?: (color: string) => void;
   colorPalette?: ColorPalette;
+  /** Storage adapter for built-in image cropper */
+  imageStorage?: {
+    saveBlob: (key: string, blob: Blob, filename: string) => Promise<void>;
+    generateImageKey: (prefix?: string) => string;
+  };
 };
 
-const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, pages, currentPageSlug, isMultipage, editable, onEdit, isPreview, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, onTextSizeChange, onTextColorChange, colorPalette }) => {
+const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, footer, layout, pages, currentPageSlug, isMultipage, editable, onEdit, isPreview, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, onTextSizeChange, onTextColorChange, colorPalette, imageStorage }) => {
   const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [hidevLogoPopupOpen, setHidevLogoPopupOpen] = useState(false);
@@ -101,6 +106,12 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   const termsText = t('footer.termsAndConditions', 'Terms and Conditions');
   const rightsText = t('footer.allRightsReserved', 'All rights reserved');
   console.log(`🦶 [Footer] Variables:`, { privacyText, termsText, rightsText });
+  
+  // Backwards-compatible copyright text: use footer.copyrightText if defined, otherwise generate from businessName
+  const currentYear = new Date().getFullYear();
+  const displayCopyrightText = footer?.copyrightText !== undefined 
+    ? footer.copyrightText 
+    : `© ${currentYear} ${businessName || 'Local Business'}. ${rightsText}.`;
   
   // Convert string booleans to actual booleans (editor stores everything as strings)
   const showPrivacyPolicy = footer?.showPrivacyPolicy === true || footer?.showPrivacyPolicy === 'true';
@@ -371,7 +382,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                   fontSize: `${footer?.textSize || 1.0}rem`
                 }}
               >
-                {displayBusinessName || 'Business Name'}
+                {displayBusinessName || 'Logo Text'}
               </span>
             )}
             {/* Show placeholder when both are hidden */}
@@ -386,8 +397,11 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
               <button
                 key={link.id}
                 onClick={() => handleNavigation(link.id, link.isPage, link.slug)}
-                className={`footer-link text-gray-600 font-medium ${link.isActive ? 'underline' : ''}`}
-                style={{ fontSize: `${navLinkSize}rem` }}
+                className={`footer-link font-medium ${link.isActive ? 'underline' : ''}`}
+                style={{ 
+                  fontSize: `${navLinkSize}rem`,
+                  color: footer?.colors?.navText || '#4B5563'
+                }}
               >
                 {link.key}
               </button>
@@ -479,7 +493,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                   fontSize: `${footer?.textSize || 1.0}rem`
                 }}
               >
-                {displayBusinessName || 'Business Name'}
+                {displayBusinessName || 'Logo Text'}
               </span>
             )}
             {/* Show placeholder when both are hidden */}
@@ -498,8 +512,11 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
               <button
                 key={link.id}
                 onClick={() => handleNavigation(link.id, link.isPage, link.slug)}
-                className={`footer-link text-gray-600 font-medium ${link.isActive ? 'underline' : ''}`}
-                style={{ fontSize: `${navLinkSize}rem` }}
+                className={`footer-link font-medium ${link.isActive ? 'underline' : ''}`}
+                style={{ 
+                  fontSize: `${navLinkSize}rem`,
+                  color: footer?.colors?.navText || '#4B5563'
+                }}
               >
                 {link.key}
               </button>
@@ -570,22 +587,22 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
               </div>
             )}
 
-            {/* Copyright */}
+            {/* Copyright - editable text with default tied to business name for backwards compatibility */}
             <div className="text-center text-sm text-gray-500">
-              {'\u00A9'} {new Date().getFullYear()} <EditableText
-                value={displayBusinessName || 'Local Business'}
-                path="footer.brandText"
+              <EditableText
+                value={displayCopyrightText}
+                path="footer.copyrightText"
                 editable={editable}
                 onEdit={onEdit}
-                placeholder="Business Name"
-                textSize={footer?.copyrightTextSize || 0.875} // Default to sister site small text size
-                textSizePresets={[0.75, 0.875, 1.0, 1.125]} // Small text presets
-                textSizeNormal={0.875} // 14px - sister site small text size
+                placeholder={`© ${currentYear} ${businessName || 'Local Business'}. ${rightsText}.`}
+                textSize={footer?.copyrightTextSize || 0.875}
+                textSizePresets={[0.75, 0.875, 1.0, 1.125]}
+                textSizeNormal={0.875}
                 textSizeMin={0.625}
                 textSizeMax={1.5}
                 onTextSizeChange={onEdit ? (size: number) => onEdit('footer.copyrightTextSize', size.toString()) : undefined}
                 textSizeLabel="Copyright Text Size"
-              />. {rightsText}.
+              />
             </div>
           </div>
         </div>
@@ -645,6 +662,12 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
             }
           }}
           logoUrl={logoUrl}
+          storage={imageStorage}
+          onLogoChange={(logoKey) => {
+            if (onEdit) {
+              onEdit('logoUrl', logoKey);
+            }
+          }}
           showBusinessName={showBusinessName}
           onShowBusinessNameChange={(show) => {
             if (onShowBusinessNameChange) {

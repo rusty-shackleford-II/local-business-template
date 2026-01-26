@@ -131,6 +131,16 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
   const fontSize = buttonStyles.fontSize ?? 16;
   const fontWeight = buttonStyles.fontWeight ?? 600;
   
+  // Check if buttonStyles has any explicit customization (matches ButtonGridEditor logic)
+  const hasCustomStyles = buttonStyles && (
+    buttonStyles.paddingX !== undefined ||
+    buttonStyles.paddingY !== undefined ||
+    buttonStyles.borderRadius !== undefined ||
+    buttonStyles.fontSize !== undefined ||
+    buttonStyles.fontWeight !== undefined ||
+    buttonStyles.fontFamily !== undefined
+  );
+  
   // Pulse effect on open
   useEffect(() => {
     const timer = setTimeout(() => setShowPulse(false), 600);
@@ -198,18 +208,37 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
   };
   
   // Get button preview styles
+  // Must match ButtonGridEditor's customButtonStyle logic to show accurate preview
   const getPreviewStyle = (): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = {
-      width: `${paddingX * 2 + 100}px`,
+    // Match ButtonGridEditor's sizing logic:
+    // - Legacy mode (no custom styles): use padding-based natural sizing
+    // - Custom styles mode: use explicit width/height based on paddingX/paddingY
+    const baseStyle: React.CSSProperties = hasCustomStyles ? {
+      // Custom styles mode: explicit dimensions (matches ButtonGridEditor non-fluid custom mode)
+      minWidth: `${paddingX * 2 + 100}px`,
       height: `${paddingY * 2 + 20}px`,
+      padding: 0,
       borderRadius: `${borderRadius}px`,
       fontFamily: fontFamily || 'inherit',
       fontSize: `${fontSize}px`,
       fontWeight,
-      display: 'flex',
+      display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
       transition: 'all 0.2s ease',
+      boxSizing: 'border-box',
+    } : {
+      // Legacy mode: natural sizing with padding (matches ButtonGridEditor non-fluid legacy mode)
+      padding: '14px 32px',
+      borderRadius: '8px',
+      fontFamily: 'inherit',
+      fontSize: '16px',
+      fontWeight: 600,
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      transition: 'all 0.2s ease',
+      boxSizing: 'border-box',
     };
     
     switch (variant) {
@@ -242,414 +271,434 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/60 z-[9998]"
+        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div
         ref={popoverRef}
-        className="fixed z-[9999] bg-gray-900 rounded-xl shadow-2xl border border-gray-700 p-6"
+        className="fixed z-[9999] w-full max-w-lg bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '640px',
-          maxWidth: '95vw',
           maxHeight: '90vh',
-          overflowY: 'auto',
         }}
         onClick={stopClick}
         onMouseDown={stopClick}
       >
         {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-white font-semibold text-lg">Edit Button</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+              <ArrowRightIcon className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-white">Edit Button</h2>
+              <p className="text-xs text-gray-400 truncate max-w-[200px]">{button.label || 'Untitled Button'}</p>
+            </div>
+          </div>
           <div className="flex items-center gap-1">
             {/* Delete button - only show if there's more than one button */}
             {allButtons.length > 1 && !isLegacyButton && (
               <button
                 onClick={() => setShowDeleteConfirm(true)}
-                className="text-gray-400 hover:text-red-400 transition-colors p-1.5 rounded hover:bg-red-500/10"
+                className="p-1.5 rounded-lg hover:bg-red-500/10 transition-colors"
                 title="Delete this button"
               >
-                <TrashIcon className="h-5 w-5" />
+                <TrashIcon className="h-5 w-5 text-gray-400 hover:text-red-400" />
               </button>
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors p-1.5 rounded hover:bg-gray-800"
+              className="p-1.5 rounded-lg hover:bg-white/10 transition-colors"
             >
-              <XMarkIcon className="h-5 w-5" />
+              <XMarkIcon className="h-5 w-5 text-gray-400" />
             </button>
           </div>
         </div>
         
-        {/* Delete Confirmation */}
-        {showDeleteConfirm && (
-          <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <p className="text-red-400 text-sm font-medium mb-3">
-              Are you sure you want to delete this button?
-            </p>
-            <div className="flex gap-2">
+        {/* Content */}
+        <div className="p-5 space-y-5 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 140px)' }}>
+          {/* Delete Confirmation */}
+          {showDeleteConfirm && (
+            <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+              <p className="text-red-400 text-sm font-medium mb-3">
+                Are you sure you want to delete this button?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    // Remove this button from the array
+                    const updatedButtons = allButtons.filter((_, i) => i !== buttonIndex);
+                    onEdit('hero.ctaButtons', updatedButtons);
+                    onClose();
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
+                >
+                  Yes, Delete
+                </button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Subtitle explaining scope */}
+          {!showDeleteConfirm && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+              <svg className="w-4 h-4 flex-shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <p className="text-amber-400/90 text-xs">Editing only this button — not all buttons</p>
+            </div>
+          )}
+          
+          {/* Button Preview */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Preview</label>
+            <div 
+              className="flex justify-center items-center py-8 bg-gray-800/30 border border-white/5 rounded-xl"
+              style={{ minHeight: '100px' }}
+            >
               <button
-                onClick={() => {
-                  // Remove this button from the array
-                  const updatedButtons = allButtons.filter((_, i) => i !== buttonIndex);
-                  onEdit('hero.ctaButtons', updatedButtons);
-                  onClose();
+                className="shadow-lg select-none pointer-events-none"
+                style={{
+                  ...getPreviewStyle(),
+                  animation: showPulse ? 'pulse-highlight 0.6s ease-out' : undefined,
+                  boxShadow: showPulse ? '0 0 0 4px rgba(99, 102, 241, 0.5)' : undefined,
                 }}
-                className="flex-1 px-3 py-2 text-sm font-medium text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors"
               >
-                Yes, Delete
-              </button>
-              <button
-                onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-3 py-2 text-sm font-medium text-gray-300 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-              >
-                Cancel
+                {button.label || 'Button Text'}
+                {showArrow && <ArrowRightIcon className="ml-2 h-5 w-5" />}
               </button>
             </div>
           </div>
-        )}
         
-        {/* Subtitle explaining scope */}
-        {!showDeleteConfirm && (
-          <p className="text-amber-400/90 text-sm mb-5 flex items-center gap-2">
-            <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-            </svg>
-            Editing only this button — not all buttons
-          </p>
-        )}
-        
-        {/* Button Preview */}
-        <div 
-          className="mb-6 flex justify-center items-center py-8 bg-gray-800/50 rounded-lg"
-          style={{ minHeight: '100px' }}
-        >
-          <button
-            className="shadow-lg select-none pointer-events-none"
-            style={{
-              ...getPreviewStyle(),
-              animation: showPulse ? 'pulse-highlight 0.6s ease-out' : undefined,
-              boxShadow: showPulse ? '0 0 0 4px rgba(59, 130, 246, 0.5)' : undefined,
-            }}
-          >
-            {button.label || 'Button Text'}
-            {showArrow && <ArrowRightIcon className="ml-2 h-5 w-5" />}
-          </button>
-        </div>
-        
-        {/* Button Label */}
-        <div className="mb-5">
-          <label className="text-sm text-gray-300 block mb-2 font-medium">Button Label</label>
-          <input
-            type="text"
-            value={button.label || ''}
-            onChange={(e) => updateButton('label', e.target.value)}
-            className="w-full bg-gray-800 text-white text-sm px-3 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
-            placeholder="Enter button text"
-          />
-        </div>
-        
-        {/* Variant Selection */}
-        <div className="mb-5">
-          <label className="text-sm text-gray-300 block mb-2 font-medium">Button Style</label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['primary', 'secondary', 'outline'] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => updateButton('variant', v)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  variant === v 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700'
-                }`}
-              >
-                {v.charAt(0).toUpperCase() + v.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        {/* Action Type */}
-        <div className="mb-5">
-          <label className="text-sm text-gray-300 block mb-2 font-medium">Button Action</label>
-          <select
-            value={actionType}
-            onChange={(e) => updateButton('actionType', e.target.value)}
-            className="w-full bg-gray-800 text-white text-sm px-3 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
-          >
-            <option value="contact">Scroll to Contact Form</option>
-            <option value="external">Open External Link</option>
-            <option value="phone">Call Phone Number</option>
-          </select>
-        </div>
-        
-        {/* Conditional fields based on action type */}
-        {actionType === 'external' && (
-          <div className="mb-5">
-            <label className="text-sm text-gray-300 block mb-2 font-medium">Link URL</label>
+          {/* Button Label */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Button Label</label>
             <input
               type="text"
-              value={button.href || ''}
-              onChange={(e) => updateButton('href', e.target.value)}
-              className="w-full bg-gray-800 text-white text-sm px-3 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
-              placeholder="https://example.com or #section-id"
+              value={button.label || ''}
+              onChange={(e) => updateButton('label', e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+              placeholder="Enter button text"
             />
-            <p className="text-xs text-gray-500 mt-1">Use # for anchor links (e.g., #about) or full URLs for external sites</p>
-          </div>
-        )}
-        
-        {actionType === 'phone' && (
-          <div className="mb-5">
-            <label className="text-sm text-gray-300 block mb-2 font-medium">Phone Number</label>
-            <input
-              type="tel"
-              value={button.phoneNumber || ''}
-              onChange={(e) => updateButton('phoneNumber', e.target.value)}
-              className="w-full bg-gray-800 text-white text-sm px-3 py-2.5 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none"
-              placeholder="+1 (555) 123-4567"
-            />
-          </div>
-        )}
-        
-        {/* Show Arrow Toggle */}
-        <div className="mb-5 flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
-          <div>
-            <label className="text-sm text-gray-300 font-medium">Show Arrow Icon</label>
-            <p className="text-xs text-gray-500">Display → arrow after button text</p>
-          </div>
-          <button
-            onClick={() => updateButton('showArrow', !showArrow)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${showArrow ? 'bg-blue-500' : 'bg-gray-700'}`}
-          >
-            <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${showArrow ? 'translate-x-6' : ''}`} />
-          </button>
-        </div>
-        
-        {/* Color Pickers Row */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Background Color */}
-          <div 
-            className={`p-3 rounded-lg transition-all ${focusedColorField === 'background' ? 'bg-blue-500/10 ring-2 ring-blue-500/50' : 'bg-gray-800/30'}`}
-            onClick={() => setFocusedColorField('background')}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <label className={`text-sm font-medium ${focusedColorField === 'background' ? 'text-blue-400' : 'text-gray-300'}`}>
-                Background {focusedColorField === 'background' && <span className="text-xs opacity-60">●</span>}
-              </label>
-              <div className="flex gap-1">
-                <button
-                  onClick={(e) => { e.stopPropagation(); setBgColorMode('hex'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'hex' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
-                >
-                  HEX
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setBgColorMode('rgba'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'rgba' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
-                >
-                  RGBA
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="color"
-                value={rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
-                onChange={(e) => {
-                  const { r, g, b } = parseColor(e.target.value);
-                  if (bgColorMode === 'rgba') {
-                    updateButton('backgroundColor', toRgbaString(r, g, b, bgParsed.a));
-                  } else {
-                    updateButton('backgroundColor', e.target.value);
-                  }
-                }}
-                onFocus={() => setFocusedColorField('background')}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-600 hover:border-gray-500 transition-colors flex-shrink-0"
-                style={{ backgroundColor }}
-              />
-              {bgColorMode === 'hex' ? (
-                <input
-                  type="text"
-                  value={backgroundColor.startsWith('#') ? backgroundColor : rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
-                  onChange={(e) => updateButton('backgroundColor', e.target.value)}
-                  onFocus={() => setFocusedColorField('background')}
-                  className="flex-1 bg-gray-800 text-white text-sm px-2 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none font-mono text-xs"
-                  placeholder="#000000"
-                />
-              ) : (
-                <div className="flex-1 grid grid-cols-4 gap-1">
-                  <input type="number" min="0" max="255" value={bgParsed.r}
-                    onChange={(e) => updateButton('backgroundColor', toRgbaString(parseInt(e.target.value) || 0, bgParsed.g, bgParsed.b, bgParsed.a))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Red (0-255)"
-                  />
-                  <input type="number" min="0" max="255" value={bgParsed.g}
-                    onChange={(e) => updateButton('backgroundColor', toRgbaString(bgParsed.r, parseInt(e.target.value) || 0, bgParsed.b, bgParsed.a))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Green (0-255)"
-                  />
-                  <input type="number" min="0" max="255" value={bgParsed.b}
-                    onChange={(e) => updateButton('backgroundColor', toRgbaString(bgParsed.r, bgParsed.g, parseInt(e.target.value) || 0, bgParsed.a))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Blue (0-255)"
-                  />
-                  <input type="number" min="0" max="1" step="0.01" value={bgParsed.a.toFixed(2)}
-                    onChange={(e) => updateButton('backgroundColor', toRgbaString(bgParsed.r, bgParsed.g, bgParsed.b, parseFloat(e.target.value) || 0))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Alpha (0-1)"
-                  />
-                </div>
-              )}
-            </div>
-            
-            {/* Clear to use global color */}
-            {button.backgroundColor && (
-              <button
-                onClick={() => updateButton('backgroundColor', undefined)}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                Reset to global color
-              </button>
-            )}
           </div>
           
-          {/* Text Color */}
-          <div 
-            className={`p-3 rounded-lg transition-all ${focusedColorField === 'text' ? 'bg-blue-500/10 ring-2 ring-blue-500/50' : 'bg-gray-800/30'}`}
-            onClick={() => setFocusedColorField('text')}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <label className={`text-sm font-medium ${focusedColorField === 'text' ? 'text-blue-400' : 'text-gray-300'}`}>
-                Text {focusedColorField === 'text' && <span className="text-xs opacity-60">●</span>}
-              </label>
-              <div className="flex gap-1">
+          {/* Variant Selection */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Button Style</label>
+            <div className="grid grid-cols-3 gap-2">
+              {(['primary', 'secondary', 'outline'] as const).map((v) => (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setTextColorMode('hex'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'hex' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  key={v}
+                  onClick={() => updateButton('variant', v)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    variant === v 
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25' 
+                      : 'bg-gray-800/50 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10'
+                  }`}
                 >
-                  HEX
+                  {v.charAt(0).toUpperCase() + v.slice(1)}
                 </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setTextColorMode('rgba'); }}
-                  className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'rgba' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
-                >
-                  RGBA
-                </button>
-              </div>
+              ))}
             </div>
-            
-            <div className="flex items-center gap-2 mb-2">
+          </div>
+          
+          {/* Action Type */}
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Button Action</label>
+            <select
+              value={actionType}
+              onChange={(e) => updateButton('actionType', e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+            >
+              <option value="contact">Scroll to Contact Form</option>
+              <option value="external">Open External Link</option>
+              <option value="phone">Call Phone Number</option>
+            </select>
+          </div>
+          
+          {/* Conditional fields based on action type */}
+          {actionType === 'external' && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Link URL</label>
               <input
-                type="color"
-                value={rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
-                onChange={(e) => {
-                  const { r, g, b } = parseColor(e.target.value);
-                  if (textColorMode === 'rgba') {
-                    updateButton('textColor', toRgbaString(r, g, b, textParsed.a));
-                  } else {
-                    updateButton('textColor', e.target.value);
-                  }
-                }}
-                onFocus={() => setFocusedColorField('text')}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-gray-600 hover:border-gray-500 transition-colors flex-shrink-0"
-                style={{ backgroundColor: textColor }}
+                type="text"
+                value={button.href || ''}
+                onChange={(e) => updateButton('href', e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                placeholder="https://example.com or #section-id"
               />
-              {textColorMode === 'hex' ? (
-                <input
-                  type="text"
-                  value={textColor.startsWith('#') ? textColor : rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
-                  onChange={(e) => updateButton('textColor', e.target.value)}
-                  onFocus={() => setFocusedColorField('text')}
-                  className="flex-1 bg-gray-800 text-white text-sm px-2 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none font-mono text-xs"
-                  placeholder="#ffffff"
-                />
-              ) : (
-                <div className="flex-1 grid grid-cols-4 gap-1">
-                  <input type="number" min="0" max="255" value={textParsed.r}
-                    onChange={(e) => updateButton('textColor', toRgbaString(parseInt(e.target.value) || 0, textParsed.g, textParsed.b, textParsed.a))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Red (0-255)"
-                  />
-                  <input type="number" min="0" max="255" value={textParsed.g}
-                    onChange={(e) => updateButton('textColor', toRgbaString(textParsed.r, parseInt(e.target.value) || 0, textParsed.b, textParsed.a))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Green (0-255)"
-                  />
-                  <input type="number" min="0" max="255" value={textParsed.b}
-                    onChange={(e) => updateButton('textColor', toRgbaString(textParsed.r, textParsed.g, parseInt(e.target.value) || 0, textParsed.a))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Blue (0-255)"
-                  />
-                  <input type="number" min="0" max="1" step="0.01" value={textParsed.a.toFixed(2)}
-                    onChange={(e) => updateButton('textColor', toRgbaString(textParsed.r, textParsed.g, textParsed.b, parseFloat(e.target.value) || 0))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800 text-white text-center text-xs py-1.5 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                    title="Alpha (0-1)"
-                  />
+              <p className="text-xs text-gray-500">Use # for anchor links (e.g., #about) or full URLs for external sites</p>
+            </div>
+          )}
+          
+          {actionType === 'phone' && (
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Phone Number</label>
+              <input
+                type="tel"
+                value={button.phoneNumber || ''}
+                onChange={(e) => updateButton('phoneNumber', e.target.value)}
+                className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all"
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+          )}
+          
+          {/* Show Arrow Toggle */}
+          <div className="flex items-center justify-between p-4 bg-gray-800/50 border border-white/5 rounded-xl">
+            <div>
+              <label className="text-xs font-medium text-gray-300 uppercase tracking-wider">Show Arrow Icon</label>
+              <p className="text-xs text-gray-500 mt-0.5">Display → arrow after button text</p>
+            </div>
+            <button
+              onClick={() => updateButton('showArrow', !showArrow)}
+              className={`relative w-12 h-6 rounded-full transition-colors ${showArrow ? 'bg-gradient-to-r from-indigo-500 to-purple-600' : 'bg-gray-700'}`}
+            >
+              <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${showArrow ? 'translate-x-6' : ''}`} />
+            </button>
+          </div>
+        
+          {/* Color Pickers Row */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Background Color */}
+            <div 
+              className={`p-3 rounded-xl transition-all cursor-pointer ${focusedColorField === 'background' ? 'bg-indigo-500/10 ring-2 ring-indigo-500/50' : 'bg-gray-800/50 border border-white/5'}`}
+              onClick={() => setFocusedColorField('background')}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <label className={`text-xs font-medium uppercase tracking-wider ${focusedColorField === 'background' ? 'text-indigo-400' : 'text-gray-300'}`}>
+                  Background {focusedColorField === 'background' && <span className="text-xs opacity-60">●</span>}
+                </label>
+                <div className="flex gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setBgColorMode('hex'); }}
+                    className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'hex' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  >
+                    HEX
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setBgColorMode('rgba'); }}
+                    className={`px-2 py-0.5 text-[10px] rounded ${bgColorMode === 'rgba' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  >
+                    RGBA
+                  </button>
                 </div>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="color"
+                  value={rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
+                  onChange={(e) => {
+                    const { r, g, b } = parseColor(e.target.value);
+                    if (bgColorMode === 'rgba') {
+                      updateButton('backgroundColor', toRgbaString(r, g, b, bgParsed.a));
+                    } else {
+                      updateButton('backgroundColor', e.target.value);
+                    }
+                  }}
+                  onFocus={() => setFocusedColorField('background')}
+                  className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
+                  style={{ backgroundColor }}
+                />
+                {bgColorMode === 'hex' ? (
+                  <input
+                    type="text"
+                    value={backgroundColor.startsWith('#') ? backgroundColor : rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
+                    onChange={(e) => updateButton('backgroundColor', e.target.value)}
+                    onFocus={() => setFocusedColorField('background')}
+                    className="flex-1 bg-gray-800/50 text-white text-xs px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono"
+                    placeholder="#000000"
+                  />
+                ) : (
+                  <div className="flex-1 grid grid-cols-4 gap-1">
+                    <input type="number" min="0" max="255" value={bgParsed.r}
+                      onChange={(e) => updateButton('backgroundColor', toRgbaString(parseInt(e.target.value) || 0, bgParsed.g, bgParsed.b, bgParsed.a))}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Red (0-255)"
+                    />
+                    <input type="number" min="0" max="255" value={bgParsed.g}
+                      onChange={(e) => updateButton('backgroundColor', toRgbaString(bgParsed.r, parseInt(e.target.value) || 0, bgParsed.b, bgParsed.a))}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Green (0-255)"
+                    />
+                    <input type="number" min="0" max="255" value={bgParsed.b}
+                      onChange={(e) => updateButton('backgroundColor', toRgbaString(bgParsed.r, bgParsed.g, parseInt(e.target.value) || 0, bgParsed.a))}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Blue (0-255)"
+                    />
+                    <input type="number" min="0" max="1" step="0.01" value={bgParsed.a.toFixed(2)}
+                      onChange={(e) => updateButton('backgroundColor', toRgbaString(bgParsed.r, bgParsed.g, bgParsed.b, parseFloat(e.target.value) || 0))}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Alpha (0-1)"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Clear to use global color */}
+              {button.backgroundColor && (
+                <button
+                  onClick={() => updateButton('backgroundColor', undefined)}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  Reset to global color
+                </button>
               )}
             </div>
             
-            {/* Clear to use global color */}
-            {button.textColor && (
-              <button
-                onClick={() => updateButton('textColor', undefined)}
-                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-              >
-                Reset to global color
-              </button>
-            )}
+            {/* Text Color */}
+            <div 
+              className={`p-3 rounded-xl transition-all cursor-pointer ${focusedColorField === 'text' ? 'bg-indigo-500/10 ring-2 ring-indigo-500/50' : 'bg-gray-800/50 border border-white/5'}`}
+              onClick={() => setFocusedColorField('text')}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <label className={`text-xs font-medium uppercase tracking-wider ${focusedColorField === 'text' ? 'text-indigo-400' : 'text-gray-300'}`}>
+                  Text {focusedColorField === 'text' && <span className="text-xs opacity-60">●</span>}
+                </label>
+                <div className="flex gap-1">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setTextColorMode('hex'); }}
+                    className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'hex' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  >
+                    HEX
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setTextColorMode('rgba'); }}
+                    className={`px-2 py-0.5 text-[10px] rounded ${textColorMode === 'rgba' ? 'bg-indigo-500 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'}`}
+                  >
+                    RGBA
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="color"
+                  value={rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
+                  onChange={(e) => {
+                    const { r, g, b } = parseColor(e.target.value);
+                    if (textColorMode === 'rgba') {
+                      updateButton('textColor', toRgbaString(r, g, b, textParsed.a));
+                    } else {
+                      updateButton('textColor', e.target.value);
+                    }
+                  }}
+                  onFocus={() => setFocusedColorField('text')}
+                  className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
+                  style={{ backgroundColor: textColor }}
+                />
+                {textColorMode === 'hex' ? (
+                  <input
+                    type="text"
+                    value={textColor.startsWith('#') ? textColor : rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
+                    onChange={(e) => updateButton('textColor', e.target.value)}
+                    onFocus={() => setFocusedColorField('text')}
+                    className="flex-1 bg-gray-800/50 text-white text-xs px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono"
+                    placeholder="#ffffff"
+                  />
+                ) : (
+                  <div className="flex-1 grid grid-cols-4 gap-1">
+                    <input type="number" min="0" max="255" value={textParsed.r}
+                      onChange={(e) => updateButton('textColor', toRgbaString(parseInt(e.target.value) || 0, textParsed.g, textParsed.b, textParsed.a))}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Red (0-255)"
+                    />
+                    <input type="number" min="0" max="255" value={textParsed.g}
+                      onChange={(e) => updateButton('textColor', toRgbaString(textParsed.r, parseInt(e.target.value) || 0, textParsed.b, textParsed.a))}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Green (0-255)"
+                    />
+                    <input type="number" min="0" max="255" value={textParsed.b}
+                      onChange={(e) => updateButton('textColor', toRgbaString(textParsed.r, textParsed.g, parseInt(e.target.value) || 0, textParsed.a))}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Blue (0-255)"
+                    />
+                    <input type="number" min="0" max="1" step="0.01" value={textParsed.a.toFixed(2)}
+                      onChange={(e) => updateButton('textColor', toRgbaString(textParsed.r, textParsed.g, textParsed.b, parseFloat(e.target.value) || 0))}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Alpha (0-1)"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              {/* Clear to use global color */}
+              {button.textColor && (
+                <button
+                  onClick={() => updateButton('textColor', undefined)}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                >
+                  Reset to global color
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {/* Preset Colors */}
+          <div className="p-4 bg-gray-800/50 border border-white/5 rounded-xl">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-medium text-gray-300 uppercase tracking-wider">
+                Presets → <span className="text-indigo-400">{focusedColorField === 'background' ? 'Background' : 'Text'}</span>
+              </span>
+              <span className="text-xs text-gray-500">Click to apply</span>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {presetColors.map((preset, i) => (
+                <button
+                  key={i}
+                  onClick={() => applyPresetColor(preset.color)}
+                  className="w-8 h-8 rounded-lg border-2 border-white/20 hover:border-white hover:scale-110 transition-all relative group"
+                  style={{ 
+                    backgroundColor: preset.color,
+                    boxShadow: preset.color === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' : undefined,
+                  }}
+                  title={`${preset.label}: ${preset.color}`}
+                >
+                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                    {preset.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         
-        {/* Preset Colors */}
-        <div className="mb-5 p-3 bg-gray-800/30 rounded-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-gray-400">
-              Presets → <span className="text-blue-400">{focusedColorField === 'background' ? 'Background' : 'Text'}</span>
-            </span>
-            <span className="text-xs text-gray-500">Click to apply</span>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            {presetColors.map((preset, i) => (
-              <button
-                key={i}
-                onClick={() => applyPresetColor(preset.color)}
-                className="w-8 h-8 rounded-md border-2 border-gray-600 hover:border-white hover:scale-110 transition-all relative group"
-                style={{ 
-                  backgroundColor: preset.color,
-                  boxShadow: preset.color === '#ffffff' ? 'inset 0 0 0 1px rgba(0,0,0,0.1)' : undefined,
-                }}
-                title={`${preset.label}: ${preset.color}`}
-              >
-                <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  {preset.label}
-                </span>
-              </button>
-            ))}
-          </div>
+        {/* Footer */}
+        <div className="flex items-center justify-end px-5 py-4 border-t border-white/10 bg-black/20">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 rounded-lg shadow-lg shadow-indigo-500/25 transition-all"
+          >
+            Done
+          </button>
         </div>
-        
       </div>
       
       {/* Pulse animation keyframes */}
       <style>{`
         @keyframes pulse-highlight {
-          0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-          50% { box-shadow: 0 0 0 12px rgba(59, 130, 246, 0); }
-          100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+          0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7); }
+          50% { box-shadow: 0 0 0 12px rgba(99, 102, 241, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
         }
       `}</style>
     </>

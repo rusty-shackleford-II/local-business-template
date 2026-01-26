@@ -36,6 +36,11 @@ export type SiteData = SiteDataType & {
   // Benefits inline editing
   onDeleteBenefit?: (index: number) => void;
   onAddBenefit?: (afterIndex?: number) => void;
+  // Storage adapter for built-in image cropper
+  imageStorage?: {
+    saveBlob: (key: string, blob: Blob, filename: string) => Promise<void>;
+    generateImageKey: (prefix?: string) => string;
+  };
 };
 
 // Type for any section data
@@ -359,6 +364,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
             }
           } : undefined}
           onHeroImageClick={site.onHeroImageClick}
+          imageStorage={site.imageStorage}
           colorPalette={site.colorPalette}
           sectionId={customSectionId}
           socialLinks={site.socialLinks}
@@ -524,6 +530,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         onBusinessNameColorChange={site.onEdit ? (color: string) => site.onEdit!('header.colors.businessNameColor', color) : undefined}
         onLogoClick={site.onLogoClick}
         colorPalette={site.colorPalette}
+        imageStorage={site.imageStorage}
       />
       <main>
         {normalizedSections.filter(s => s.enabled).map((sectionConfig, index) => 
@@ -542,6 +549,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
         onEdit={site.onEdit}
         isPreview={site.isPreview}
         colorPalette={site.colorPalette}
+        imageStorage={site.imageStorage}
       />
     </div>
   );
