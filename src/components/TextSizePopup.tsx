@@ -49,7 +49,7 @@ type TextSizePopupProps = {
   onClose: () => void;
   textSize: number;
   onTextSizeChange: (size: number) => void;
-  targetElement?: HTMLElement | null; // Kept for API compatibility
+  targetElement?: HTMLElement | null; // Used for smart positioning
   label?: string;
   presetSizes?: number[];
   normalSize?: number;
@@ -81,6 +81,7 @@ export default function TextSizePopup({
   onClose,
   textSize,
   onTextSizeChange,
+  targetElement,
   label = "Text Style",
   presetSizes = [0.75, 1.0, 1.25, 1.5],
   normalSize = 1.0,
@@ -126,6 +127,7 @@ export default function TextSizePopup({
       icon={<TextStyleIcon />}
       width="sm"
       backdropOpacity={0}
+      targetElement={targetElement}
     >
       {/* Font Size Slider */}
       <EditorSlider

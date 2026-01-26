@@ -1092,6 +1092,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
               buttonStyles={buttonStyles}
               isLegacyButton={isLegacyButton}
               allButtons={buttons}
+              targetElement={null} // Mobile doesn't need smart positioning - use centered
             />
           );
         })()}
@@ -1192,6 +1193,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
           onBackgroundColorChange={(color) => onEdit?.('hero.colors.ctaBackground', color)}
           onTextColorChange={(color) => onEdit?.('hero.colors.ctaText', color)}
           colorPalette={colorPalette}
+          targetElement={gridRef.current}
         />
       )}
       
@@ -1205,6 +1207,9 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
         // Legacy buttons have id 'legacy-cta' and ctaButtons array is empty/undefined
         const isLegacyButton = editingButton.id === 'legacy-cta' && (!ctaButtons || ctaButtons.length === 0);
         
+        // Get the button element for smart positioning
+        const buttonElement = buttonRefsMap.current.get(editingButtonId) || null;
+        
         return (
           <SingleButtonEditor
             button={editingButton}
@@ -1217,6 +1222,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             buttonStyles={buttonStyles}
             isLegacyButton={isLegacyButton}
             allButtons={buttons}
+            targetElement={buttonElement}
           />
         );
       })()}

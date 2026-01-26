@@ -20,6 +20,7 @@ const FooterStyleIcon = () => (
 type FooterStylePopupProps = {
   isOpen: boolean;
   onClose: () => void;
+  targetElement?: HTMLElement | null; // Used for smart positioning
   // Footer background color
   footerColor?: string;
   onFooterColorChange?: (color: string) => void;
@@ -42,6 +43,7 @@ type FooterStylePopupProps = {
 export default function FooterStylePopup({
   isOpen,
   onClose,
+  targetElement,
   footerColor = '#ffffff',
   onFooterColorChange,
   navLinkSize = 1.0,
@@ -82,6 +84,7 @@ export default function FooterStylePopup({
       icon={<FooterStyleIcon />}
       width="md"
       backdropOpacity={0}
+      targetElement={targetElement}
     >
       {/* Footer Background Color */}
       {onFooterColorChange && (

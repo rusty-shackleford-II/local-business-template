@@ -85,7 +85,77 @@ type SingleButtonEditorProps = {
   buttonStyles?: ButtonStyles;
   isLegacyButton?: boolean; // True if this button uses legacy hero.cta format
   allButtons?: HeroCtaButton[]; // All buttons (for migration purposes)
+  targetElement?: HTMLElement | null; // Used for smart positioning
 };
+
+// Smart positioning constants
+const MODAL_WIDTH = 440;
+const PADDING = 16;
+
+/**
+ * Calculate the best position for the modal relative to a target element.
+ */
+function calculateSmartPosition(
+  targetRect: DOMRect,
+  modalHeight: number
+): { top: number; left: number } | null {
+  const viewport = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+  };
+  
+  const spaceAbove = targetRect.top - PADDING;
+  const spaceBelow = viewport.height - targetRect.bottom - PADDING;
+  const spaceLeft = targetRect.left - PADDING;
+  const spaceRight = viewport.width - targetRect.right - PADDING;
+  
+  const fitsAbove = spaceAbove >= modalHeight + PADDING;
+  const fitsBelow = spaceBelow >= modalHeight + PADDING;
+  const fitsLeft = spaceLeft >= MODAL_WIDTH + PADDING;
+  const fitsRight = spaceRight >= MODAL_WIDTH + PADDING;
+  
+  const centerHorizontally = () => {
+    const targetCenterX = targetRect.left + targetRect.width / 2;
+    let left = targetCenterX - MODAL_WIDTH / 2;
+    return Math.max(PADDING, Math.min(viewport.width - MODAL_WIDTH - PADDING, left));
+  };
+  
+  const centerVertically = () => {
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+    let top = targetCenterY - modalHeight / 2;
+    return Math.max(PADDING, Math.min(viewport.height - modalHeight - PADDING, top));
+  };
+  
+  // Prefer below, then above, then right, then left
+  if (fitsBelow) {
+    return { top: targetRect.bottom + PADDING, left: centerHorizontally() };
+  }
+  if (fitsAbove) {
+    return { top: targetRect.top - modalHeight - PADDING, left: centerHorizontally() };
+  }
+  if (fitsRight) {
+    return { top: centerVertically(), left: targetRect.right + PADDING };
+  }
+  if (fitsLeft) {
+    return { top: centerVertically(), left: targetRect.left - MODAL_WIDTH - PADDING };
+  }
+  
+  // Fallback: position with most space
+  const spaces = [
+    { space: spaceBelow, getPos: () => ({ top: targetRect.bottom + PADDING, left: centerHorizontally() }) },
+    { space: spaceAbove, getPos: () => ({ top: Math.max(PADDING, targetRect.top - modalHeight - PADDING), left: centerHorizontally() }) },
+    { space: spaceRight, getPos: () => ({ top: centerVertically(), left: targetRect.right + PADDING }) },
+    { space: spaceLeft, getPos: () => ({ top: centerVertically(), left: Math.max(PADDING, targetRect.left - MODAL_WIDTH - PADDING) }) },
+  ];
+  
+  const best = spaces.sort((a, b) => b.space - a.space)[0];
+  const pos = best.getPos();
+  
+  return {
+    top: Math.max(PADDING, Math.min(viewport.height - modalHeight - PADDING, pos.top)),
+    left: Math.max(PADDING, Math.min(viewport.width - MODAL_WIDTH - PADDING, pos.left)),
+  };
+}
 
 const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
   button,
@@ -98,8 +168,27 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
   buttonStyles = {},
   isLegacyButton = false,
   allButtons = [],
+  targetElement,
 }) => {
   const popoverRef = useRef<HTMLDivElement>(null);
+  
+  // Smart positioning state
+  const [smartPosition, setSmartPosition] = useState<{ top: number; left: number } | null>(null);
+  
+  // Calculate position when modal opens or target changes
+  useEffect(() => {
+    if (targetElement) {
+      const timer = setTimeout(() => {
+        const targetRect = targetElement.getBoundingClientRect();
+        const modalHeight = popoverRef.current?.offsetHeight || 600;
+        const pos = calculateSmartPosition(targetRect, modalHeight);
+        setSmartPosition(pos);
+      }, 0);
+      return () => clearTimeout(timer);
+    } else {
+      setSmartPosition(null);
+    }
+  }, [targetElement]);
   
   // Button state - with defaults from global or button-specific values
   const backgroundColor = button.backgroundColor || defaultCtaBg;
@@ -269,20 +358,22 @@ const SingleButtonEditor: React.FC<SingleButtonEditorProps> = ({
   // Modal content
   const modalContent = (
     <>
-      {/* Backdrop */}
+      {/* Click catcher (invisible - no darkening) */}
       <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
+        className="fixed inset-0 z-[9998]"
         onClick={onClose}
       />
       
       {/* Modal */}
       <div
         ref={popoverRef}
-        className="fixed z-[9999] w-full max-w-lg bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="fixed z-[9999] bg-gradient-to-b from-gray-900 to-gray-950 rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         style={{
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          top: smartPosition ? `${smartPosition.top}px` : '50%',
+          left: smartPosition ? `${smartPosition.left}px` : '50%',
+          transform: smartPosition ? 'none' : 'translate(-50%, -50%)',
+          width: `${MODAL_WIDTH}px`,
+          maxWidth: '95vw',
           maxHeight: '90vh',
         }}
         onClick={stopClick}

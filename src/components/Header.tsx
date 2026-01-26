@@ -789,6 +789,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         <HeaderStylePopup
           isOpen={headerStylePopupOpen}
           onClose={() => setHeaderStylePopupOpen(false)}
+          targetElement={headerRef.current}
           headerColor={header?.colors?.background || 'rgba(255, 255, 255, 0.95)'}
           onHeaderColorChange={onHeaderColorChange ? onHeaderColorChange : (color) => {
             if (onEdit) {

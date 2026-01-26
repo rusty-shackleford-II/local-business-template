@@ -3069,7 +3069,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showFontPicker={true}
                   />
                   {/* Legacy mode: render buttons inline with text (grouped as visual unit) */}
-                  {isLegacyFullwidthLayout && (
+                  {/* On mobile, buttons go to the bottom via floating container instead */}
+                  {isLegacyFullwidthLayout && !isMobile && (
                     <div className="flex flex-col items-center">
                       <ButtonGridEditor
                         buttons={ctaButtons}
@@ -3089,7 +3090,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                         buttonStyles={hero?.buttonStyles}
                         onButtonStylesChange={handleButtonStylesChange}
                       />
-                      {/* Social links for legacy layout (mobile and desktop) */}
+                      {/* Social links for legacy layout (desktop only - mobile goes to floating container) */}
                       {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
                         <div 
                           className={`mt-6 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-white/50 cursor-pointer' : ''}`}
@@ -3128,11 +3129,11 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 </div>
               )}
               
-              {/* Floating CTA Buttons - positioned separately (only for non-legacy layouts) */}
-              {/* Legacy layouts render buttons inline with the text above */}
-              {/* On mobile: static positioning at bottom with proper padding */}
-              {/* On desktop: absolute positioning with drag support */}
-              {!isLegacyFullwidthLayout && (
+              {/* Floating CTA Buttons - positioned separately */}
+              {/* On desktop non-legacy: absolute positioning with drag support */}
+              {/* On desktop legacy: buttons rendered inline above (not here) */}
+              {/* On mobile (all layouts): static positioning at bottom with mt-auto */}
+              {(!isLegacyFullwidthLayout || isMobile) && (
                 <div 
                   ref={buttonsFloatingRef}
                   className={`z-30 overflow-visible ${

@@ -174,9 +174,9 @@ const EventButtonEditor: React.FC<EventButtonEditorProps> = ({
   // Modal content
   const modalContent = (
     <>
-      {/* Backdrop */}
+      {/* Click catcher (invisible - no darkening) */}
       <div 
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998]"
+        className="fixed inset-0 z-[9998]"
         onClick={onClose}
       />
       

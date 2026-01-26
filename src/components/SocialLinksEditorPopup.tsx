@@ -25,7 +25,7 @@ interface SocialLinksEditorPopupProps {
   onClose: () => void;
   socialLinks?: SocialLinksConfig;
   onEdit?: (path: string, value: any) => void;
-  targetElement?: HTMLElement | null; // Kept for API compatibility
+  targetElement?: HTMLElement | null; // Used for smart positioning
 }
 
 // Icon for the modal header
@@ -58,6 +58,7 @@ const SocialLinksEditorPopup: React.FC<SocialLinksEditorPopupProps> = ({
   onClose, 
   socialLinks, 
   onEdit,
+  targetElement,
 }) => {
   // Local state for form values (synced with props)
   const [localHeroIconSize, setLocalHeroIconSize] = useState(socialLinks?.heroSocialIconSize ?? 1.0);
@@ -119,6 +120,7 @@ const SocialLinksEditorPopup: React.FC<SocialLinksEditorPopupProps> = ({
       icon={<SocialIcon />}
       width="lg"
       backdropOpacity={0}
+      targetElement={targetElement}
     >
       {/* Show in Hero Toggle + Size */}
       <div className="space-y-2">

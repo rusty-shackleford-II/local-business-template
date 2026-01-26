@@ -580,7 +580,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
               <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
                 {showPrivacyPolicy && (
                   <button
-                    onClick={() => setPrivacyModalOpen(true)}
+                    onClick={(e) => { e.stopPropagation(); setPrivacyModalOpen(true); }}
                     className="text-gray-600 hover:text-gray-900 underline transition-colors"
                   >
                     {privacyText}
@@ -591,7 +591,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                 )}
                 {showTermsAndConditions && (
                   <button
-                    onClick={() => setTermsModalOpen(true)}
+                    onClick={(e) => { e.stopPropagation(); setTermsModalOpen(true); }}
                     className="text-gray-600 hover:text-gray-900 underline transition-colors"
                   >
                     {termsText}
@@ -722,6 +722,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         <FooterStylePopup
           isOpen={footerStylePopupOpen}
           onClose={() => setFooterStylePopupOpen(false)}
+          targetElement={footerRef.current}
           footerColor={footer?.colors?.background || '#ffffff'}
           onFooterColorChange={(color) => {
             if (onEdit) {

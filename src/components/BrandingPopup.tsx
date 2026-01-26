@@ -25,7 +25,7 @@ const BrandingIcon = () => (
 type BrandingPopupProps = {
   isOpen: boolean;
   onClose: () => void;
-  targetElement?: HTMLElement | null; // Kept for API compatibility, but modal is now centered + draggable
+  targetElement?: HTMLElement | null; // Used for smart positioning
   location: 'header' | 'footer';
   // Logo toggle
   showLogo: boolean;
@@ -57,6 +57,7 @@ type BrandingPopupProps = {
 export default function BrandingPopup({
   isOpen,
   onClose,
+  targetElement,
   location,
   showLogo,
   onShowLogoChange,
@@ -125,6 +126,7 @@ export default function BrandingPopup({
       icon={<BrandingIcon />}
       width="md"
       backdropOpacity={0}
+      targetElement={targetElement}
     >
       {/* Logo Section */}
       <div className="space-y-3">

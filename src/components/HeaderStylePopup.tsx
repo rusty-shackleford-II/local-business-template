@@ -19,6 +19,7 @@ const HeaderStyleIcon = () => (
 type HeaderStylePopupProps = {
   isOpen: boolean;
   onClose: () => void;
+  targetElement?: HTMLElement | null; // Used for smart positioning
   // Header background color
   headerColor?: string;
   onHeaderColorChange?: (color: string) => void;
@@ -35,6 +36,7 @@ type HeaderStylePopupProps = {
 export default function HeaderStylePopup({
   isOpen,
   onClose,
+  targetElement,
   headerColor = 'rgba(255, 255, 255, 0.95)',
   onHeaderColorChange,
   navLinkSize = 1.0,
@@ -71,6 +73,7 @@ export default function HeaderStylePopup({
       icon={<HeaderStyleIcon />}
       width="md"
       backdropOpacity={0}
+      targetElement={targetElement}
     >
       {/* Header Background Color */}
       {onHeaderColorChange && (
