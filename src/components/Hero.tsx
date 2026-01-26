@@ -2880,7 +2880,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     width: hero?.overlaySize?.width ? `${hero.overlaySize.width}%` : 'auto',
                     minWidth: isMobile ? '90%' : '400px',
                     maxWidth: '100%',
-                    paddingBottom: hero?.overlaySize?.bottomPadding ? `${(hero.overlaySize.bottomPadding) + 48}px` : undefined, // 48px is base padding (p-12)
+                    // On mobile, don't apply extra bottom padding since buttons are inside the box
+                    paddingBottom: (!isMobile && hero?.overlaySize?.bottomPadding) ? `${(hero.overlaySize.bottomPadding) + 48}px` : undefined, // 48px is base padding (p-12)
                   }}
                 >
                   {/* Recenter button - subtle control in top right */}
@@ -3173,7 +3174,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               {/* On desktop legacy: buttons rendered inline above (not here) */}
               {/* On mobile WITHOUT blur: static positioning at bottom with mt-auto */}
               {/* On mobile WITH blur: buttons are inside the blur box (not here) */}
-              {(!isLegacyFullwidthLayout || (isMobile && !hero?.overlayBlur)) && (
+              {((!isLegacyFullwidthLayout && !isMobile) || (isMobile && !hero?.overlayBlur)) && (
                 <div 
                   ref={buttonsFloatingRef}
                   className={`z-30 overflow-visible ${
