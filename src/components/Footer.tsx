@@ -6,6 +6,7 @@ import IdbImage from './IdbImage';
 import LegalTextModal from './LegalTextModal';
 import TextSizePopup from './TextSizePopup';
 import BrandingPopup from './BrandingPopup';
+import FooterStylePopup from './FooterStylePopup';
 import { useI18nContext } from './I18nProvider';
 import type { Footer as FooterCfg, Layout, SectionKey, Page, ColorPalette } from '../types';
 
@@ -79,8 +80,10 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [hidevLogoPopupOpen, setHidevLogoPopupOpen] = useState(false);
   const [brandingPopupOpen, setBrandingPopupOpen] = useState(false);
+  const [footerStylePopupOpen, setFooterStylePopupOpen] = useState(false);
   const hidevLogoRef = useRef<HTMLDivElement>(null);
   const brandingAreaRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLElement>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -321,7 +324,8 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         `
       }} />
       <footer 
-        className="border-t border-gray-200"
+        ref={footerRef}
+        className={`border-t border-gray-200 ${editable ? 'cursor-pointer hover:ring-2 hover:ring-inset hover:ring-blue-400/40' : ''}`}
         style={{ 
           backgroundColor: footer?.colors?.background || '#ffffff',
           '--logo-height-sm': `${logoHeights.sm}rem`,
@@ -330,6 +334,15 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           '--hidev-logo-height': `${hidevLogoHeight}rem`,
           '--hidev-logo-max-width': `${hidevLogoMaxWidth}px`
         } as React.CSSProperties & { [key: string]: string }}
+        onClick={(e) => {
+          // Only open footer style popup if editable and clicking outside branding area and hidev logo
+          if (editable && 
+              !brandingAreaRef.current?.contains(e.target as Node) &&
+              !hidevLogoRef.current?.contains(e.target as Node)) {
+            setFooterStylePopupOpen(true);
+          }
+        }}
+        title={editable ? 'Click to edit footer style' : undefined}
       >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-12">
         {/* Desktop Layout */}
@@ -698,6 +711,45 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           onLogoSizeChange={onLogoSizeChange ? onLogoSizeChange : (size) => {
             if (onEdit) {
               onEdit('footer.logoSize', size.toString());
+            }
+          }}
+          presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
+        />
+      )}
+      
+      {/* Footer Style Popup for editing footer background, nav link size/color, and legal links */}
+      {editable && (
+        <FooterStylePopup
+          isOpen={footerStylePopupOpen}
+          onClose={() => setFooterStylePopupOpen(false)}
+          footerColor={footer?.colors?.background || '#ffffff'}
+          onFooterColorChange={(color) => {
+            if (onEdit) {
+              onEdit('footer.colors.background', color);
+            }
+          }}
+          navLinkSize={navLinkSize}
+          onNavLinkSizeChange={(size) => {
+            if (onEdit) {
+              onEdit('footer.navLinkSize', size.toString());
+            }
+          }}
+          navLinkColor={footer?.colors?.navText || '#4B5563'}
+          onNavLinkColorChange={(color) => {
+            if (onEdit) {
+              onEdit('footer.colors.navText', color);
+            }
+          }}
+          showPrivacyPolicy={showPrivacyPolicy}
+          onShowPrivacyPolicyChange={(show) => {
+            if (onEdit) {
+              onEdit('footer.showPrivacyPolicy', show.toString());
+            }
+          }}
+          showTermsAndConditions={showTermsAndConditions}
+          onShowTermsAndConditionsChange={(show) => {
+            if (onEdit) {
+              onEdit('footer.showTermsAndConditions', show.toString());
             }
           }}
           presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}

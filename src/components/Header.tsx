@@ -5,6 +5,7 @@ import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import LanguageToggle from './LanguageToggle';
 import BrandingPopup from './BrandingPopup';
+import HeaderStylePopup from './HeaderStylePopup';
 import { useI18nContext } from './I18nProvider';
 import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette, Page, PageSection } from '../types';
 
@@ -27,6 +28,10 @@ type Props = {
   onShowLogoChange?: (show: boolean) => void;
   onShowBusinessNameChange?: (show: boolean) => void;
   onLogoSizeChange?: (size: number) => void;
+  // Header style callbacks
+  onHeaderColorChange?: (color: string) => void;
+  onNavLinkSizeChange?: (size: number) => void;
+  onNavLinkColorChange?: (color: string) => void;
   colorPalette?: ColorPalette;
   /** Storage adapter for built-in image cropper */
   imageStorage?: {
@@ -51,14 +56,16 @@ type NavLink = {
   }>;
 };
 
-const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, colorPalette, imageStorage }) => {
+const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, header, payment, layout, pages, currentPageSlug, isMultipage, isPreview, editable, onEdit, onTextSizeChange, onBusinessNameColorChange, onLogoClick, onShowLogoChange, onShowBusinessNameChange, onLogoSizeChange, onHeaderColorChange, onNavLinkSizeChange, onNavLinkColorChange, colorPalette, imageStorage }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [expandedMobileNav, setExpandedMobileNav] = useState<string | null>(null);
   const [brandingPopupOpen, setBrandingPopupOpen] = useState(false);
+  const [headerStylePopupOpen, setHeaderStylePopupOpen] = useState(false);
   const hoverTimeoutRef = useRef<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const brandingAreaRef = useRef<HTMLDivElement | null>(null);
+  const headerRef = useRef<HTMLElement | null>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -461,7 +468,8 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         `
       }} />
       <header 
-        className={`${isPreview ? 'sticky top-0' : 'fixed left-0 right-0'} z-40 backdrop-blur-sm border-b transition-all duration-300 ease-in-out`}
+        ref={headerRef}
+        className={`${isPreview ? 'sticky top-0' : 'fixed left-0 right-0'} z-40 backdrop-blur-sm border-b transition-all duration-300 ease-in-out ${editable ? 'cursor-pointer hover:ring-2 hover:ring-inset hover:ring-blue-400/40' : ''}`}
         style={{ 
           height: expandableHeader ? calculateHeaderHeight() : undefined,
           minHeight: expandableHeader ? calculateHeaderHeight() : '4rem',
@@ -472,6 +480,13 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           '--logo-height-lg': `${logoHeights.lg}rem`,
           '--text-size-multiplier': textSize.toString()
         } as React.CSSProperties & { [key: string]: string }}
+        onClick={(e) => {
+          // Only open header style popup if editable and clicking outside branding area
+          if (editable && !brandingAreaRef.current?.contains(e.target as Node)) {
+            setHeaderStylePopupOpen(true);
+          }
+        }}
+        title={editable ? 'Click to edit header style' : undefined}
       >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full py-3">
@@ -763,6 +778,33 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           onLogoSizeChange={onLogoSizeChange ? onLogoSizeChange : (size) => {
             if (onEdit) {
               onEdit('header.logoSize', size.toString());
+            }
+          }}
+          presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
+        />
+      )}
+      
+      {/* Header Style Popup for editing header background, nav link size and color */}
+      {editable && (
+        <HeaderStylePopup
+          isOpen={headerStylePopupOpen}
+          onClose={() => setHeaderStylePopupOpen(false)}
+          headerColor={header?.colors?.background || 'rgba(255, 255, 255, 0.95)'}
+          onHeaderColorChange={onHeaderColorChange ? onHeaderColorChange : (color) => {
+            if (onEdit) {
+              onEdit('header.colors.background', color);
+            }
+          }}
+          navLinkSize={navLinkSize}
+          onNavLinkSizeChange={onNavLinkSizeChange ? onNavLinkSizeChange : (size) => {
+            if (onEdit) {
+              onEdit('header.navLinkSize', size.toString());
+            }
+          }}
+          navLinkColor={header?.colors?.navText || '#374151'}
+          onNavLinkColorChange={onNavLinkColorChange ? onNavLinkColorChange : (color) => {
+            if (onEdit) {
+              onEdit('header.colors.navText', color);
             }
           }}
           presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
