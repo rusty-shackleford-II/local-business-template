@@ -2833,7 +2833,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           <div 
             className={`z-20 px-4 sm:px-6 lg:px-8 ${
               isMobile 
-                ? 'relative flex flex-col flex-1 pt-20 pb-0' 
+                ? 'relative flex flex-col flex-1 pt-20 pb-8' 
                 : 'absolute inset-0'
             }`}
             style={isMobile ? {} : {
