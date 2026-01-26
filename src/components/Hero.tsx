@@ -2976,6 +2976,45 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     showFontPicker={true}
                   />
                   
+                  {/* Mobile: Render buttons INSIDE the blur overlay box */}
+                  {isMobile && (
+                    <div className="mt-6 flex flex-col items-center w-full">
+                      <ButtonGridEditor
+                        buttons={ctaButtons}
+                        gridLayout={effectiveGridLayout}
+                        onLayoutChange={handleGridLayoutChange}
+                        onButtonClick={onButtonClick}
+                        editable={editable}
+                        colorPalette={colorPalette}
+                        defaultCtaBg={hero?.colors?.ctaBackground}
+                        defaultCtaText={hero?.colors?.ctaText}
+                        getButtonStyles={getButtonStyles}
+                        ctaButtons={hero?.ctaButtons}
+                        onEdit={onEdit}
+                        payment={payment}
+                        isFullwidthOverlay={true}
+                        isMobile={true}
+                        buttonStyles={hero?.buttonStyles}
+                        onButtonStylesChange={handleButtonStylesChange}
+                      />
+                      {/* Mobile social links inside blur box */}
+                      {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
+                        <div 
+                          className={`mt-4 p-2 -m-2 rounded ${editable ? 'hover:border hover:border-dashed hover:border-white/50 cursor-pointer' : ''}`}
+                          onClick={(e) => {
+                            if (!editable) return;
+                            if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                            e.stopPropagation();
+                            socialIconSizeTargetRef.current = e.currentTarget as HTMLDivElement;
+                            setShowSocialIconSizePopup(true);
+                          }}
+                        >
+                          <HeroSocialLinks socialLinks={socialLinks} align="center" isFullwidthOverlay={true} className="mt-0" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   {/* Resize handles - only visible in edit mode */}
                   {editable && (
                     <>
@@ -3132,8 +3171,9 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               {/* Floating CTA Buttons - positioned separately */}
               {/* On desktop non-legacy: absolute positioning with drag support */}
               {/* On desktop legacy: buttons rendered inline above (not here) */}
-              {/* On mobile (all layouts): static positioning at bottom with mt-auto */}
-              {(!isLegacyFullwidthLayout || isMobile) && (
+              {/* On mobile WITHOUT blur: static positioning at bottom with mt-auto */}
+              {/* On mobile WITH blur: buttons are inside the blur box (not here) */}
+              {(!isLegacyFullwidthLayout || (isMobile && !hero?.overlayBlur)) && (
                 <div 
                   ref={buttonsFloatingRef}
                   className={`z-30 overflow-visible ${
