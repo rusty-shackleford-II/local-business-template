@@ -42,6 +42,9 @@ export default function Document() {
             />
           </>
         )}
+        
+        {/* hCaptcha script */}
+        <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
       </Head>
       <body className="font-sans">
         <noscript>You need to enable JavaScript to run this app.</noscript>

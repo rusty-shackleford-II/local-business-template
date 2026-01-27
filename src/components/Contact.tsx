@@ -25,15 +25,23 @@ import {
   SiInstacart 
 } from 'react-icons/si';
 import axios from 'axios';
-import Botpoison from '@botpoison/browser';
-import { formatPhoneNumber, stripPhoneNumber } from '../lib/phoneUtils';
+import { stripPhoneNumber } from '../lib/phoneUtils';
 import type { Contact as ContactCfg, BusinessInfo, ColorPalette, License, SocialLinksConfig } from '../types';
 
 const FORMSPARK_ACTION_URL = 'https://submit-form.com/n1Wkyb8df';
 
-const botpoison = new Botpoison({
-  publicKey: 'pk_55fc7d1f-7d36-4409-be48-38d9ec0f6950',
-});
+// hCaptcha sitekey
+const HCAPTCHA_SITEKEY = '6d52d016-4fce-411e-83ba-04ea97fe2e3c';
+
+// Declare hcaptcha global type
+declare global {
+  interface Window {
+    hcaptcha?: {
+      reset: (widgetId?: string) => void;
+      getResponse: (widgetId?: string) => string;
+    };
+  }
+}
 
 type Props = { 
   contact?: ContactCfg; 
@@ -212,11 +220,18 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
       setFormData(resetData);
       setConsentChecked(false);
       setIsSubmitting(false);
+      window.hcaptcha?.reset();
       return;
     }
     
     try {
-      const { solution } = await botpoison.challenge();
+      // Get hCaptcha response token
+      const hcaptchaResponse = window.hcaptcha?.getResponse();
+      if (!hcaptchaResponse) {
+        alert('Please complete the captcha verification.');
+        setIsSubmitting(false);
+        return;
+      }
       
       // Build recipients list from contactRecipients (deduplicated)
       const recipients = contact?.contactRecipients?.length 
@@ -227,7 +242,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
       const submissionData: any = {
         ...formData,
         recipients: `<<<${recipients.join(',')}>>>`,
-        _botpoison: solution,
+        'h-captcha-response': hcaptchaResponse,
       };
       
       // Include site URL/domain if available
@@ -250,9 +265,13 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
       }, {} as Record<string, string>);
       setFormData(resetData);
       setConsentChecked(false);
+      // Reset hCaptcha
+      window.hcaptcha?.reset();
     } catch (error) {
       console.error(error);
       alert('There was an error submitting your form. Please try again.');
+      // Reset hCaptcha on error
+      window.hcaptcha?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -434,6 +453,9 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                         </label>
                       </div>
                     )}
+
+                    {/* hCaptcha Widget */}
+                    <div className="h-captcha" data-sitekey={HCAPTCHA_SITEKEY}></div>
 
                     <button
                       type="submit"
