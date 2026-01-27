@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@hcaptcha/react-hcaptcha": "^1.11.0",
     "@floating-ui/react": "^0.26.28",
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",

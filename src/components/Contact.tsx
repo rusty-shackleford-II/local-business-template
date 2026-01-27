@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import { MapPinIcon, PhoneIcon, EnvelopeIcon, ClockIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import EditableText from './EditableText';
@@ -32,16 +33,6 @@ const FORMSPARK_ACTION_URL = 'https://submit-form.com/n1Wkyb8df';
 
 // hCaptcha sitekey
 const HCAPTCHA_SITEKEY = '6d52d016-4fce-411e-83ba-04ea97fe2e3c';
-
-// Declare hcaptcha global type
-declare global {
-  interface Window {
-    hcaptcha?: {
-      reset: (widgetId?: string) => void;
-      getResponse: (widgetId?: string) => string;
-    };
-  }
-}
 
 type Props = { 
   contact?: ContactCfg; 
@@ -145,6 +136,16 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
   
+  // hCaptcha state
+  const [hcaptchaToken, setHcaptchaToken] = useState<string | null>(null);
+  const [isHcaptchaMounted, setIsHcaptchaMounted] = useState(false);
+  const hcaptchaRef = useRef<HCaptcha>(null);
+  
+  // Mount hCaptcha only on client side to avoid SSR hydration mismatch
+  useEffect(() => {
+    setIsHcaptchaMounted(true);
+  }, []);
+  
   // Social links editor popup state
   const [showSocialLinksPopup, setShowSocialLinksPopup] = useState(false);
   const socialLinksTargetRef = useRef<HTMLDivElement>(null);
@@ -220,14 +221,14 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
       setFormData(resetData);
       setConsentChecked(false);
       setIsSubmitting(false);
-      window.hcaptcha?.reset();
+      setHcaptchaToken(null);
+      hcaptchaRef.current?.resetCaptcha();
       return;
     }
     
     try {
       // Get hCaptcha response token
-      const hcaptchaResponse = window.hcaptcha?.getResponse();
-      if (!hcaptchaResponse) {
+      if (!hcaptchaToken) {
         alert('Please complete the captcha verification.');
         setIsSubmitting(false);
         return;
@@ -242,7 +243,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
       const submissionData: any = {
         ...formData,
         recipients: `<<<${recipients.join(',')}>>>`,
-        'h-captcha-response': hcaptchaResponse,
+        'h-captcha-response': hcaptchaToken,
       };
       
       // Include site URL/domain if available
@@ -266,12 +267,14 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
       setFormData(resetData);
       setConsentChecked(false);
       // Reset hCaptcha
-      window.hcaptcha?.reset();
+      setHcaptchaToken(null);
+      hcaptchaRef.current?.resetCaptcha();
     } catch (error) {
       console.error(error);
       alert('There was an error submitting your form. Please try again.');
       // Reset hCaptcha on error
-      window.hcaptcha?.reset();
+      setHcaptchaToken(null);
+      hcaptchaRef.current?.resetCaptcha();
     } finally {
       setIsSubmitting(false);
     }
@@ -454,8 +457,15 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       </div>
                     )}
 
-                    {/* hCaptcha Widget */}
-                    <div className="h-captcha" data-sitekey={HCAPTCHA_SITEKEY}></div>
+                    {/* hCaptcha Widget - only render on client side to avoid SSR hydration mismatch */}
+                    {isHcaptchaMounted && (
+                      <HCaptcha
+                        ref={hcaptchaRef}
+                        sitekey={HCAPTCHA_SITEKEY}
+                        onVerify={(token) => setHcaptchaToken(token)}
+                        onExpire={() => setHcaptchaToken(null)}
+                      />
+                    )}
 
                     <button
                       type="submit"
