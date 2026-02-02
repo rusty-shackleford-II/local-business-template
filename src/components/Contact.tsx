@@ -209,21 +209,25 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
     setIsSubmitting(true);
     
     // Bot trap: real messages always have spaces. Silently "succeed" without sending.
-    const messageValue = formData['message'] || '';
-    if (!messageValue.includes(' ')) {
-      // Fake success - bot thinks it worked but nothing is sent
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
-      setIsSubmitted(true);
-      const resetData = formFields.reduce((acc, field) => {
-        acc[field.name] = '';
-        return acc;
-      }, {} as Record<string, string>);
-      setFormData(resetData);
-      setConsentChecked(false);
-      setIsSubmitting(false);
-      setHcaptchaToken(null);
-      hcaptchaRef.current?.resetCaptcha();
-      return;
+    // Only apply this check if the message field exists in the form
+    const hasMessageField = formFields.some(field => field.name === 'message');
+    if (hasMessageField) {
+      const messageValue = formData['message'] || '';
+      if (!messageValue.includes(' ')) {
+        // Fake success - bot thinks it worked but nothing is sent
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
+        setIsSubmitted(true);
+        const resetData = formFields.reduce((acc, field) => {
+          acc[field.name] = '';
+          return acc;
+        }, {} as Record<string, string>);
+        setFormData(resetData);
+        setConsentChecked(false);
+        setIsSubmitting(false);
+        setHcaptchaToken(null);
+        hcaptchaRef.current?.resetCaptcha();
+        return;
+      }
     }
     
     try {
