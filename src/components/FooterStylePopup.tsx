@@ -20,6 +20,8 @@ const FooterStyleIcon = () => (
 type FooterStylePopupProps = {
   isOpen: boolean;
   onClose: () => void;
+  /** Called when cancel button is clicked - parent should restore original values */
+  onCancel?: () => void;
   targetElement?: HTMLElement | null; // Used for smart positioning
   // Footer background color
   footerColor?: string;
@@ -43,6 +45,7 @@ type FooterStylePopupProps = {
 export default function FooterStylePopup({
   isOpen,
   onClose,
+  onCancel,
   targetElement,
   footerColor = '#ffffff',
   onFooterColorChange,
@@ -80,10 +83,13 @@ export default function FooterStylePopup({
     <EditorModal
       isOpen={isOpen}
       onClose={onClose}
+      onCancel={onCancel}
+      showCancelButton={!!onCancel}
       title="Footer Style"
       icon={<FooterStyleIcon />}
       width="md"
       backdropOpacity={0}
+      closeOnBackdropClick={true}
       targetElement={targetElement}
     >
       {/* Footer Background Color */}

@@ -23,6 +23,8 @@ import {
 interface SocialLinksEditorPopupProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called when cancel button is clicked - parent should restore original values */
+  onCancel?: () => void;
   socialLinks?: SocialLinksConfig;
   onEdit?: (path: string, value: any) => void;
   targetElement?: HTMLElement | null; // Used for smart positioning
@@ -56,6 +58,7 @@ const PLATFORMS = [
 const SocialLinksEditorPopup: React.FC<SocialLinksEditorPopupProps> = ({ 
   isOpen, 
   onClose, 
+  onCancel,
   socialLinks, 
   onEdit,
   targetElement,
@@ -116,10 +119,13 @@ const SocialLinksEditorPopup: React.FC<SocialLinksEditorPopupProps> = ({
     <EditorModal
       isOpen={isOpen}
       onClose={onClose}
+      onCancel={onCancel}
+      showCancelButton={!!onCancel}
       title="Social Links"
       icon={<SocialIcon />}
       width="lg"
       backdropOpacity={0}
+      closeOnBackdropClick={true}
       targetElement={targetElement}
     >
       {/* Show in Hero Toggle + Size */}

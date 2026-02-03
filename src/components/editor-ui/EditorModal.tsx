@@ -21,6 +21,12 @@ export interface EditorModalProps {
   showDoneButton?: boolean;
   /** Custom done button text */
   doneButtonText?: string;
+  /** Show a cancel button in footer */
+  showCancelButton?: boolean;
+  /** Custom cancel button text */
+  cancelButtonText?: string;
+  /** Callback when cancel is clicked (defaults to onClose if not provided) */
+  onCancel?: () => void;
   /** Target element to position near (modal will avoid covering it) */
   targetElement?: HTMLElement | null;
 }
@@ -147,6 +153,9 @@ export default function EditorModal({
   closeOnBackdropClick = true,
   showDoneButton = true,
   doneButtonText = 'Done',
+  showCancelButton = false,
+  cancelButtonText = 'Cancel',
+  onCancel,
   targetElement,
 }: EditorModalProps) {
   const [mounted, setMounted] = useState(false);
@@ -271,39 +280,56 @@ export default function EditorModal({
     };
   }, [initialPosition]);
   
-  // Handle backdrop click
-  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (closeOnBackdropClick && e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [closeOnBackdropClick, onClose]);
-  
   // Stop propagation on modal click
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
   
-  if (!isOpen || !mounted) return null;
+  // Handle outside clicks via document listener (allows clicks on target element to pass through)
+  useEffect(() => {
+    if (!isOpen || !closeOnBackdropClick) return;
+    
+    const handleDocumentClick = (e: MouseEvent) => {
+      const target = e.target as Node;
+      
+      // Don't close if clicking inside the modal
+      if (modalRef.current?.contains(target)) {
+        return;
+      }
+      
+      // Don't close if clicking on the target element (e.g., the editable text)
+      if (targetElement?.contains(target)) {
+        return;
+      }
+      
+      // Close for clicks outside both modal and target
+      onClose();
+    };
+    
+    // Use setTimeout to avoid the click that opened the modal from immediately closing it
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleDocumentClick);
+    }, 0);
+    
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleDocumentClick);
+    };
+  }, [isOpen, closeOnBackdropClick, targetElement, onClose]);
   
+  if (!isOpen || !mounted) return null;
+
   const modalContent = (
-    <>
-      {/* Backdrop - only render if opacity > 0 */}
-      {backdropOpacity > 0 && (
-        <div
-          className="fixed inset-0 z-[9998]"
-          style={{ backgroundColor: `rgba(0, 0, 0, ${backdropOpacity})` }}
-          onClick={handleBackdropClick}
-        />
-      )}
-      
-      {/* Click catcher for when no backdrop - invisible but catches outside clicks */}
-      {backdropOpacity === 0 && closeOnBackdropClick && (
-        <div
-          className="fixed inset-0 z-[9998]"
-          onClick={handleBackdropClick}
-        />
-      )}
-      
+    // Outer wrapper - covers entire viewport for visual backdrop only
+    // pointer-events: none allows clicks to pass through to elements below (like the target element)
+    // Outside click detection is handled by document listener in useEffect
+    <div
+      className="fixed inset-0 z-[9998]"
+      style={{
+        ...(backdropOpacity > 0 ? { backgroundColor: `rgba(0, 0, 0, ${backdropOpacity})` } : {}),
+        pointerEvents: 'none',
+      }}
+    >
       {/* Modal */}
       <div
         ref={modalRef}
@@ -318,6 +344,7 @@ export default function EditorModal({
           maxHeight: 'calc(100vh - 32px)',
           display: 'flex',
           flexDirection: 'column',
+          pointerEvents: 'auto', // Re-enable pointer events for the modal itself
         }}
         onClick={stopPropagation}
         onMouseDown={stopPropagation}
@@ -349,9 +376,17 @@ export default function EditorModal({
         </div>
         
         {/* Footer */}
-        {(footer || showDoneButton) && (
+        {(footer || showDoneButton || showCancelButton) && (
           <div className="flex items-center justify-end px-4 py-2.5 border-t border-white/10 bg-black/20 gap-2">
             {footer}
+            {showCancelButton && (
+              <button
+                onClick={onCancel || onClose}
+                className="px-3 py-1.5 text-xs font-medium text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+              >
+                {cancelButtonText}
+              </button>
+            )}
             {showDoneButton && (
               <button
                 onClick={onClose}
@@ -363,7 +398,7 @@ export default function EditorModal({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
   
   return createPortal(modalContent, document.body);

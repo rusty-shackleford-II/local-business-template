@@ -62,6 +62,20 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
   const [expandedMobileNav, setExpandedMobileNav] = useState<string | null>(null);
   const [brandingPopupOpen, setBrandingPopupOpen] = useState(false);
   const [headerStylePopupOpen, setHeaderStylePopupOpen] = useState(false);
+  // Track original values for cancel functionality
+  const [originalHeaderStyle, setOriginalHeaderStyle] = useState<{
+    backgroundColor?: string;
+    navLinkSize?: number;
+    navLinkColor?: string;
+  } | null>(null);
+  const [originalBranding, setOriginalBranding] = useState<{
+    showLogo?: boolean;
+    showBusinessName?: boolean;
+    brandText?: string;
+    textSize?: number;
+    textColor?: string;
+    logoSize?: number;
+  } | null>(null);
   const hoverTimeoutRef = useRef<number | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const brandingAreaRef = useRef<HTMLDivElement | null>(null);
@@ -483,6 +497,12 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         onClick={(e) => {
           // Only open header style popup if editable and clicking outside branding area
           if (editable && !brandingAreaRef.current?.contains(e.target as Node)) {
+            // Save original values before opening popup (for cancel functionality)
+            setOriginalHeaderStyle({
+              backgroundColor: header?.colors?.background,
+              navLinkSize: header?.navLinkSize,
+              navLinkColor: header?.colors?.navText,
+            });
             setHeaderStylePopupOpen(true);
           }
         }}
@@ -497,6 +517,15 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             onClick={(e) => {
               if (editable) {
                 e.stopPropagation();
+                // Save original values before opening popup (for cancel functionality)
+                setOriginalBranding({
+                  showLogo: header?.showLogo !== false && header?.showLogo !== 'false',
+                  showBusinessName: header?.showBusinessName !== false && header?.showBusinessName !== 'false',
+                  brandText: header?.brandText,
+                  textSize: header?.textSize,
+                  textColor: header?.colors?.brandText,
+                  logoSize: header?.logoSize,
+                });
                 setBrandingPopupOpen(true);
               } else if (!editable) {
                 // Non-edit mode: scroll to top/hero
@@ -738,6 +767,19 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         <BrandingPopup
           isOpen={brandingPopupOpen}
           onClose={() => setBrandingPopupOpen(false)}
+          onCancel={() => {
+            // Restore original values and close
+            if (originalBranding && onEdit) {
+              if (originalBranding.showLogo !== undefined) onEdit('header.showLogo', originalBranding.showLogo.toString());
+              if (originalBranding.showBusinessName !== undefined) onEdit('header.showBusinessName', originalBranding.showBusinessName.toString());
+              if (originalBranding.brandText !== undefined) onEdit('header.brandText', originalBranding.brandText);
+              if (originalBranding.textSize !== undefined) onEdit('header.textSize', originalBranding.textSize.toString());
+              if (originalBranding.textColor !== undefined) onEdit('header.colors.brandText', originalBranding.textColor);
+              if (originalBranding.logoSize !== undefined) onEdit('header.logoSize', originalBranding.logoSize.toString());
+            }
+            setOriginalBranding(null);
+            setBrandingPopupOpen(false);
+          }}
           targetElement={brandingAreaRef.current}
           location="header"
           showLogo={showLogo}
@@ -789,6 +831,16 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         <HeaderStylePopup
           isOpen={headerStylePopupOpen}
           onClose={() => setHeaderStylePopupOpen(false)}
+          onCancel={() => {
+            // Restore original values and close
+            if (originalHeaderStyle && onEdit) {
+              if (originalHeaderStyle.backgroundColor !== undefined) onEdit('header.colors.background', originalHeaderStyle.backgroundColor);
+              if (originalHeaderStyle.navLinkSize !== undefined) onEdit('header.navLinkSize', originalHeaderStyle.navLinkSize.toString());
+              if (originalHeaderStyle.navLinkColor !== undefined) onEdit('header.colors.navText', originalHeaderStyle.navLinkColor);
+            }
+            setOriginalHeaderStyle(null);
+            setHeaderStylePopupOpen(false);
+          }}
           targetElement={headerRef.current}
           headerColor={header?.colors?.background || 'rgba(255, 255, 255, 0.95)'}
           onHeaderColorChange={onHeaderColorChange ? onHeaderColorChange : (color) => {

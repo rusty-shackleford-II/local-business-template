@@ -25,6 +25,8 @@ const BrandingIcon = () => (
 type BrandingPopupProps = {
   isOpen: boolean;
   onClose: () => void;
+  /** Called when cancel button is clicked - parent should restore original values */
+  onCancel?: () => void;
   targetElement?: HTMLElement | null; // Used for smart positioning
   location: 'header' | 'footer';
   // Logo toggle
@@ -57,6 +59,7 @@ type BrandingPopupProps = {
 export default function BrandingPopup({
   isOpen,
   onClose,
+  onCancel,
   targetElement,
   location,
   showLogo,
@@ -122,10 +125,13 @@ export default function BrandingPopup({
     <EditorModal
       isOpen={isOpen}
       onClose={onClose}
+      onCancel={onCancel}
+      showCancelButton={!!onCancel}
       title={`${location === 'header' ? 'Header' : 'Footer'} Branding`}
       icon={<BrandingIcon />}
       width="md"
       backdropOpacity={0}
+      closeOnBackdropClick={true}
       targetElement={targetElement}
     >
       {/* Logo Section */}

@@ -324,9 +324,13 @@ export default function EditableText({
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
-      if (effectiveEditable && onTextSizeChange) {
+      // Always stop propagation when editable to prevent parent click handlers from firing
+      if (effectiveEditable) {
         e.stopPropagation();
-        setShowPopup(true);
+        // Only show popup if we have a text size change handler
+        if (onTextSizeChange) {
+          setShowPopup(true);
+        }
       }
     },
     [effectiveEditable, onTextSizeChange]

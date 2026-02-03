@@ -47,6 +47,8 @@ const TextStyleIcon = () => (
 type TextSizePopupProps = {
   isOpen: boolean;
   onClose: () => void;
+  /** Called when cancel button is clicked - parent should restore original values */
+  onCancel?: () => void;
   textSize: number;
   onTextSizeChange: (size: number) => void;
   targetElement?: HTMLElement | null; // Used for smart positioning
@@ -79,6 +81,7 @@ type TextSizePopupProps = {
 export default function TextSizePopup({
   isOpen,
   onClose,
+  onCancel,
   textSize,
   onTextSizeChange,
   targetElement,
@@ -123,10 +126,13 @@ export default function TextSizePopup({
     <EditorModal
       isOpen={isOpen}
       onClose={onClose}
+      onCancel={onCancel}
+      showCancelButton={!!onCancel}
       title={label}
       icon={<TextStyleIcon />}
       width="sm"
       backdropOpacity={0}
+      closeOnBackdropClick={true}
       targetElement={targetElement}
     >
       {/* Font Size Slider */}

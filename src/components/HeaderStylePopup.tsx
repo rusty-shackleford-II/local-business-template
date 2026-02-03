@@ -19,6 +19,8 @@ const HeaderStyleIcon = () => (
 type HeaderStylePopupProps = {
   isOpen: boolean;
   onClose: () => void;
+  /** Called when cancel button is clicked - parent should restore original values */
+  onCancel?: () => void;
   targetElement?: HTMLElement | null; // Used for smart positioning
   // Header background color
   headerColor?: string;
@@ -36,6 +38,7 @@ type HeaderStylePopupProps = {
 export default function HeaderStylePopup({
   isOpen,
   onClose,
+  onCancel,
   targetElement,
   headerColor = 'rgba(255, 255, 255, 0.95)',
   onHeaderColorChange,
@@ -69,10 +72,13 @@ export default function HeaderStylePopup({
     <EditorModal
       isOpen={isOpen}
       onClose={onClose}
+      onCancel={onCancel}
+      showCancelButton={!!onCancel}
       title="Header Style"
       icon={<HeaderStyleIcon />}
       width="md"
       backdropOpacity={0}
+      closeOnBackdropClick={true}
       targetElement={targetElement}
     >
       {/* Header Background Color */}

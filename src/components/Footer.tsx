@@ -81,9 +81,26 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   const [hidevLogoPopupOpen, setHidevLogoPopupOpen] = useState(false);
   const [brandingPopupOpen, setBrandingPopupOpen] = useState(false);
   const [footerStylePopupOpen, setFooterStylePopupOpen] = useState(false);
+  // Track original values for cancel functionality
+  const [originalFooterStyle, setOriginalFooterStyle] = useState<{
+    backgroundColor?: string;
+    navLinkSize?: number;
+    navLinkColor?: string;
+    showPrivacyPolicy?: boolean;
+    showTermsAndConditions?: boolean;
+  } | null>(null);
+  const [originalBranding, setOriginalBranding] = useState<{
+    showLogo?: boolean;
+    showBusinessName?: boolean;
+    brandText?: string;
+    textSize?: number;
+    textColor?: string;
+    logoSize?: number;
+  } | null>(null);
   const hidevLogoRef = useRef<HTMLDivElement>(null);
   const brandingAreaRef = useRef<HTMLDivElement>(null);
   const footerRef = useRef<HTMLElement>(null);
+  const copyrightAreaRef = useRef<HTMLDivElement>(null);
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -335,10 +352,19 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           '--hidev-logo-max-width': `${hidevLogoMaxWidth}px`
         } as React.CSSProperties & { [key: string]: string }}
         onClick={(e) => {
-          // Only open footer style popup if editable and clicking outside branding area and hidev logo
+          // Only open footer style popup if editable and clicking outside branding area, hidev logo, and copyright area
           if (editable && 
               !brandingAreaRef.current?.contains(e.target as Node) &&
-              !hidevLogoRef.current?.contains(e.target as Node)) {
+              !hidevLogoRef.current?.contains(e.target as Node) &&
+              !copyrightAreaRef.current?.contains(e.target as Node)) {
+            // Save original values before opening popup (for cancel functionality)
+            setOriginalFooterStyle({
+              backgroundColor: footer?.colors?.background,
+              navLinkSize: footer?.navLinkSize,
+              navLinkColor: footer?.colors?.navText,
+              showPrivacyPolicy: footer?.showPrivacyPolicy === true || footer?.showPrivacyPolicy === 'true',
+              showTermsAndConditions: footer?.showTermsAndConditions === true || footer?.showTermsAndConditions === 'true',
+            });
             setFooterStylePopupOpen(true);
           }
         }}
@@ -354,6 +380,15 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
             onClick={(e) => {
               if (editable) {
                 e.stopPropagation();
+                // Save original values before opening popup (for cancel functionality)
+                setOriginalBranding({
+                  showLogo: footer?.showLogo !== false && footer?.showLogo !== 'false',
+                  showBusinessName: footer?.showBusinessName !== false && footer?.showBusinessName !== 'false',
+                  brandText: footer?.brandText,
+                  textSize: footer?.textSize,
+                  textColor: footer?.colors?.textColor,
+                  logoSize: footer?.logoSize,
+                });
                 setBrandingPopupOpen(true);
               }
             }}
@@ -465,6 +500,15 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
             onClick={(e) => {
               if (editable) {
                 e.stopPropagation();
+                // Save original values before opening popup (for cancel functionality)
+                setOriginalBranding({
+                  showLogo: footer?.showLogo !== false && footer?.showLogo !== 'false',
+                  showBusinessName: footer?.showBusinessName !== false && footer?.showBusinessName !== 'false',
+                  brandText: footer?.brandText,
+                  textSize: footer?.textSize,
+                  textColor: footer?.colors?.textColor,
+                  logoSize: footer?.logoSize,
+                });
                 setBrandingPopupOpen(true);
               }
             }}
@@ -601,7 +645,11 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
             )}
 
             {/* Copyright - editable text with default tied to business name for backwards compatibility */}
-            <div className="text-center text-sm text-gray-500">
+            <div 
+              ref={copyrightAreaRef} 
+              className="text-center text-sm text-gray-500"
+              onClick={editable ? (e) => e.stopPropagation() : undefined}
+            >
               <EditableText
                 value={displayCopyrightText}
                 path="footer.copyrightText"
@@ -664,6 +712,19 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         <BrandingPopup
           isOpen={brandingPopupOpen}
           onClose={() => setBrandingPopupOpen(false)}
+          onCancel={() => {
+            // Restore original values and close
+            if (originalBranding && onEdit) {
+              if (originalBranding.showLogo !== undefined) onEdit('footer.showLogo', originalBranding.showLogo.toString());
+              if (originalBranding.showBusinessName !== undefined) onEdit('footer.showBusinessName', originalBranding.showBusinessName.toString());
+              if (originalBranding.brandText !== undefined) onEdit('footer.brandText', originalBranding.brandText);
+              if (originalBranding.textSize !== undefined) onEdit('footer.textSize', originalBranding.textSize.toString());
+              if (originalBranding.textColor !== undefined) onEdit('footer.colors.textColor', originalBranding.textColor);
+              if (originalBranding.logoSize !== undefined) onEdit('footer.logoSize', originalBranding.logoSize.toString());
+            }
+            setOriginalBranding(null);
+            setBrandingPopupOpen(false);
+          }}
           targetElement={brandingAreaRef.current}
           location="footer"
           showLogo={showLogo}
@@ -722,6 +783,18 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         <FooterStylePopup
           isOpen={footerStylePopupOpen}
           onClose={() => setFooterStylePopupOpen(false)}
+          onCancel={() => {
+            // Restore original values and close
+            if (originalFooterStyle && onEdit) {
+              if (originalFooterStyle.backgroundColor !== undefined) onEdit('footer.colors.background', originalFooterStyle.backgroundColor);
+              if (originalFooterStyle.navLinkSize !== undefined) onEdit('footer.navLinkSize', originalFooterStyle.navLinkSize.toString());
+              if (originalFooterStyle.navLinkColor !== undefined) onEdit('footer.colors.navText', originalFooterStyle.navLinkColor);
+              if (originalFooterStyle.showPrivacyPolicy !== undefined) onEdit('footer.showPrivacyPolicy', originalFooterStyle.showPrivacyPolicy.toString());
+              if (originalFooterStyle.showTermsAndConditions !== undefined) onEdit('footer.showTermsAndConditions', originalFooterStyle.showTermsAndConditions.toString());
+            }
+            setOriginalFooterStyle(null);
+            setFooterStylePopupOpen(false);
+          }}
           targetElement={footerRef.current}
           footerColor={footer?.colors?.background || '#ffffff'}
           onFooterColorChange={(color) => {
