@@ -29,7 +29,8 @@ import axios from 'axios';
 import { stripPhoneNumber } from '../lib/phoneUtils';
 import type { Contact as ContactCfg, BusinessInfo, ColorPalette, License, SocialLinksConfig } from '../types';
 
-const FORMSPARK_ACTION_URL = 'https://submit-form.com/n1Wkyb8df';
+// Contact submission edge function - validates hCaptcha, saves to DB, sends email via SendLayer
+const CONTACT_SUBMISSION_URL = 'https://eejrhvuxthdbmyyiubnr.supabase.co/functions/v1/contact-submission';
 
 // hCaptcha sitekey
 const HCAPTCHA_SITEKEY = '6d52d016-4fce-411e-83ba-04ea97fe2e3c';
@@ -240,21 +241,28 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
         submissionData.consentText = contact?.consentText || '';
       }
       
-      await axios.post(FORMSPARK_ACTION_URL, submissionData);
-      setIsSubmitted(true);
-      // Reset form data dynamically
-      const resetData = formFields.reduce((acc, field) => {
-        acc[field.name] = '';
-        return acc;
-      }, {} as Record<string, string>);
-      setFormData(resetData);
-      setConsentChecked(false);
+      const response = await axios.post(CONTACT_SUBMISSION_URL, submissionData);
+      
+      if (response.data.success) {
+        setIsSubmitted(true);
+        // Reset form data dynamically
+        const resetData = formFields.reduce((acc, field) => {
+          acc[field.name] = '';
+          return acc;
+        }, {} as Record<string, string>);
+        setFormData(resetData);
+        setConsentChecked(false);
+      } else {
+        // Server returned an error
+        throw new Error(response.data.error || 'Submission failed');
+      }
       // Reset hCaptcha
       setHcaptchaToken(null);
       hcaptchaRef.current?.resetCaptcha();
-    } catch (error) {
-      console.error(error);
-      alert('There was an error submitting your form. Please try again.');
+    } catch (error: any) {
+      console.error('Form submission error:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'There was an error submitting your form. Please try again.';
+      alert(errorMessage);
       // Reset hCaptcha on error
       setHcaptchaToken(null);
       hcaptchaRef.current?.resetCaptcha();
