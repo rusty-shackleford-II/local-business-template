@@ -64,6 +64,7 @@ import type { HeroCtaButton, ButtonGridLayout, ButtonGridPosition, ColorPalette,
 // EditableText no longer needed - button text editing happens in SingleButtonEditor modal
 import ButtonStyleEditor from './ButtonStyleEditor';
 import SingleButtonEditor from './SingleButtonEditor';
+import { useI18nContext } from './I18nProvider';
 
 // ============================================================================
 // TYPES
@@ -240,6 +241,17 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   onButtonStylesChange,
   alignToStart = false,
 }) => {
+  // i18n for translating button labels
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
+  // Helper to get translated button label
+  const getButtonLabel = useCallback((button: HeroCtaButton, index: number): string => {
+    // Try translation by button index first (hero.ctaButtons.0.label, hero.ctaButtons.1.label, etc.)
+    const translatedLabel = t(`hero.ctaButtons.${index}.label`, button.label);
+    return translatedLabel || button.label || 'Button text';
+  }, [t]);
+  
   // Drag state
   const [draggedButtonId, setDraggedButtonId] = useState<string | null>(null);
   const [activeDropTarget, setActiveDropTarget] = useState<DropTarget | null>(null);
@@ -823,7 +835,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
               ...(!useFluidSizing && buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : {}),
               pointerEvents: 'none' 
             }}>
-              {button.label || 'Button text'}
+              {getButtonLabel(button, buttonIndex)}
             </span>
             {button.showArrow !== false && (
               <ArrowRightIcon 
@@ -951,7 +963,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             ...customButtonStyle,
           }}
         >
-          {draggedButton.label}
+          {getButtonLabel(draggedButton, draggedButtonIndex)}
           {draggedButton.showArrow !== false && (
             <ArrowRightIcon 
               className={useFluidSizing ? '' : 'ml-2 h-5 w-5'}
@@ -1023,7 +1035,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
               >
                 {/* Text is display-only here; editing happens in SingleButtonEditor modal */}
                 <span style={{ fontSize: mobileFontSize, pointerEvents: 'none' }}>
-                  {button.label || 'Button text'}
+                  {getButtonLabel(button, index)}
                 </span>
                 {button.showArrow !== false && (
                   <ArrowRightIcon className="ml-2 h-5 w-5 flex-shrink-0" />

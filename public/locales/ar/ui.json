@@ -12,6 +12,15 @@
     "shop": "متجر",
     "gallery": "معرض"
   },
+  "hero": {
+    "buttons": {
+      "buyNow": "اشترِ الآن",
+      "getStarted": "ابدأ اليوم",
+      "externalLink": "رابط خارجي",
+      "customIcon": "أيقونة مخصصة"
+    },
+    "ctaButtons": []
+  },
   "contact": {
     "form": {
       "fullName": "الاسم الكامل",

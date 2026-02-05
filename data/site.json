@@ -10,7 +10,13 @@
           "headline": "Clean & Bright Laundry Services",
           "subheadline": "Sparkling results with friendly service every day",
           "ctaText": "Schedule a Pickup",
-          "secondaryCtaText": "View Services"
+          "secondaryCtaText": "View Services",
+          "ctaButtons": [
+            { "label": "Book Appointment" },
+            { "label": "Call Us Now" },
+            { "label": "View Menu" },
+            { "label": "Get Directions" }
+          ]
         }
       },
       "es": {
@@ -18,7 +24,13 @@
           "headline": "Servicios de lavandería limpios y brillantes",
           "subheadline": "Resultados impecables con atención amable todos los días",
           "ctaText": "Programar una recogida",
-          "secondaryCtaText": "Ver servicios"
+          "secondaryCtaText": "Ver servicios",
+          "ctaButtons": [
+            { "label": "Reservar Cita" },
+            { "label": "Llámenos Ahora" },
+            { "label": "Ver Menú" },
+            { "label": "Obtener Direcciones" }
+          ]
         }
       }
     }

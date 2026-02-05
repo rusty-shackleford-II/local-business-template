@@ -9,6 +9,7 @@ import ButtonGridEditor, { getEffectiveGridLayout, legacyToGridLayout } from './
 import HeroImageEditor from './HeroImageEditor';
 import TextSizePopup from './TextSizePopup';
 import { createPortal } from 'react-dom';
+import { useI18nContext } from './I18nProvider';
 import { 
   FaInstagram, 
   FaFacebookF, 
@@ -166,6 +167,8 @@ const HeroSocialLinks: React.FC<{
   className?: string;
   iconSizeMultiplier?: number; // Size multiplier (0.5 to 2.0, default 1.0)
 }> = ({ socialLinks, align = 'left', isFullwidthOverlay = false, compact = false, className = '', iconSizeMultiplier }) => {
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   const links = socialLinks?.links;
   
   // Check if we should show social links in hero
@@ -448,13 +451,13 @@ const HeroSocialLinks: React.FC<{
             rel="noopener noreferrer"
             className={`${getIconClass('text-gray-700')} overflow-hidden`}
             style={containerStyle}
-            aria-label={customLink.label || 'External Link'}
+            aria-label={customLink.label || t('hero.buttons.externalLink', 'External Link')}
           >
             {customLink.iconUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img 
                 src={customLink.iconUrl} 
-                alt={customLink.label || 'Custom icon'} 
+                alt={customLink.label || t('hero.buttons.customIcon', 'Custom icon')} 
                 style={iconStyle}
                 className="object-contain"
               />
@@ -469,6 +472,9 @@ const HeroSocialLinks: React.FC<{
 };
 
 const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, onHeroImageAddClick, imageStorage, colorPalette, sectionId = 'home', socialLinks }) => {
+  const i18n = useI18nContext();
+  const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  
   const [videoLoading, setVideoLoading] = useState(true);
   const [imageLoading, setImageLoading] = useState(true);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -522,7 +528,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     if (payment?.addHeroCta) {
       return [{
         id: 'payment-cta',
-        label: payment?.heroCtaLabel || hero?.cta?.label || 'Buy Now',
+        label: payment?.heroCtaLabel || hero?.cta?.label || t('hero.buttons.buyNow', 'Buy Now'),
         labelTextSize: payment?.heroCtaLabelTextSize || hero?.cta?.labelTextSize,
         actionType: 'contact', // Payment CTA scrolls to payment section
         showArrow: true
@@ -538,7 +544,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     if (hero?.cta) {
       return [{
         id: 'legacy-cta',
-        label: hero.cta.label || 'Get Started Today',
+        label: hero.cta.label || t('hero.buttons.getStarted', 'Get Started Today'),
         labelTextSize: hero.cta.labelTextSize,
         href: hero.cta.href,
         actionType: hero.cta.actionType,
@@ -550,10 +556,10 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     // Default button if nothing is configured
     return [{
       id: 'default-cta',
-      label: 'Get Started Today',
+      label: t('hero.buttons.getStarted', 'Get Started Today'),
       showArrow: true
     }];
-  }, [hero?.ctaButtons, hero?.cta, payment?.addHeroCta, payment?.heroCtaLabel, payment?.heroCtaLabelTextSize]);
+  }, [hero?.ctaButtons, hero?.cta, payment?.addHeroCta, payment?.heroCtaLabel, payment?.heroCtaLabelTextSize, t]);
   
   // Compute grid columns for buttons
   // Auto-detect based on button count if not explicitly set

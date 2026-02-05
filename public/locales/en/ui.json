@@ -12,6 +12,15 @@
     "shop": "Shop",
     "gallery": "Gallery"
   },
+  "hero": {
+    "buttons": {
+      "buyNow": "Buy Now",
+      "getStarted": "Get Started Today",
+      "externalLink": "External Link",
+      "customIcon": "Custom icon"
+    },
+    "ctaButtons": []
+  },
   "contact": {
     "form": {
       "fullName": "Full Name",
