@@ -126,7 +126,6 @@ export default function EditableText({
   // Popup manages its own outside-click; we avoid double-handling here
   const isEditingRef = useRef(false);
   const suppressBlurCommitRef = useRef(false);
-  const DEBUG = true; // Temporarily enabled to debug translation issues
   const isMenuPath = useMemo(() => typeof path === 'string' && path.startsWith('menu.'), [path]);
 
   useEffect(() => {
@@ -186,20 +185,12 @@ export default function EditableText({
       if (!isEditingRef.current) return;
       if (isMenuPath) {
         // For menu.* fields, avoid live updates; commit on blur to prevent re-renders while typing
-        if (DEBUG) {
-          // eslint-disable-next-line no-console
-          console.log('[MenuDebug EditableText] mutation skipped live update', { path });
-        }
         return;
       }
       
       // Skip live updates for multiline text to prevent duplication issues with Enter key
       // Multiline fields will commit their changes on blur instead
       if (multiline) {
-        if (DEBUG) {
-          // eslint-disable-next-line no-console
-          console.log('[EditableText] mutation skipped live update for multiline', { path });
-        }
         return;
       }
       
@@ -247,19 +238,11 @@ export default function EditableText({
 
   const handleFocus = useCallback(() => {
     isEditingRef.current = true;
-    if (DEBUG) {
-      // eslint-disable-next-line no-console
-      console.log('[MenuDebug EditableText] onFocus', { path });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleBlur = useCallback(() => {
     isEditingRef.current = false;
-    if (DEBUG) {
-      // eslint-disable-next-line no-console
-      console.log('[MenuDebug EditableText] onBlur', { path });
-    }
     
     // Extract the current text from the DOM
     let text = "";
@@ -541,6 +524,10 @@ export default function EditableText({
     'data-testid': dataTestId,
     'data-placeholder': placeholder || "Click to edit",
   };
+  
+  // Generate a unique key to force React to remount when language/edit mode changes
+  // This prevents stale innerHTML from editable mode persisting when switching languages
+  const elementKey = `${path || 'editable'}-${i18nContext?.currentLanguage || 'default'}-${effectiveEditable ? 'edit' : 'view'}`;
 
   // Add anchor-specific props if using as="a"
   if (as === "a") {
@@ -551,35 +538,14 @@ export default function EditableText({
 
   const displayValue = useMemo(() => {
     if (!path || !i18nContext?.enabled) {
-      if (DEBUG) console.log(`[EditableText] No path or i18n disabled, returning internal:`, internal);
       return internal;
     }
     if (i18nContext.currentLanguage === i18nContext.defaultLanguage) {
-      if (DEBUG) console.log(`[EditableText] Default language, returning internal:`, internal);
       return internal;
     }
     // Use value prop directly for translation fallback to avoid flash when switching languages
     const fallbackText = value !== undefined && value !== null ? String(value) : internal;
     const translatedText = i18nContext.t(path, fallbackText);
-    
-    if (DEBUG) {
-      console.log(`[EditableText] Translation lookup for path "${path}":`, {
-        currentLanguage: i18nContext.currentLanguage,
-        fallbackText: fallbackText,
-        translatedText: translatedText,
-        valueLength: String(value).length,
-        translatedLength: translatedText.length
-      });
-    }
-    
-    // Debug: Check if we're getting concatenated translations
-    if (DEBUG && translatedText && fallbackText && translatedText !== fallbackText && translatedText.includes(fallbackText)) {
-      console.warn(`⚠️ [EditableText] Possible concatenation detected for path "${path}":`, {
-        fallbackText,
-        translatedText,
-        currentLanguage: i18nContext.currentLanguage
-      });
-    }
     
     return translatedText;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -623,7 +589,7 @@ export default function EditableText({
     if (multiline && displayValue) {
       const parts = (displayValue || "").split('\n');
       return (
-        <Tag {...domProps}>
+        <Tag key={elementKey} {...domProps}>
           {parts.map((part, index) => (
             <React.Fragment key={index}>
               {part}
@@ -633,13 +599,14 @@ export default function EditableText({
         </Tag>
       );
     }
-    return <Tag {...domProps}>{displayValue || placeholder || null}</Tag>;
+    return <Tag key={elementKey} {...domProps}>{displayValue || placeholder || null}</Tag>;
   }
 
   // For editable elements, don't use React children - control via ref
   // For non-editable elements, use React children for proper rendering
   const editableElement = effectiveEditable ? (
     <Tag
+      key={elementKey}
       {...domProps}
       ref={setInitialContent}
       contentEditable
@@ -654,7 +621,7 @@ export default function EditableText({
     />
   ) : (
     // Non-editable: use React children for proper rendering
-    <Tag {...domProps}>
+    <Tag key={elementKey} {...domProps}>
       {multiline && displayValue ? (
         displayValue.split('\n').map((part, index, array) => (
           <React.Fragment key={index}>

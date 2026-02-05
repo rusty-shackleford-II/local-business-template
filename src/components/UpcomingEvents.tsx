@@ -235,6 +235,7 @@ Thank you!`;
           <EditableText
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+            style={{ color: upcomingEvents.titleTextColor }}
             value={upcomingEvents.title}
             path="upcomingEvents.title"
             editable={editable}
@@ -242,15 +243,23 @@ Thank you!`;
             placeholder="Enter events title"
             textSize={upcomingEvents.titleTextSize || 2.25} // Default to sister site section title size (desktop)
             onTextSizeChange={onEdit ? (size: number) => onEdit('upcomingEvents.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Events Title Size"
+            textSizeLabel="Events Title Style"
             textSizePresets={[1.875, 2.25, 2.75, 3.25]} // Section title presets
             textSizeNormal={2.25} // 36px - sister site section title size (desktop)
             textSizeMin={1.5}
             textSizeMax={4.0}
+            textColor={upcomingEvents.titleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('upcomingEvents.titleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={upcomingEvents.titleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('upcomingEvents.titleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           <EditableText
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto"
+            style={{ color: upcomingEvents.subtitleTextColor }}
             value={upcomingEvents.subtitle}
             path="upcomingEvents.subtitle"
             editable={editable}
@@ -259,11 +268,18 @@ Thank you!`;
             multiline
             textSize={upcomingEvents.subtitleTextSize || 1.125} // Default to sister site body text size
             onTextSizeChange={onEdit ? (size: number) => onEdit('upcomingEvents.subtitleTextSize', size.toString()) : undefined}
-            textSizeLabel="Events Subtitle Size"
+            textSizeLabel="Events Subtitle Style"
             textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
             textSizeNormal={1.125} // 18px - sister site body text size
             textSizeMin={0.875}
             textSizeMax={2.0}
+            textColor={upcomingEvents.subtitleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('upcomingEvents.subtitleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={upcomingEvents.subtitleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('upcomingEvents.subtitleTextFont', font) : undefined}
+            showFontPicker={true}
           />
         </div>
 
@@ -367,49 +383,73 @@ Thank you!`;
                             <EditableText
                               as="h3"
                               className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors duration-200"
+                              style={{ color: event.titleTextColor }}
                               value={event.title}
                               path={`upcomingEvents.items.${eventIndex}.title`}
                               editable={editable}
                               onEdit={onEdit}
                               placeholder="Enter event title"
-                              textSize={event.titleTextSize || 1.25} // Default to sister site medium headline size
+                              textSize={event.titleTextSize || 1.25}
                               onTextSizeChange={onEdit ? (size: number) => onEdit(`upcomingEvents.items.${eventIndex}.titleTextSize`, size.toString()) : undefined}
-                              textSizeLabel="Event Title Size"
-                              textSizePresets={[1.0, 1.25, 1.5, 1.75]} // Medium headline presets
-                              textSizeNormal={1.25} // 20px - sister site medium headline size
+                              textSizeLabel="Event Title Style"
+                              textSizePresets={[1.0, 1.25, 1.5, 1.75]}
+                              textSizeNormal={1.25}
                               textSizeMin={0.875}
                               textSizeMax={2.25}
+                              textColor={event.titleTextColor}
+                              onTextColorChange={onEdit ? (color: string) => onEdit(`upcomingEvents.items.${eventIndex}.titleTextColor`, color) : undefined}
+                              showColorPicker={true}
+                              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                              fontFamily={event.titleTextFont}
+                              onFontFamilyChange={onEdit ? (font: string) => onEdit(`upcomingEvents.items.${eventIndex}.titleTextFont`, font) : undefined}
+                              showFontPicker={true}
                             />
                             <EditableText
                               as="span"
                               className="text-primary-600 font-semibold whitespace-nowrap"
+                              style={{ color: event.pricePerPersonTextColor }}
                               value={event.pricePerPerson}
                               path={`upcomingEvents.items.${eventIndex}.pricePerPerson`}
                               editable={editable}
                               onEdit={onEdit}
                               placeholder="$0.00"
-                              textSize={event.pricePerPersonTextSize || 1.0} // text-base = 1rem
+                              textSize={event.pricePerPersonTextSize || 1.0}
                               onTextSizeChange={onEdit ? (size: number) => onEdit(`upcomingEvents.items.${eventIndex}.pricePerPersonTextSize`, size.toString()) : undefined}
-                              textSizeLabel="Event Price Size"
+                              textSizeLabel="Event Price Style"
+                              textColor={event.pricePerPersonTextColor}
+                              onTextColorChange={onEdit ? (color: string) => onEdit(`upcomingEvents.items.${eventIndex}.pricePerPersonTextColor`, color) : undefined}
+                              showColorPicker={true}
+                              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                              fontFamily={event.pricePerPersonTextFont}
+                              onFontFamilyChange={onEdit ? (font: string) => onEdit(`upcomingEvents.items.${eventIndex}.pricePerPersonTextFont`, font) : undefined}
+                              showFontPicker={true}
                             />
                           </div>
 
                           <EditableText
                             as="p"
                             className="text-gray-600 leading-relaxed mb-4"
+                            style={{ color: event.descriptionTextColor }}
                             value={event.description}
                             path={`upcomingEvents.items.${eventIndex}.description`}
                             editable={editable}
                             onEdit={onEdit}
                             placeholder="Enter event description"
                             multiline
-                            textSize={event.descriptionTextSize || 1.0} // Default to standard body text
+                            textSize={event.descriptionTextSize || 1.0}
                             onTextSizeChange={onEdit ? (size: number) => onEdit(`upcomingEvents.items.${eventIndex}.descriptionTextSize`, size.toString()) : undefined}
-                            textSizeLabel="Event Description Size"
-                            textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
-                            textSizeNormal={1.0} // 16px - standard body text
+                            textSizeLabel="Event Description Style"
+                            textSizePresets={[0.875, 1.0, 1.125, 1.25]}
+                            textSizeNormal={1.0}
                             textSizeMin={0.75}
                             textSizeMax={1.75}
+                            textColor={event.descriptionTextColor}
+                            onTextColorChange={onEdit ? (color: string) => onEdit(`upcomingEvents.items.${eventIndex}.descriptionTextColor`, color) : undefined}
+                            showColorPicker={true}
+                            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                            fontFamily={event.descriptionTextFont}
+                            onFontFamilyChange={onEdit ? (font: string) => onEdit(`upcomingEvents.items.${eventIndex}.descriptionTextFont`, font) : undefined}
+                            showFontPicker={true}
                           />
 
                           {/* Event Details */}
@@ -434,14 +474,22 @@ Thank you!`;
                                 <span className="font-medium">👥</span>
                                 <EditableText
                                   as="span"
+                                  style={{ color: event.capacityTextColor }}
                                   value={event.capacity}
                                   path={`upcomingEvents.items.${eventIndex}.capacity`}
                                   editable={editable}
                                   onEdit={onEdit}
                                   placeholder="20-50 guests"
-                                  textSize={event.capacityTextSize || 0.875} // text-sm = 0.875rem
+                                  textSize={event.capacityTextSize || 0.875}
                                   onTextSizeChange={onEdit ? (size: number) => onEdit(`upcomingEvents.items.${eventIndex}.capacityTextSize`, size.toString()) : undefined}
-                                  textSizeLabel="Event Capacity Size"
+                                  textSizeLabel="Event Capacity Style"
+                                  textColor={event.capacityTextColor}
+                                  onTextColorChange={onEdit ? (color: string) => onEdit(`upcomingEvents.items.${eventIndex}.capacityTextColor`, color) : undefined}
+                                  showColorPicker={true}
+                                  presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                                  fontFamily={event.capacityTextFont}
+                                  onFontFamilyChange={onEdit ? (font: string) => onEdit(`upcomingEvents.items.${eventIndex}.capacityTextFont`, font) : undefined}
+                                  showFontPicker={true}
                                 />
                               </div>
                             )}

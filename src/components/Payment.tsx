@@ -239,6 +239,7 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
             <EditableText
               as="h2"
               className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+              style={{ color: payment?.titleTextColor }}
               value={title}
               path="payment.title"
               editable={editable}
@@ -246,15 +247,23 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
               placeholder="Payment section title"
               textSize={payment?.titleTextSize || 2.25}
               onTextSizeChange={onEdit ? (size: number) => onEdit('payment.titleTextSize', size.toString()) : undefined}
-              textSizeLabel="Payment Title Size"
+              textSizeLabel="Payment Title Style"
               textSizePresets={[1.5, 2.0, 2.25, 2.5, 3.0]}
               textSizeNormal={2.25}
               textSizeMin={1.0}
               textSizeMax={4.0}
+              textColor={payment?.titleTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit('payment.titleTextColor', color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={payment?.titleTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit('payment.titleTextFont', font) : undefined}
+              showFontPicker={true}
             />
             <EditableText
               as="p"
               className="text-lg text-gray-600 mb-8"
+              style={{ color: payment?.descriptionTextColor }}
               value={description}
               path="payment.description"
               editable={editable}
@@ -263,11 +272,18 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
               multiline
               textSize={payment?.descriptionTextSize || 1.125}
               onTextSizeChange={onEdit ? (size: number) => onEdit('payment.descriptionTextSize', size.toString()) : undefined}
-              textSizeLabel="Payment Description Size"
+              textSizeLabel="Payment Description Style"
               textSizePresets={[0.875, 1.0, 1.125, 1.25, 1.5]}
               textSizeNormal={1.125}
               textSizeMin={0.75}
               textSizeMax={2.0}
+              textColor={payment?.descriptionTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit('payment.descriptionTextColor', color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={payment?.descriptionTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit('payment.descriptionTextFont', font) : undefined}
+              showFontPicker={true}
             />
           </div>
           {renderGallery()}
@@ -289,6 +305,7 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
             <EditableText
               as="h2"
               className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+              style={{ color: payment?.titleTextColor }}
               value={title}
               path="payment.title"
               editable={editable}
@@ -296,15 +313,23 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
               placeholder="Payment section title"
               textSize={payment?.titleTextSize || 2.25}
               onTextSizeChange={onEdit ? (size: number) => onEdit('payment.titleTextSize', size.toString()) : undefined}
-              textSizeLabel="Payment Title Size"
+              textSizeLabel="Payment Title Style"
               textSizePresets={[1.5, 2.0, 2.25, 2.5, 3.0]}
               textSizeNormal={2.25}
               textSizeMin={1.0}
               textSizeMax={4.0}
+              textColor={payment?.titleTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit('payment.titleTextColor', color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={payment?.titleTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit('payment.titleTextFont', font) : undefined}
+              showFontPicker={true}
             />
             <EditableText
               as="p"
               className="text-lg text-gray-600 mb-8"
+              style={{ color: payment?.descriptionTextColor }}
               value={description}
               path="payment.description"
               editable={editable}
@@ -313,11 +338,18 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
               multiline
               textSize={payment?.descriptionTextSize || 1.125}
               onTextSizeChange={onEdit ? (size: number) => onEdit('payment.descriptionTextSize', size.toString()) : undefined}
-              textSizeLabel="Payment Description Size"
+              textSizeLabel="Payment Description Style"
               textSizePresets={[0.875, 1.0, 1.125, 1.25, 1.5]}
               textSizeNormal={1.125}
               textSizeMin={0.75}
               textSizeMax={2.0}
+              textColor={payment?.descriptionTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit('payment.descriptionTextColor', color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={payment?.descriptionTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit('payment.descriptionTextFont', font) : undefined}
+              showFontPicker={true}
             />
             {renderGallery()}
             <div className="mt-8">
@@ -354,13 +386,21 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
                   editable={editable}
                   onEdit={onEdit}
                   placeholder="Button text"
+                  style={{ color: payment?.buttonLabelTextColor }}
                   textSize={payment?.buttonLabelTextSize || 1.0}
                   onTextSizeChange={onEdit ? (size: number) => onEdit('payment.buttonLabelTextSize', size.toString()) : undefined}
-                  textSizeLabel="Button Text Size"
+                  textSizeLabel="Button Text Style"
                   textSizePresets={[0.875, 1.0, 1.125, 1.25]}
                   textSizeNormal={1.0}
                   textSizeMin={0.75}
                   textSizeMax={1.5}
+                  textColor={payment?.buttonLabelTextColor}
+                  onTextColorChange={onEdit ? (color: string) => onEdit('payment.buttonLabelTextColor', color) : undefined}
+                  showColorPicker={true}
+                  presetColors={['#ffffff', '#000000', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                  fontFamily={payment?.buttonLabelTextFont}
+                  onFontFamilyChange={onEdit ? (font: string) => onEdit('payment.buttonLabelTextFont', font) : undefined}
+                  showFontPicker={true}
                 />
               </a>
               {!payment?.paymentLinkUrl && (

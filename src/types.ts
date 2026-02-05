@@ -12,7 +12,9 @@ export type Header = {
   logoSize?: number; // Logo size multiplier (0.5 to 3.0, default 1.0)
   expandableHeader?: boolean; // Whether header should expand when logo gets too large
   textSize?: number; // Text size multiplier (0.5 to 2.0, default 1.0)
+  textFont?: string; // Business name font family
   navLinkSize?: number; // Nav link text size multiplier (0.75 to 1.5, default 1.0)
+  navLinkFont?: string; // Nav link font family
 };
 
 // Hero CTA button type for multiple buttons support
@@ -125,8 +127,12 @@ export type Hero = {
 export type AboutStatistic = {
   name: string;
   nameTextSize?: number;
+  nameTextColor?: string;
+  nameTextFont?: string;
   value: string;
   valueTextSize?: number;
+  valueTextColor?: string;
+  valueTextFont?: string;
   icon: string;
 };
 
@@ -140,11 +146,17 @@ export type AboutImage = {
 export type About = {
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   description?: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   statistics?: AboutStatistic[];
   features?: string[];
   featuresTextSize?: number;
+  featuresTextColor?: string;
+  featuresTextFont?: string;
   images?: AboutImage[];
   thumbnailSize?: number; // Size multiplier for gallery thumbnails (1.0 to 3.0, default 1.0)
   layoutStyle?: 'standard' | 'mosaic'; // Layout style: standard (horizontal carousel) or mosaic (tiled grid)
@@ -154,8 +166,12 @@ export type ServiceItem = {
   id: string;
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   description: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   imageUrl?: string;
   alt?: string;
   // Optional thumbnail URL for cropped version (backwards compatible)
@@ -167,25 +183,43 @@ export type ServiceItem = {
 export type Services = {
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   items: ServiceItem[];
   descriptionTextSize?: number; // Uniform text size for all service descriptions
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
+  itemTitleTextColor?: string; // Uniform text color for all service item titles
+  itemTitleTextFont?: string; // Uniform font for all service item titles
 };
 
 export type BusinessBenefitItem = {
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   description: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
 };
 
 export type BusinessBenefits = {
   title: string;
   titleTextSize?: number; // Main section title size
+  titleTextColor?: string;
+  titleTextFont?: string;
   items: BusinessBenefitItem[];
   itemTitleTextSize?: number; // Uniform text size for all benefit item titles
+  itemTitleTextColor?: string;
+  itemTitleTextFont?: string;
   itemDescriptionTextSize?: number; // Uniform text size for all benefit item descriptions
+  itemDescriptionTextColor?: string;
+  itemDescriptionTextFont?: string;
 };
 
 
@@ -194,22 +228,39 @@ export type TestimonialItem = {
   authorImageUrl?: string;
   authorName: string;
   authorNameTextSize?: number;
+  authorNameTextColor?: string;
+  authorNameTextFont?: string;
   rating: number;
   reviewDate?: string;
   reviewDateTextSize?: number;
+  reviewDateTextColor?: string;
+  reviewDateTextFont?: string;
   reviewText: string;
   reviewTextTextSize?: number;
+  reviewTextTextColor?: string;
+  reviewTextTextFont?: string;
 };
 
 export type Testimonials = { 
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   overallRating?: number;
   totalReviews?: number;
   showGoogleReviewsBadge?: boolean;
-  items: TestimonialItem[] 
+  items: TestimonialItem[];
+  // Uniform styles for all testimonial items
+  itemAuthorNameTextColor?: string;
+  itemAuthorNameTextFont?: string;
+  itemReviewTextTextColor?: string;
+  itemReviewTextTextFont?: string;
+  itemReviewDateTextColor?: string;
+  itemReviewDateTextFont?: string;
 };
 
 // Upcoming Events types
@@ -217,16 +268,24 @@ export type UpcomingEventItem = {
   id: string;
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   description: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   eventType: string;
   eventTypeTextSize?: number;
   date?: string;
   time?: string;
   capacity?: string;
   capacityTextSize?: number;
+  capacityTextColor?: string;
+  capacityTextFont?: string;
   pricePerPerson?: string;
   pricePerPersonTextSize?: number;
+  pricePerPersonTextColor?: string;
+  pricePerPersonTextFont?: string;
   imageUrl?: string;
   alt?: string;
   inquireUrl?: string; // External URL for inquire button instead of contact form
@@ -286,11 +345,20 @@ export type EventsButtonStyles = {
 export type UpcomingEvents = {
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   items: UpcomingEventItem[];
   // Global button styling for all event buttons
   buttonStyles?: EventsButtonStyles;
+  // Uniform styles for all event items
+  itemTitleTextColor?: string;
+  itemTitleTextFont?: string;
+  itemDescriptionTextColor?: string;
+  itemDescriptionTextFont?: string;
 };
 
 // Menu types
@@ -298,10 +366,16 @@ export type MenuItem = {
   id: string;
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   description?: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   price?: string;
   priceTextSize?: number;
+  priceTextColor?: string;
+  priceTextFont?: string;
   imageUrl?: string;
   alt?: string;
   dietary?: string[];
@@ -320,8 +394,12 @@ export type MenuCategory = {
   id: string;
   name: string;
   nameTextSize?: number;
+  nameTextColor?: string;
+  nameTextFont?: string;
   description?: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   items: MenuItem[];
   layoutStyle?: 'carousel' | 'mosaic'; // Layout style: carousel (horizontal swiper) or mosaic (grid)
   cardSize?: number; // Card size multiplier (1.0 to 3.0, default 1.0)
@@ -338,8 +416,12 @@ export type MenuTab = {
   id: string;
   name: string;
   nameTextSize?: number;
+  nameTextColor?: string;
+  nameTextFont?: string;
   description?: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   menuImages?: MenuImage[]; // Large menu images that can be swiped through
   bulkImages?: MenuBulkImage[];
   categories?: MenuCategory[];
@@ -351,10 +433,21 @@ export type MenuTab = {
 export type Menu = {
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle?: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   tabs?: MenuTab[];
   items?: MenuItem[]; // Keep for backward compatibility
+  // Uniform styles for all menu items
+  itemTitleTextColor?: string;
+  itemTitleTextFont?: string;
+  itemDescriptionTextColor?: string;
+  itemDescriptionTextFont?: string;
+  itemPriceTextColor?: string;
+  itemPriceTextFont?: string;
 };
 
 // Custom social link with optional custom icon
@@ -423,12 +516,22 @@ export type License = {
 export type Contact = {
   title: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle?: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   address?: string;
   addressTextSize?: number;
+  addressTextColor?: string;
+  addressTextFont?: string;
   phone?: string;
   phoneTextSize?: number;
+  phoneTextColor?: string;
+  phoneTextFont?: string;
+  emailTextColor?: string;
+  emailTextFont?: string;
   mapEmbedUrl?: string;
   contactRecipients?: string[];
   businessHours?: BusinessHours;
@@ -444,15 +547,23 @@ export type Contact = {
   consentText?: string; // The text to display (e.g., "By checking this box, you agree to receive marketing emails")
   consentRequiresCheckbox?: boolean; // Whether to show a checkbox
   consentTextSize?: number; // Text size for consent field
+  consentTextColor?: string;
+  consentTextFont?: string;
 };
 
 export type Footer = {
   socialLinks?: { platform: string; url: string }[];
   copyrightText?: string;
   copyrightTextSize?: number;
+  copyrightTextColor?: string;
+  copyrightTextFont?: string;
   logoSize?: number; // Logo size multiplier (0.5 to 3.0, default 1.0)
   textSize?: number; // Business name text size multiplier (0.5 to 2.0, default 1.0)
+  textColor?: string; // Business name text color
+  textFont?: string; // Business name text font
   navLinkSize?: number; // Nav link text size multiplier (0.75 to 1.5, default 1.0)
+  navLinkColor?: string; // Nav link text color
+  navLinkFont?: string; // Nav link text font
   hidevLogoSize?: number; // Hi Dev logo size multiplier (0.4 to 1.0, default 1.0 = max size)
   showLogo?: boolean | string; // Toggle footer logo visibility (default: true when undefined for backwards compatibility, stored as string in editor)
   showBusinessName?: boolean | string; // Toggle footer business name visibility (default: true when undefined for backwards compatibility, stored as string in editor)
@@ -478,8 +589,12 @@ export type SEO = {
 export type VideoItem = {
   title?: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle?: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   provider: 'youtube' | 'vimeo';
   url: string; // Accepts full iframe embed code or URL; component extracts src as needed
   aspectRatio?: string; // e.g., "16:9", "1:1", "9:16" - used for cover behavior
@@ -495,9 +610,18 @@ export type VideoItem = {
 export type Videos = {
   title?: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   subtitle?: string;
   subtitleTextSize?: number;
+  subtitleTextColor?: string;
+  subtitleTextFont?: string;
   items: VideoItem[];
+  // Uniform styles for all video items
+  itemTitleTextColor?: string;
+  itemTitleTextFont?: string;
+  itemSubtitleTextColor?: string;
+  itemSubtitleTextFont?: string;
 };
 
 // Payment section types
@@ -520,16 +644,24 @@ export type PaymentGalleryImage = {
 export type Payment = {
   title?: string;
   titleTextSize?: number;
+  titleTextColor?: string;
+  titleTextFont?: string;
   description?: string;
   descriptionTextSize?: number;
+  descriptionTextColor?: string;
+  descriptionTextFont?: string;
   buttonLabel?: string;
   buttonLabelTextSize?: number;
+  buttonLabelTextColor?: string;
+  buttonLabelTextFont?: string;
   buttonColor?: string; // Button background color
   provider?: PaymentProvider; // Type of payment integration
   paymentLinkUrl?: string; // Payment link URL (Stripe, Shopify, etc.)
   shopifyEmbedCode?: string; // Shopify Buy Button embed code
   galleryImages?: PaymentGalleryImage[]; // Product image gallery
   galleryTitle?: string; // Gallery section title
+  galleryTitleTextColor?: string;
+  galleryTitleTextFont?: string;
   thumbnailSize?: number; // Size multiplier for gallery thumbnails (1.0 to 3.0, default 1.0)
   addHeroCta?: boolean; // If enabled, hero CTA scrolls to payment
   heroCtaLabel?: string; // Optional override label for hero CTA

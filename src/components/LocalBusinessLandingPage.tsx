@@ -11,6 +11,7 @@ import Contact from "./Contact";
 import Footer from "./Footer";
 import Videos from "./Videos";
 import Payment from "./Payment";
+import { TextStyleProvider } from "./TextStyleContext";
 
 // Import proper types
 import type { SiteData as SiteDataType, SectionKey, Page, PageSection, Hero as HeroType, About as AboutType, Services as ServicesType, BusinessBenefits as BusinessBenefitsType, Menu as MenuType, Testimonials as TestimonialsType, UpcomingEvents as UpcomingEventsType, Contact as ContactType, Videos as VideosType, Payment as PaymentType } from '../types';
@@ -512,7 +513,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     return <React.Fragment key={sectionConfig.sectionId}>{content}</React.Fragment>;
   };
 
-  return (
+  const content = (
     <div className="App">
       <Header 
         businessName={site.businessInfo?.businessName || site.businessName || 'Local Business'} 
@@ -553,6 +554,13 @@ export default function LocalBusinessLandingPage(site: SiteData) {
       />
     </div>
   );
+
+  // Wrap with TextStyleProvider only in edit mode to track recent fonts/colors
+  if (site.editable) {
+    return <TextStyleProvider>{content}</TextStyleProvider>;
+  }
+
+  return content;
 }
 
 

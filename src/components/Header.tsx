@@ -663,7 +663,10 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             </nav>
             
             {/* Language Toggle - Desktop */}
-            <div className="hidden md:block">
+            <div 
+              className="hidden md:block"
+              onClick={(e) => e.stopPropagation()}
+            >
               <LanguageToggle 
                 navTextColor={header?.colors?.navText}
                 enableHoverSelection={false}
@@ -755,7 +758,10 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
               )}
               
               {/* Language Toggle - Mobile */}
-              <div className="pt-2 border-t border-gray-200">
+              <div 
+                className="pt-2 border-t border-gray-200"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <LanguageToggle 
                   navTextColor={header?.colors?.navText}
                   enableHoverSelection={false}

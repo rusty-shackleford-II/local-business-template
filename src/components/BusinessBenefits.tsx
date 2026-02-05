@@ -137,6 +137,7 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
           <EditableText
             as="h3"
             className="text-2xl md:text-3xl font-bold text-gray-900 mb-8 text-center mobile-left"
+            style={{ color: businessBenefits.titleTextColor }}
             value={businessBenefits.title}
             path="businessBenefits.title"
             editable={editable}
@@ -144,11 +145,18 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
             placeholder="Benefits section title"
             textSize={businessBenefits.titleTextSize || 1.5}
             onTextSizeChange={onEdit ? (size: number) => onEdit('businessBenefits.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Benefits Title Size"
+            textSizeLabel="Benefits Title Style"
             textSizePresets={[1.25, 1.5, 1.875, 2.25]}
             textSizeNormal={1.5}
             textSizeMin={1.0}
             textSizeMax={2.75}
+            textColor={businessBenefits.titleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('businessBenefits.titleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={businessBenefits.titleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('businessBenefits.titleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {displayItems.map(({ benefit, originalIndex }, displayIndex) => (
@@ -185,6 +193,7 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
                       <EditableText
                         as="h4"
                         className="text-gray-900 font-semibold mb-1"
+                        style={{ color: businessBenefits.itemTitleTextColor }}
                         value={benefit.title}
                         path={`businessBenefits.items.${originalIndex}.title`}
                         editable={editable}
@@ -193,15 +202,23 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
                         placeholder={newlyAddedIndices.has(originalIndex) ? "Enter title..." : ""}
                         textSize={businessBenefits.itemTitleTextSize || 1.0}
                         onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.itemTitleTextSize`, size.toString()) : undefined}
-                        textSizeLabel="Benefit Title Size (All Items)"
+                        textSizeLabel="Benefit Title Style (All Items)"
                         textSizePresets={[0.875, 1.0, 1.125, 1.25]}
                         textSizeNormal={1.0}
                         textSizeMin={0.75}
                         textSizeMax={1.75}
+                        textColor={businessBenefits.itemTitleTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('businessBenefits.itemTitleTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={businessBenefits.itemTitleTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('businessBenefits.itemTitleTextFont', font) : undefined}
+                        showFontPicker={true}
                       />
                       <EditableText
                         as="p"
                         className="text-gray-700 leading-relaxed"
+                        style={{ color: businessBenefits.itemDescriptionTextColor }}
                         value={benefit.description}
                         path={`businessBenefits.items.${originalIndex}.description`}
                         editable={editable}
@@ -211,11 +228,18 @@ const BusinessBenefitsComponent: React.FC<Props> = ({
                         multiline
                         textSize={businessBenefits.itemDescriptionTextSize || 1.0}
                         onTextSizeChange={onEdit ? (size: number) => onEdit(`businessBenefits.itemDescriptionTextSize`, size.toString()) : undefined}
-                        textSizeLabel="Benefit Description Size (All Items)"
+                        textSizeLabel="Benefit Description Style (All Items)"
                         textSizePresets={[0.875, 1.0, 1.125, 1.25]}
                         textSizeNormal={1.0}
                         textSizeMin={0.75}
                         textSizeMax={1.75}
+                        textColor={businessBenefits.itemDescriptionTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('businessBenefits.itemDescriptionTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={businessBenefits.itemDescriptionTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('businessBenefits.itemDescriptionTextFont', font) : undefined}
+                        showFontPicker={true}
                       />
                     </div>
                   </div>

@@ -264,6 +264,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
             <EditableText
               as="h4"
               className={`text-base sm:text-lg font-medium text-gray-900 leading-tight ${item.price ? 'flex-1 pr-3' : ''}`}
+              style={{ color: item.titleTextColor }}
               value={item.title}
               path={`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.title`}
               editable={editable}
@@ -271,16 +272,24 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
               placeholder="Enter item name"
               textSize={item.titleTextSize || 1.0}
               onTextSizeChange={onEdit ? (size: number) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.titleTextSize`, size.toString()) : undefined}
-              textSizeLabel="Menu Item Title Size"
+              textSizeLabel="Menu Item Title Style"
               textSizePresets={[0.875, 1.0, 1.125, 1.25]}
               textSizeNormal={1.0}
               textSizeMin={0.75}
               textSizeMax={1.75}
+              textColor={item.titleTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.titleTextColor`, color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={item.titleTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.titleTextFont`, font) : undefined}
+              showFontPicker={true}
             />
             {(item.price || editable) && (
               <EditableText
                 as="span"
                 className="text-base sm:text-lg font-semibold text-green-600 whitespace-nowrap"
+                style={{ color: item.priceTextColor }}
                 value={item.price}
                 path={`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.price`}
                 editable={editable}
@@ -288,17 +297,25 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
                 placeholder=""
                 textSize={item.priceTextSize || 1.0}
                 onTextSizeChange={onEdit ? (size: number) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.priceTextSize`, size.toString()) : undefined}
-                textSizeLabel="Menu Item Price Size"
+                textSizeLabel="Menu Item Price Style"
                 textSizePresets={[0.875, 1.0, 1.125, 1.25]}
                 textSizeNormal={1.0}
                 textSizeMin={0.75}
                 textSizeMax={1.75}
+                textColor={item.priceTextColor}
+                onTextColorChange={onEdit ? (color: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.priceTextColor`, color) : undefined}
+                showColorPicker={true}
+                presetColors={['#000000', '#ffffff', '#16a34a', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                fontFamily={item.priceTextFont}
+                onFontFamilyChange={onEdit ? (font: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.priceTextFont`, font) : undefined}
+                showFontPicker={true}
               />
             )}
           </div>
           <EditableText
             as="p"
             className="text-gray-600 text-sm leading-relaxed mb-3"
+            style={{ color: item.descriptionTextColor }}
             value={item.description}
             path={`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.description`}
             editable={editable}
@@ -307,11 +324,18 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
             multiline
             textSize={item.descriptionTextSize || 0.875}
             onTextSizeChange={onEdit ? (size: number) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.descriptionTextSize`, size.toString()) : undefined}
-            textSizeLabel="Menu Item Description Size"
+            textSizeLabel="Menu Item Description Style"
             textSizePresets={[0.75, 0.875, 1.0, 1.125]}
             textSizeNormal={0.875}
             textSizeMin={0.625}
             textSizeMax={1.5}
+            textColor={item.descriptionTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.descriptionTextColor`, color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={item.descriptionTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.items.${itemIndex}.descriptionTextFont`, font) : undefined}
+            showFontPicker={true}
           />
           {item.dietary && item.dietary.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -332,6 +356,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
         <EditableText
           as="h3"
           className="text-xl sm:text-2xl font-semibold text-gray-900 mb-2"
+          style={{ color: category.nameTextColor }}
           value={category.name}
           path={`menu.tabs.${activeTab}.categories.${categoryIndex}.name`}
           editable={editable}
@@ -339,16 +364,24 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
           placeholder="Enter category name"
           textSize={category.nameTextSize || 1.25}
           onTextSizeChange={onEdit ? (size: number) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.nameTextSize`, size.toString()) : undefined}
-          textSizeLabel="Category Name Size"
+          textSizeLabel="Category Name Style"
           textSizePresets={[1.0, 1.25, 1.5, 1.75]}
           textSizeNormal={1.25}
           textSizeMin={0.875}
           textSizeMax={2.25}
+          textColor={category.nameTextColor}
+          onTextColorChange={onEdit ? (color: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.nameTextColor`, color) : undefined}
+          showColorPicker={true}
+          presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+          fontFamily={category.nameTextFont}
+          onFontFamilyChange={onEdit ? (font: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.nameTextFont`, font) : undefined}
+          showFontPicker={true}
         />
         <div className="w-16 h-px bg-gray-300 mx-auto mb-2"></div>
         <EditableText
           as="p"
           className="text-gray-600 text-sm sm:text-base"
+          style={{ color: category.descriptionTextColor }}
           value={category.description}
           path={`menu.tabs.${activeTab}.categories.${categoryIndex}.description`}
           editable={editable}
@@ -357,11 +390,18 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
           multiline
           textSize={category.descriptionTextSize || 1.0}
           onTextSizeChange={onEdit ? (size: number) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.descriptionTextSize`, size.toString()) : undefined}
-          textSizeLabel="Category Description Size"
+          textSizeLabel="Category Description Style"
           textSizePresets={[0.875, 1.0, 1.125, 1.25]}
           textSizeNormal={1.0}
           textSizeMin={0.75}
           textSizeMax={1.75}
+          textColor={category.descriptionTextColor}
+          onTextColorChange={onEdit ? (color: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.descriptionTextColor`, color) : undefined}
+          showColorPicker={true}
+          presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+          fontFamily={category.descriptionTextFont}
+          onFontFamilyChange={onEdit ? (font: string) => onEdit(`menu.tabs.${activeTab}.categories.${categoryIndex}.descriptionTextFont`, font) : undefined}
+          showFontPicker={true}
         />
       </div>
 
@@ -603,6 +643,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
             <EditableText
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4"
+            style={{ color: menu.titleTextColor }}
             value={menu.title}
             path="menu.title"
             editable={editable}
@@ -610,15 +651,22 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
             placeholder="Enter menu title"
             textSize={menu.titleTextSize || 2.25} // Default to sister site section title size (desktop)
             onTextSizeChange={onEdit ? (size: number) => onEdit('menu.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Menu Title Size"
+            textSizeLabel="Menu Title Style"
             textSizePresets={[1.875, 2.25, 2.75, 3.25]} // Section title presets
             textSizeNormal={2.25} // 36px - sister site section title size (desktop)
             textSizeMin={1.5}
             textSizeMax={4.0}
+            textColor={menu.titleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('menu.titleTextColor', color) : undefined}
+            showColorPicker={true}
+            fontFamily={menu.titleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('menu.titleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           <EditableText
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto"
+            style={{ color: menu.subtitleTextColor }}
             value={menu.subtitle}
             path="menu.subtitle"
             editable={editable}
@@ -627,11 +675,17 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
             multiline
             textSize={menu.subtitleTextSize || 1.125} // Default to sister site body text size
             onTextSizeChange={onEdit ? (size: number) => onEdit('menu.subtitleTextSize', size.toString()) : undefined}
-            textSizeLabel="Menu Subtitle Size"
+            textSizeLabel="Menu Subtitle Style"
             textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
             textSizeNormal={1.125} // 18px - sister site body text size
             textSizeMin={0.875}
             textSizeMax={2.0}
+            textColor={menu.subtitleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('menu.subtitleTextColor', color) : undefined}
+            showColorPicker={true}
+            fontFamily={menu.subtitleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('menu.subtitleTextFont', font) : undefined}
+            showFontPicker={true}
           />
         </div>
 
@@ -669,19 +723,27 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                     <EditableText
                       as="p"
                       className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto"
+                      style={{ color: menu.tabs![activeTab].descriptionTextColor }}
                       value={menu.tabs![activeTab].description}
                       path={`menu.tabs.${activeTab}.description`}
                       editable={editable}
                       onEdit={onEdit}
                       placeholder="Enter tab description"
                       multiline
-                      textSize={menu.tabs![activeTab].descriptionTextSize || 1.125} // Default to sister site body text size
+                      textSize={menu.tabs![activeTab].descriptionTextSize || 1.125}
                       onTextSizeChange={onEdit ? (size: number) => onEdit(`menu.tabs.${activeTab}.descriptionTextSize`, size.toString()) : undefined}
-                      textSizeLabel="Tab Description Size"
-                      textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
-                      textSizeNormal={1.125} // 18px - sister site body text size
+                      textSizeLabel="Tab Description Style"
+                      textSizePresets={[1.0, 1.125, 1.25, 1.5]}
+                      textSizeNormal={1.125}
                       textSizeMin={0.875}
                       textSizeMax={2.0}
+                      textColor={menu.tabs![activeTab].descriptionTextColor}
+                      onTextColorChange={onEdit ? (color: string) => onEdit(`menu.tabs.${activeTab}.descriptionTextColor`, color) : undefined}
+                      showColorPicker={true}
+                      presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                      fontFamily={menu.tabs![activeTab].descriptionTextFont}
+                      onFontFamilyChange={onEdit ? (font: string) => onEdit(`menu.tabs.${activeTab}.descriptionTextFont`, font) : undefined}
+                      showFontPicker={true}
                     />
                   </div>
                 )}

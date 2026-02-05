@@ -51,6 +51,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
           <EditableText
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+            style={{ color: services.titleTextColor }}
             value={services.title}
             path="services.title"
             editable={editable}
@@ -58,15 +59,23 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
             placeholder="Services section title"
             textSize={services.titleTextSize || 2.25} // Default to sister site section title size (desktop)
             onTextSizeChange={onEdit ? (size: number) => onEdit('services.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Services Title Size"
+            textSizeLabel="Services Title Style"
             textSizePresets={[1.875, 2.25, 2.75, 3.25]} // Section title presets
             textSizeNormal={2.25} // 36px - sister site section title size (desktop)
             textSizeMin={1.5}
             textSizeMax={4.0}
+            textColor={services.titleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('services.titleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={services.titleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('services.titleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           <EditableText
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto"
+            style={{ color: services.subtitleTextColor }}
             value={services.subtitle}
             path="services.subtitle"
             editable={editable}
@@ -75,11 +84,18 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
             multiline
             textSize={services.subtitleTextSize || 1.125} // Default to sister site body text size
             onTextSizeChange={onEdit ? (size: number) => onEdit('services.subtitleTextSize', size.toString()) : undefined}
-            textSizeLabel="Services Subtitle Size"
+            textSizeLabel="Services Subtitle Style"
             textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
             textSizeNormal={1.125} // 18px - sister site body text size
             textSizeMin={0.875}
             textSizeMax={2.0}
+            textColor={services.subtitleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('services.subtitleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={services.subtitleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('services.subtitleTextFont', font) : undefined}
+            showFontPicker={true}
           />
         </div>
 
@@ -154,6 +170,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
                   <EditableText
                     as="h3"
                     className="text-xl font-semibold text-gray-900 mb-3 group-hover:text-primary-600 transition-colors duration-200"
+                    style={{ color: services.itemTitleTextColor }}
                     value={service.title}
                     path={`services.items.${index}.title`}
                     editable={editable}
@@ -161,15 +178,23 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
                     placeholder="Service title"
                     textSize={services.titleTextSize || 1.25} // Uniform size for ALL service titles
                     onTextSizeChange={onEdit ? (size: number) => onEdit(`services.titleTextSize`, size.toString()) : undefined}
-                    textSizeLabel="Service Title Size (All Cards)"
+                    textSizeLabel="Service Title Style (All Cards)"
                     textSizePresets={[1.0, 1.25, 1.5, 1.75]} // Medium headline presets
                     textSizeNormal={1.25} // 20px - sister site medium headline size
                     textSizeMin={0.875}
                     textSizeMax={2.25}
+                    textColor={services.itemTitleTextColor}
+                    onTextColorChange={onEdit ? (color: string) => onEdit('services.itemTitleTextColor', color) : undefined}
+                    showColorPicker={true}
+                    presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                    fontFamily={services.itemTitleTextFont}
+                    onFontFamilyChange={onEdit ? (font: string) => onEdit('services.itemTitleTextFont', font) : undefined}
+                    showFontPicker={true}
                   />
                   <EditableText
                     as="p"
                     className="text-gray-600 leading-relaxed"
+                    style={{ color: services.descriptionTextColor }}
                     value={service.description}
                     path={`services.items.${index}.description`}
                     editable={editable}
@@ -178,11 +203,18 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
                     multiline
                     textSize={services.descriptionTextSize || 1.0} // Uniform size for ALL service descriptions
                     onTextSizeChange={onEdit ? (size: number) => onEdit(`services.descriptionTextSize`, size.toString()) : undefined}
-                    textSizeLabel="Service Description Size (All Cards)"
+                    textSizeLabel="Service Description Style (All Cards)"
                     textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
                     textSizeNormal={1.0} // 16px - standard body text
                     textSizeMin={0.75}
                     textSizeMax={1.75}
+                    textColor={services.descriptionTextColor}
+                    onTextColorChange={onEdit ? (color: string) => onEdit('services.descriptionTextColor', color) : undefined}
+                    showColorPicker={true}
+                    presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                    fontFamily={services.descriptionTextFont}
+                    onFontFamilyChange={onEdit ? (font: string) => onEdit('services.descriptionTextFont', font) : undefined}
+                    showFontPicker={true}
                   />
                 </div>
               </CardWrapper>

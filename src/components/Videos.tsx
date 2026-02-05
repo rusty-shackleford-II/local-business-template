@@ -210,6 +210,7 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
               <EditableText
                 as="h2"
                 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 pb-3 border-b border-gray-200 inline-block"
+                style={{ color: videos.titleTextColor }}
                 value={videos.title || ''}
                 path="videos.title"
                 editable={!!editable}
@@ -217,14 +218,22 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
                 placeholder="Videos"
                 textSize={videos.titleTextSize || 2.25}
                 onTextSizeChange={onEdit ? (size: number) => onEdit('videos.titleTextSize', size.toString()) : undefined}
-                textSizeLabel="Videos Title Size"
+                textSizeLabel="Videos Title Style"
                 textSizePresets={[1.875, 2.25, 2.75, 3.25]}
+                textColor={videos.titleTextColor}
+                onTextColorChange={onEdit ? (color: string) => onEdit('videos.titleTextColor', color) : undefined}
+                showColorPicker={true}
+                presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                fontFamily={videos.titleTextFont}
+                onFontFamilyChange={onEdit ? (font: string) => onEdit('videos.titleTextFont', font) : undefined}
+                showFontPicker={true}
               />
             )}
             {(videos.subtitle || editable) && (
               <EditableText
                 as="p"
                 className="mt-4 text-lg text-gray-600 max-w-2xl mx-auto"
+                style={{ color: videos.subtitleTextColor }}
                 value={videos.subtitle || ''}
                 path="videos.subtitle"
                 editable={!!editable}
@@ -232,8 +241,15 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
                 placeholder="See our work in action"
                 textSize={videos.subtitleTextSize || 1.125}
                 onTextSizeChange={onEdit ? (size: number) => onEdit('videos.subtitleTextSize', size.toString()) : undefined}
-                textSizeLabel="Videos Subtitle Size"
+                textSizeLabel="Videos Subtitle Style"
                 textSizePresets={[1.0, 1.125, 1.25, 1.5]}
+                textColor={videos.subtitleTextColor}
+                onTextColorChange={onEdit ? (color: string) => onEdit('videos.subtitleTextColor', color) : undefined}
+                showColorPicker={true}
+                presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                fontFamily={videos.subtitleTextFont}
+                onFontFamilyChange={onEdit ? (font: string) => onEdit('videos.subtitleTextFont', font) : undefined}
+                showFontPicker={true}
               />
             )}
           </div>
@@ -247,6 +263,7 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
                     <EditableText
                       as="h3"
                       className="text-xl font-bold tracking-tight text-gray-900 mb-2"
+                      style={{ color: video.titleTextColor }}
                       value={video.title || ''}
                       path={`videos.items.${index}.title`}
                       editable={!!editable}
@@ -254,14 +271,22 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
                       placeholder="Video title"
                       textSize={video.titleTextSize || 1.25}
                       onTextSizeChange={onEdit ? (size: number) => onEdit(`videos.items.${index}.titleTextSize`, size.toString()) : undefined}
-                      textSizeLabel="Video Title Size"
+                      textSizeLabel="Video Title Style"
                       textSizePresets={[1.0, 1.125, 1.25, 1.5]}
+                      textColor={video.titleTextColor}
+                      onTextColorChange={onEdit ? (color: string) => onEdit(`videos.items.${index}.titleTextColor`, color) : undefined}
+                      showColorPicker={true}
+                      presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                      fontFamily={video.titleTextFont}
+                      onFontFamilyChange={onEdit ? (font: string) => onEdit(`videos.items.${index}.titleTextFont`, font) : undefined}
+                      showFontPicker={true}
                     />
                   )}
                   {(video.subtitle || editable) && (
                     <EditableText
                       as="p"
                       className="text-lg text-gray-600 max-w-2xl mx-auto"
+                      style={{ color: video.subtitleTextColor }}
                       value={video.subtitle || ''}
                       path={`videos.items.${index}.subtitle`}
                       editable={!!editable}
@@ -269,8 +294,15 @@ export default function Videos({ videos, isPreview, backgroundClass = 'bg-white'
                       placeholder="Video subtitle"
                       textSize={video.subtitleTextSize || 1.0}
                       onTextSizeChange={onEdit ? (size: number) => onEdit(`videos.items.${index}.subtitleTextSize`, size.toString()) : undefined}
-                      textSizeLabel="Video Subtitle Size"
+                      textSizeLabel="Video Subtitle Style"
                       textSizePresets={[0.875, 1.0, 1.125, 1.25]}
+                      textColor={video.subtitleTextColor}
+                      onTextColorChange={onEdit ? (color: string) => onEdit(`videos.items.${index}.subtitleTextColor`, color) : undefined}
+                      showColorPicker={true}
+                      presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                      fontFamily={video.subtitleTextFont}
+                      onFontFamilyChange={onEdit ? (font: string) => onEdit(`videos.items.${index}.subtitleTextFont`, font) : undefined}
+                      showFontPicker={true}
                     />
                   )}
                 </div>

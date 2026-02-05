@@ -112,20 +112,10 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   // Backwards-compatible business name text: use footer.brandText if defined, otherwise fall back to businessName prop
   const displayBusinessName = footer?.brandText !== undefined ? footer.brandText : businessName;
   
-  // Debug: log what translations the footer is getting
-  console.log(`🦶 [Footer] RENDER - i18n enabled:`, i18n?.enabled, `language:`, i18n?.currentLanguage);
-  console.log(`🦶 [Footer] businessName:`, businessName, `displayBusinessName:`, displayBusinessName);
-  console.log(`🦶 [Footer] Actual t() results in render:`, {
-    privacyPolicy: t('footer.privacyPolicy', 'Privacy Policy'),
-    termsAndConditions: t('footer.termsAndConditions', 'Terms and Conditions'),
-    allRightsReserved: t('footer.allRightsReserved', 'All rights reserved')
-  });
-  
   // Force variables to check they're being used
   const privacyText = t('footer.privacyPolicy', 'Privacy Policy');
   const termsText = t('footer.termsAndConditions', 'Terms and Conditions');
   const rightsText = t('footer.allRightsReserved', 'All rights reserved');
-  console.log(`🦶 [Footer] Variables:`, { privacyText, termsText, rightsText });
   
   // Backwards-compatible copyright text: use footer.copyrightText if defined, otherwise generate from businessName
   const currentYear = new Date().getFullYear();
@@ -662,13 +652,21 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
                 editable={editable}
                 onEdit={onEdit}
                 placeholder={`© ${currentYear} ${businessName || 'Local Business'}. ${rightsText}.`}
+                style={{ color: footer?.copyrightTextColor }}
                 textSize={footer?.copyrightTextSize || 0.875}
                 textSizePresets={[0.75, 0.875, 1.0, 1.125]}
                 textSizeNormal={0.875}
                 textSizeMin={0.625}
                 textSizeMax={1.5}
                 onTextSizeChange={onEdit ? (size: number) => onEdit('footer.copyrightTextSize', size.toString()) : undefined}
-                textSizeLabel="Copyright Text Size"
+                textSizeLabel="Copyright Text Style"
+                textColor={footer?.copyrightTextColor}
+                onTextColorChange={onEdit ? (color: string) => onEdit('footer.copyrightTextColor', color) : undefined}
+                showColorPicker={true}
+                presetColors={['#000000', '#ffffff', '#6B7280', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                fontFamily={footer?.copyrightTextFont}
+                onFontFamilyChange={onEdit ? (font: string) => onEdit('footer.copyrightTextFont', font) : undefined}
+                showFontPicker={true}
               />
             </div>
           </div>

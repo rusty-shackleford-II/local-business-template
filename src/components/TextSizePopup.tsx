@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import {
   EditorModal,
   EditorSlider,
@@ -11,6 +11,7 @@ import {
   buildColorPresets,
   type ColorPreset,
 } from './editor-ui';
+import { useTextStyleContext } from './TextStyleContext';
 
 // Font family presets - Google Fonts are loaded dynamically by the template
 const FONT_OPTIONS = [
@@ -104,6 +105,9 @@ export default function TextSizePopup({
   onFontFamilyChange,
   showFontPicker = false,
 }: TextSizePopupProps) {
+  // Get the text style context for recent colors and fonts
+  const textStyleContext = useTextStyleContext();
+
   // Build size presets from prop
   const sizePresets = useMemo(() => 
     presetSizes.map(size => ({
@@ -113,14 +117,68 @@ export default function TextSizePopup({
     [presetSizes, normalSize]
   );
 
-  // Build color presets
+  // Build color presets - include recent colors from context
   const colorPresets: ColorPreset[] = useMemo(() => {
-    const presets = buildColorPresets({ includeBasics: true });
+    const presets: ColorPreset[] = [];
+    
+    // Add recent colors first (from context)
+    if (textStyleContext?.recentColors && textStyleContext.recentColors.length > 0) {
+      textStyleContext.recentColors.forEach((color, i) => {
+        presets.push({ color, label: `Recent ${i + 1}`, category: 'recent' as any });
+      });
+    }
+    
+    // Add site colors from presetColors prop
     presetColors.forEach((color, i) => {
-      presets.push({ color, label: `Custom ${i + 1}`, category: 'site' });
+      // Skip if already in recent colors
+      if (!textStyleContext?.recentColors?.some(c => c.toLowerCase() === color.toLowerCase())) {
+        presets.push({ color, label: `Site ${i + 1}`, category: 'site' });
+      }
     });
+    
+    // Add basic colors
+    const basics = buildColorPresets({ includeBasics: true });
+    basics.forEach(preset => {
+      // Skip if already in presets
+      if (!presets.some(p => p.color.toLowerCase() === preset.color.toLowerCase())) {
+        presets.push(preset);
+      }
+    });
+    
     return presets;
-  }, [presetColors]);
+  }, [presetColors, textStyleContext?.recentColors]);
+
+  // Get font options with recent fonts at top
+  const orderedFontOptions = useMemo(() => {
+    if (textStyleContext?.getReorderedFonts) {
+      return textStyleContext.getReorderedFonts(FONT_OPTIONS);
+    }
+    return FONT_OPTIONS;
+  }, [textStyleContext]);
+
+  // Handle font change - also track in context
+  const handleFontChange = useCallback((font: string) => {
+    if (font === '__separator__') return; // Ignore separator clicks
+    
+    if (onFontFamilyChange) {
+      onFontFamilyChange(font);
+    }
+    // Track in context for recent fonts
+    if (textStyleContext?.addRecentFont && font) {
+      textStyleContext.addRecentFont(font);
+    }
+  }, [onFontFamilyChange, textStyleContext]);
+
+  // Handle color change - also track in context
+  const handleColorChange = useCallback((color: string) => {
+    if (onTextColorChange) {
+      onTextColorChange(color);
+    }
+    // Track in context for recent colors
+    if (textStyleContext?.addRecentColor && color) {
+      textStyleContext.addRecentColor(color);
+    }
+  }, [onTextColorChange, textStyleContext]);
 
   return (
     <EditorModal
@@ -156,8 +214,8 @@ export default function TextSizePopup({
             <EditorSelect
               label="Font"
               value={fontFamily || ''}
-              onChange={onFontFamilyChange}
-              options={FONT_OPTIONS}
+              onChange={handleFontChange}
+              options={orderedFontOptions}
             />
             {fontFamily && (
               <p 
@@ -178,7 +236,7 @@ export default function TextSizePopup({
           <EditorColorPicker
             label="Color"
             value={textColor || '#000000'}
-            onChange={onTextColorChange}
+            onChange={handleColorChange}
             presets={colorPresets}
           />
         </>

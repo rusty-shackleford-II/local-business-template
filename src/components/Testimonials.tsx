@@ -170,6 +170,7 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
           <EditableText
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+            style={{ color: testimonials?.titleTextColor }}
             value={testimonials?.title || "What Our Clients Say"}
             path="testimonials.title"
             editable={editable}
@@ -177,15 +178,23 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
             placeholder="Testimonials section title"
             textSize={testimonials?.titleTextSize || 2.25} // Default to sister site section title size (desktop)
             onTextSizeChange={onEdit ? (size: number) => onEdit('testimonials.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Testimonials Title Size"
+            textSizeLabel="Testimonials Title Style"
             textSizePresets={[1.875, 2.25, 2.75, 3.25]} // Section title presets
             textSizeNormal={2.25} // 36px - sister site section title size (desktop)
             textSizeMin={1.5}
             textSizeMax={4.0}
+            textColor={testimonials?.titleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('testimonials.titleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={testimonials?.titleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('testimonials.titleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           <EditableText
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto mb-8"
+            style={{ color: testimonials?.subtitleTextColor }}
             value={testimonials?.subtitle || "Don't just take our word for it. Here's what our satisfied clients have to say about our professional services."}
             path="testimonials.subtitle"
             editable={editable}
@@ -194,11 +203,18 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
             multiline
             textSize={testimonials?.subtitleTextSize || 1.125} // Default to sister site body text size
             onTextSizeChange={onEdit ? (size: number) => onEdit('testimonials.subtitleTextSize', size.toString()) : undefined}
-            textSizeLabel="Testimonials Subtitle Size"
+            textSizeLabel="Testimonials Subtitle Style"
             textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
             textSizeNormal={1.125} // 18px - sister site body text size
             textSizeMin={0.875}
             textSizeMax={2.0}
+            textColor={testimonials?.subtitleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('testimonials.subtitleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={testimonials?.subtitleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('testimonials.subtitleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           
           {/* Google Reviews Badge */}
@@ -302,19 +318,27 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
                         <EditableText
                           as="p"
                           className="text-gray-700 leading-relaxed italic"
+                          style={{ color: review.reviewTextTextColor }}
                           value={`"${review.review_text}"`}
                           path={typeof review.originalIndex === 'number' ? `testimonials.items.${review.originalIndex}.reviewText` : undefined}
                           editable={editable}
                           onEdit={onEdit}
                           placeholder="Enter testimonial text"
                           multiline
-                          textSize={review.reviewTextTextSize || 1.0} // Default to standard body text
+                          textSize={review.reviewTextTextSize || 1.0}
                           onTextSizeChange={onEdit && typeof review.originalIndex === 'number' ? (size: number) => onEdit(`testimonials.items.${review.originalIndex}.reviewTextTextSize`, size.toString()) : undefined}
-                          textSizeLabel="Review Text Size"
-                          textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Body text presets
-                          textSizeNormal={1.0} // 16px - standard body text
+                          textSizeLabel="Review Text Style"
+                          textSizePresets={[0.875, 1.0, 1.125, 1.25]}
+                          textSizeNormal={1.0}
                           textSizeMin={0.75}
                           textSizeMax={1.75}
+                          textColor={review.reviewTextTextColor}
+                          onTextColorChange={onEdit && typeof review.originalIndex === 'number' ? (color: string) => onEdit(`testimonials.items.${review.originalIndex}.reviewTextTextColor`, color) : undefined}
+                          showColorPicker={true}
+                          presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                          fontFamily={review.reviewTextTextFont}
+                          onFontFamilyChange={onEdit && typeof review.originalIndex === 'number' ? (font: string) => onEdit(`testimonials.items.${review.originalIndex}.reviewTextTextFont`, font) : undefined}
+                          showFontPicker={true}
                         />
                       </div>
 
@@ -343,34 +367,50 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
                         <div>
                           <EditableText
                             className="font-semibold text-gray-900 capitalize"
+                            style={{ color: review.authorNameTextColor }}
                             value={review.author_name}
                             path={typeof review.originalIndex === 'number' ? `testimonials.items.${review.originalIndex}.authorName` : undefined}
                             editable={editable}
                             onEdit={onEdit}
                             placeholder="Author name"
-                            textSize={review.authorNameTextSize || 0.875} // Default to sister site small text size
+                            textSize={review.authorNameTextSize || 0.875}
                             onTextSizeChange={onEdit ? (size: number) => onEdit(`testimonials.items.${reviewsWithText.indexOf(review)}.authorNameTextSize`, size.toString()) : undefined}
-                            textSizeLabel="Author Name Size"
-                            textSizePresets={[0.75, 0.875, 1.0, 1.125]} // Small text presets
-                            textSizeNormal={0.875} // 14px - sister site small text size
+                            textSizeLabel="Author Name Style"
+                            textSizePresets={[0.75, 0.875, 1.0, 1.125]}
+                            textSizeNormal={0.875}
                             textSizeMin={0.625}
                             textSizeMax={1.5}
+                            textColor={review.authorNameTextColor}
+                            onTextColorChange={onEdit && typeof review.originalIndex === 'number' ? (color: string) => onEdit(`testimonials.items.${review.originalIndex}.authorNameTextColor`, color) : undefined}
+                            showColorPicker={true}
+                            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                            fontFamily={review.authorNameTextFont}
+                            onFontFamilyChange={onEdit && typeof review.originalIndex === 'number' ? (font: string) => onEdit(`testimonials.items.${review.originalIndex}.authorNameTextFont`, font) : undefined}
+                            showFontPicker={true}
                           />
                           <EditableText
                             as="div"
                             className="text-sm text-gray-500"
+                            style={{ color: review.reviewDateTextColor }}
                             value={review.review_date}
                             path={typeof review.originalIndex === 'number' ? `testimonials.items.${review.originalIndex}.reviewDate` : undefined}
                             editable={editable}
                             onEdit={onEdit}
                             placeholder="2 weeks ago"
-                            textSize={review.reviewDateTextSize || 0.75} // Default to tiny text for dates
+                            textSize={review.reviewDateTextSize || 0.75}
                             onTextSizeChange={onEdit ? (size: number) => onEdit(`testimonials.items.${reviewsWithText.indexOf(review)}.reviewDateTextSize`, size.toString()) : undefined}
-                            textSizeLabel="Review Date Size"
-                            textSizePresets={[0.625, 0.75, 0.875, 1.0]} // Tiny text presets
-                            textSizeNormal={0.75} // 12px - tiny text for dates
+                            textSizeLabel="Review Date Style"
+                            textSizePresets={[0.625, 0.75, 0.875, 1.0]}
+                            textSizeNormal={0.75}
                             textSizeMin={0.5}
                             textSizeMax={1.25}
+                            textColor={review.reviewDateTextColor}
+                            onTextColorChange={onEdit && typeof review.originalIndex === 'number' ? (color: string) => onEdit(`testimonials.items.${review.originalIndex}.reviewDateTextColor`, color) : undefined}
+                            showColorPicker={true}
+                            presetColors={['#000000', '#ffffff', '#6B7280', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                            fontFamily={review.reviewDateTextFont}
+                            onFontFamilyChange={onEdit && typeof review.originalIndex === 'number' ? (font: string) => onEdit(`testimonials.items.${review.originalIndex}.reviewDateTextFont`, font) : undefined}
+                            showFontPicker={true}
                           />
                         </div>
                       </div>

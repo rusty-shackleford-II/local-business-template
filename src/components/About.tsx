@@ -246,6 +246,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
             <EditableText
               as="h2"
               className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+              style={{ color: about?.titleTextColor }}
               value={about?.title || 'About Us'}
               path="about.title"
               editable={editable}
@@ -253,15 +254,23 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
               placeholder="Section title"
               textSize={about?.titleTextSize || 2.25} // Default to sister site section title size (desktop)
               onTextSizeChange={onEdit ? (size: number) => onEdit('about.titleTextSize', size.toString()) : undefined}
-              textSizeLabel="About Title Size"
+              textSizeLabel="About Title Style"
               textSizePresets={[1.875, 2.25, 2.75, 3.25]} // Section title presets
               textSizeNormal={2.25} // 36px - sister site section title size (desktop)
               textSizeMin={1.5}
               textSizeMax={4.0}
+              textColor={about?.titleTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit('about.titleTextColor', color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={about?.titleTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit('about.titleTextFont', font) : undefined}
+              showFontPicker={true}
             />
             <EditableText
               as="p"
               className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed"
+              style={{ color: about?.descriptionTextColor }}
               value={about?.description}
               path="about.description"
               editable={editable}
@@ -270,11 +279,18 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
               multiline
               textSize={about?.descriptionTextSize || 1.125} // Default to sister site body text size
               onTextSizeChange={onEdit ? (size: number) => onEdit('about.descriptionTextSize', size.toString()) : undefined}
-              textSizeLabel="About Description Size"
+              textSizeLabel="About Description Style"
               textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
               textSizeNormal={1.125} // 18px - sister site body text size
               textSizeMin={0.875}
               textSizeMax={2.0}
+              textColor={about?.descriptionTextColor}
+              onTextColorChange={onEdit ? (color: string) => onEdit('about.descriptionTextColor', color) : undefined}
+              showColorPicker={true}
+              presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+              fontFamily={about?.descriptionTextFont}
+              onFontFamilyChange={onEdit ? (font: string) => onEdit('about.descriptionTextFont', font) : undefined}
+              showFontPicker={true}
             />
           </div>
 
@@ -294,6 +310,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                       <EditableText
                         as="span"
                         className="text-gray-700"
+                        style={{ color: about?.featuresTextColor }}
                         value={feature}
                         path={`about.features.${index}`}
                         editable={editable}
@@ -301,11 +318,18 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                         placeholder=""
                         textSize={about?.featuresTextSize || 1.0} // Default to standard body text
                         onTextSizeChange={onEdit ? (size: number) => onEdit('about.featuresTextSize', size.toString()) : undefined}
-                        textSizeLabel="Features Text Size"
+                        textSizeLabel="Features Text Style"
                         textSizePresets={[0.875, 1.0, 1.125, 1.25]} // Feature text presets
                         textSizeNormal={1.0} // 16px - standard body text
                         textSizeMin={0.75}
                         textSizeMax={1.75}
+                        textColor={about?.featuresTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('about.featuresTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={about?.featuresTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('about.featuresTextFont', font) : undefined}
+                        showFontPicker={true}
                       />
                     </div>
                   ))}
@@ -329,6 +353,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                       </div>
                       <EditableText
                         className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2"
+                        style={{ color: (stat as any).valueTextColor }}
                         value={stat.value}
                         path={`about.statistics.${index}.value`}
                         editable={editable}
@@ -336,14 +361,22 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                         placeholder="Stat value"
                         textSize={(stat as any).valueTextSize || 1.5} // Default to sister site statistics size
                         onTextSizeChange={onEdit ? (size: number) => onEdit(`about.statistics.${index}.valueTextSize`, size.toString()) : undefined}
-                        textSizeLabel="Statistic Value Size"
+                        textSizeLabel="Statistic Value Style"
                         textSizePresets={[1.25, 1.5, 1.875, 2.25]} // Statistics value presets
                         textSizeNormal={1.5} // 24px - sister site statistics size
                         textSizeMin={1.0}
                         textSizeMax={3.0}
+                        textColor={(stat as any).valueTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit(`about.statistics.${index}.valueTextColor`, color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={(stat as any).valueTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit(`about.statistics.${index}.valueTextFont`, font) : undefined}
+                        showFontPicker={true}
                       />
                       <EditableText
                         className="text-sm text-gray-600"
+                        style={{ color: (stat as any).nameTextColor }}
                         value={stat.name}
                         path={`about.statistics.${index}.name`}
                         editable={editable}
@@ -351,11 +384,18 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                         placeholder="Stat name"
                         textSize={(stat as any).nameTextSize || 0.875} // Default to sister site small text size
                         onTextSizeChange={onEdit ? (size: number) => onEdit(`about.statistics.${index}.nameTextSize`, size.toString()) : undefined}
-                        textSizeLabel="Statistic Name Size"
+                        textSizeLabel="Statistic Name Style"
                         textSizePresets={[0.75, 0.875, 1.0, 1.125]} // Small text presets
                         textSizeNormal={0.875} // 14px - sister site small text size
                         textSizeMin={0.625}
                         textSizeMax={1.5}
+                        textColor={(stat as any).nameTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit(`about.statistics.${index}.nameTextColor`, color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={(stat as any).nameTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit(`about.statistics.${index}.nameTextFont`, font) : undefined}
+                        showFontPicker={true}
                       />
                     </div>
                   );

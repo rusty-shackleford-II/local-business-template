@@ -86,31 +86,23 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
 
     const loadTranslations = async () => {
       try {
-        console.log(`🌐 [I18n] Loading translations for: ${currentLanguage}`);
-        
         // Load static UI translations (template strings)
         const uiResponse = await fetch(`/locales/${currentLanguage}/ui.json`, {
           signal: controller.signal,
         });
         
-        console.log(`🌐 [I18n] UI file fetch status: ${uiResponse.status}`);
-        
         const uiTranslations = uiResponse.ok ? await uiResponse.json() : {};
-        console.log(`🌐 [I18n] UI translations loaded:`, Object.keys(uiTranslations));
         
         // Get business content translations from inline (site.json)
         const businessTranslations = inlineTranslations[currentLanguage] || {};
-        console.log(`🌐 [I18n] Business translations:`, Object.keys(businessTranslations));
         
         // Deep merge: UI translations as base, business translations supplement
         const merged = deepMerge(uiTranslations, businessTranslations);
         
-        console.log(`🌐 [I18n] Merged translations:`, merged);
         setTranslations(merged);
         setTranslationsLoaded(true);
       } catch (error) {
         if ((error as any)?.name === 'AbortError') return;
-        console.error('❌ [I18n] Error loading translations:', error);
         // Fallback to inline translations only
         setTranslations(inlineTranslations[currentLanguage] || {});
         setTranslationsLoaded(true);
@@ -169,10 +161,6 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        // Only log warnings after translations have loaded to avoid noise on initial render
-        if (translationsLoaded) {
-          console.warn(`[I18n] No translation found for "${key}", using default:`, defaultValue || 'undefined');
-        }
         return defaultValue || key;
       }
     }

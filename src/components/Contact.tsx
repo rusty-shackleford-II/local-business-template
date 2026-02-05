@@ -281,6 +281,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
           <EditableText
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
+            style={{ color: contact?.titleTextColor }}
             value={contact?.title || "Contact Us"}
             path="contact.title"
             editable={editable}
@@ -288,15 +289,23 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
             placeholder="Contact section title"
             textSize={contact?.titleTextSize || 2.25} // Default to sister site section title size (desktop)
             onTextSizeChange={onEdit ? (size: number) => onEdit('contact.titleTextSize', size.toString()) : undefined}
-            textSizeLabel="Contact Title Size"
+            textSizeLabel="Contact Title Style"
             textSizePresets={[1.875, 2.25, 2.75, 3.25]} // Section title presets
             textSizeNormal={2.25} // 36px - sister site section title size (desktop)
             textSizeMin={1.5}
             textSizeMax={4.0}
+            textColor={contact?.titleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('contact.titleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={contact?.titleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.titleTextFont', font) : undefined}
+            showFontPicker={true}
           />
           <EditableText
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto"
+            style={{ color: contact?.subtitleTextColor }}
             value={contact?.subtitle || "Ready to get started? Reach out to us today."}
             path="contact.subtitle"
             editable={editable}
@@ -305,11 +314,18 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
             multiline
             textSize={contact?.subtitleTextSize || 1.125} // Default to sister site body text size
             onTextSizeChange={onEdit ? (size: number) => onEdit('contact.subtitleTextSize', size.toString()) : undefined}
-            textSizeLabel="Contact Subtitle Size"
+            textSizeLabel="Contact Subtitle Style"
             textSizePresets={[1.0, 1.125, 1.25, 1.5]} // Body text presets
             textSizeNormal={1.125} // 18px - sister site body text size
             textSizeMin={0.875}
             textSizeMax={2.0}
+            textColor={contact?.subtitleTextColor}
+            onTextColorChange={onEdit ? (color: string) => onEdit('contact.subtitleTextColor', color) : undefined}
+            showColorPicker={true}
+            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+            fontFamily={contact?.subtitleTextFont}
+            onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.subtitleTextFont', font) : undefined}
+            showFontPicker={true}
           />
         </div>
 
@@ -430,6 +446,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                           <EditableText
                             as="span"
                             className="text-sm text-gray-600"
+                            style={{ color: contact?.consentTextColor }}
                             value={contact?.consentText || "By checking this box, you agree to receive communications from us."}
                             path="contact.consentText"
                             editable={editable}
@@ -438,11 +455,18 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             multiline
                             textSize={contact?.consentTextSize || 0.875} // text-sm = 0.875rem
                             onTextSizeChange={onEdit ? (size: number) => onEdit('contact.consentTextSize', size.toString()) : undefined}
-                            textSizeLabel="Consent Text Size"
+                            textSizeLabel="Consent Text Style"
                             textSizePresets={[0.75, 0.875, 1.0, 1.125]}
                             textSizeNormal={0.875}
                             textSizeMin={0.625}
                             textSizeMax={1.5}
+                            textColor={contact?.consentTextColor}
+                            onTextColorChange={onEdit ? (color: string) => onEdit('contact.consentTextColor', color) : undefined}
+                            showColorPicker={true}
+                            presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                            fontFamily={contact?.consentTextFont}
+                            onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.consentTextFont', font) : undefined}
+                            showFontPicker={true}
                           />
                         </label>
                       </div>
@@ -535,6 +559,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-gray-700 hover:text-primary-600 transition-colors duration-200 hover:underline"
+                        style={{ color: contact?.addressTextColor }}
                         value={contact?.address || (businessInfo?.address ? `${businessInfo.address.streetAddress}, ${businessInfo.address.addressLocality}, ${businessInfo.address.addressRegion} ${businessInfo.address.postalCode}` : '')}
                         path="contact.address"
                         editable={editable}
@@ -543,7 +568,14 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                         placeholder="Street address"
                         textSize={contact?.addressTextSize || 0.875} // text-sm = 0.875rem - smaller for contact details
                         onTextSizeChange={onEdit ? (size: number) => onEdit('contact.addressTextSize', size.toString()) : undefined}
-                        textSizeLabel="Address Text Size"
+                        textSizeLabel="Address Text Style"
+                        textColor={contact?.addressTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('contact.addressTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={contact?.addressTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.addressTextFont', font) : undefined}
+                        showFontPicker={true}
                       />
                     ) : (
                       <span className="text-gray-700">Address</span>
@@ -560,6 +592,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                           as="a"
                           href={`tel:${stripPhoneNumber(businessInfo?.phone || '')}`}
                           className="text-gray-700 hover:text-primary-600 transition-colors duration-200"
+                          style={{ color: contact?.phoneTextColor }}
                           value={businessInfo?.phone || ''}
                           path="businessInfo.phone"
                           editable={editable}
@@ -567,7 +600,14 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                           placeholder="Phone number"
                           textSize={contact?.phoneTextSize || 0.875} // text-sm = 0.875rem - smaller for contact details
                           onTextSizeChange={onEdit ? (size: number) => onEdit('contact.phoneTextSize', size.toString()) : undefined}
-                          textSizeLabel="Phone Text Size"
+                          textSizeLabel="Phone Text Style"
+                          textColor={contact?.phoneTextColor}
+                          onTextColorChange={onEdit ? (color: string) => onEdit('contact.phoneTextColor', color) : undefined}
+                          showColorPicker={true}
+                          presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                          fontFamily={contact?.phoneTextFont}
+                          onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.phoneTextFont', font) : undefined}
+                          showFontPicker={true}
                         />
                       </div>
                     </div>
@@ -582,14 +622,22 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                         as="a"
                         href={`mailto:${businessInfo?.email || ''}`}
                         className="text-gray-700 hover:text-primary-600 transition-colors duration-200"
+                        style={{ color: contact?.emailTextColor }}
                         value={businessInfo?.email || ''}
                         path="businessInfo.email"
                         editable={editable}
                         onEdit={onEdit}
                         placeholder="Email address"
-                        textSize={contact?.phoneTextSize || 0.875} // text-sm = 0.875rem - smaller for contact details
+                        textSize={contact?.phoneTextSize || 0.875}
                         onTextSizeChange={onEdit ? (size: number) => onEdit('contact.phoneTextSize', size.toString()) : undefined}
-                        textSizeLabel="Email Text Size"
+                        textSizeLabel="Email Text Style"
+                        textColor={contact?.emailTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('contact.emailTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', '#374151', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={contact?.emailTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.emailTextFont', font) : undefined}
+                        showFontPicker={true}
                       />
                     </div>
                   )}
