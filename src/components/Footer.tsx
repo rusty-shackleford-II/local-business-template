@@ -265,13 +265,19 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
 
     // Multipage mode: show pages as nav items
     if (isMultipage && pages && pages.length > 1) {
-      return pages.map(page => ({
-        key: page.name,
-        id: page.id,
-        slug: page.slug,
-        isPage: true,
-        isActive: currentPageSlug === page.slug || (page.slug === '' && (!currentPageSlug || currentPageSlug === 'home'))
-      }));
+      return pages.map(page => {
+        // For backwards compatibility: if home page has no name, default to 'Home'
+        const isHomePage = page.slug === '' || page.id === 'home';
+        const pageLabel = page.name || (isHomePage ? t('nav.home', 'Home') : page.id);
+        
+        return {
+          key: pageLabel,
+          id: page.id,
+          slug: page.slug,
+          isPage: true,
+          isActive: currentPageSlug === page.slug || (page.slug === '' && (!currentPageSlug || currentPageSlug === 'home'))
+        };
+      });
     }
 
     // Single-page mode: show sections as nav items

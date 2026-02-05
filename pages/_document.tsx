@@ -13,6 +13,9 @@ export default function Document() {
   return (
     <Html lang={defaultLanguage} dir={direction}>
       <Head>
+        {/* Explicit UTF-8 charset to prevent encoding issues */}
+        <meta charSet="utf-8" />
+        
         {/* Preconnect to Google Fonts */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

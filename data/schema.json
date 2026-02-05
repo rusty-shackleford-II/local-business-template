@@ -1165,7 +1165,8 @@
         "grubhub": { "type": "string", "format": "uri-reference" },
         "postmates": { "type": "string", "format": "uri-reference" },
         "instacart": { "type": "string", "format": "uri-reference" },
-        "toast": { "type": "string", "format": "uri-reference" }
+        "toast": { "type": "string", "format": "uri-reference" },
+        "deliveroo": { "type": "string", "format": "uri-reference" }
       }
     },
     "menuItem": {

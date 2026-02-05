@@ -381,6 +381,7 @@ export type SocialMedia = {
   postmates?: string;
   instacart?: string;
   toast?: string;
+  deliveroo?: string;
   // Custom external links with custom icons
   customLinks?: CustomSocialLink[];
 };

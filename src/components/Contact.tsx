@@ -715,6 +715,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   const iconPx = Math.round(iconBaseSize * iconSize);
                   const grubhubIconPx = Math.round(32 * iconSize); // h-8 w-8 for grubhub
                   const toastImagePx = Math.round(32 * iconSize);
+                  const deliverooImagePx = Math.round(32 * iconSize);
                   // Check for social links - handle both string values and customLinks array
                   const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
                     key !== 'customLinks' && typeof value === 'string' && value.trim()
@@ -924,6 +925,25 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                               alt="Toast" 
                               width={toastImagePx}
                               height={toastImagePx}
+                              loading="lazy"
+                              className="object-contain"
+                            />
+                          </a>
+                        )}
+                        {social.deliveroo && (
+                          <a
+                            href={social.deliveroo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center"
+                            style={{ width: containerPx, height: containerPx, padding: Math.round(8 * iconSize) }}
+                            aria-label="Order from us on Deliveroo"
+                          >
+                            <Image 
+                              src="/deliveroo-logo.png" 
+                              alt="Deliveroo" 
+                              width={deliverooImagePx}
+                              height={deliverooImagePx}
                               loading="lazy"
                               className="object-contain"
                             />

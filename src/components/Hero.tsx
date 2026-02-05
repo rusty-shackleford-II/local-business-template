@@ -20,6 +20,13 @@ import {
   FaYoutube
 } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
+import { 
+  SiDoordash, 
+  SiUbereats, 
+  SiGrubhub,
+  SiPostmates, 
+  SiInstacart 
+} from 'react-icons/si';
 import type { Hero as HeroCfg, Payment as PaymentCfg, ColorPalette, HeroCtaButton, SocialLinksConfig, ButtonGridLayout, SocialMedia } from '../types';
 import SocialLinksEditorPopup from './SocialLinksEditorPopup';
 
@@ -303,6 +310,132 @@ const HeroSocialLinks: React.FC<{
           aria-label="Google Business"
         >
           <FaGoogle style={iconStyle} />
+        </a>
+      )}
+      {/* Food Delivery & Ordering Icons */}
+      {links.doordash && (
+        <a
+          href={links.doordash}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={getIconClass('text-red-500')}
+          style={containerStyle}
+          aria-label="Order on DoorDash"
+          onClick={(e) => {
+            e.preventDefault();
+            window.open(links.doordash, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <SiDoordash style={iconStyle} />
+        </a>
+      )}
+      {links.ubereats && (
+        <a
+          href={links.ubereats}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={getIconClass('text-green-600')}
+          style={containerStyle}
+          aria-label="Order on Uber Eats"
+          onClick={(e) => {
+            // Prevent Chrome mobile from freezing on deep link interception
+            e.preventDefault();
+            window.open(links.ubereats, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <SiUbereats style={iconStyle} />
+        </a>
+      )}
+      {links.grubhub && (
+        <a
+          href={links.grubhub}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={getIconClass('text-orange-600')}
+          style={{ ...containerStyle, padding: `${Math.round(4 * sizeMultiplier)}px` }}
+          aria-label="Order on Grubhub"
+          onClick={(e) => {
+            e.preventDefault();
+            window.open(links.grubhub, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <SiGrubhub style={{ width: `${Math.round(32 * sizeMultiplier)}px`, height: `${Math.round(32 * sizeMultiplier)}px` }} />
+        </a>
+      )}
+      {links.postmates && (
+        <a
+          href={links.postmates}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={getIconClass('text-black')}
+          style={containerStyle}
+          aria-label="Order on Postmates"
+          onClick={(e) => {
+            e.preventDefault();
+            window.open(links.postmates, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <SiPostmates style={iconStyle} />
+        </a>
+      )}
+      {links.instacart && (
+        <a
+          href={links.instacart}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={getIconClass('text-green-500')}
+          style={containerStyle}
+          aria-label="Order on Instacart"
+          onClick={(e) => {
+            e.preventDefault();
+            window.open(links.instacart, '_blank', 'noopener,noreferrer');
+          }}
+        >
+          <SiInstacart style={iconStyle} />
+        </a>
+      )}
+      {links.toast && (
+        <a
+          href={links.toast}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${getIconClass('text-gray-700')} overflow-hidden`}
+          style={{ ...containerStyle, padding: `${Math.round(8 * sizeMultiplier)}px` }}
+          aria-label="Order on Toast"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="/toast-logo.png" 
+            alt="Toast" 
+            style={{ 
+              width: `${Math.round(32 * sizeMultiplier)}px`, 
+              height: `${Math.round(32 * sizeMultiplier)}px`,
+              ...(isFullwidthOverlay ? { filter: 'brightness(0) invert(1)' } : {})
+            }}
+            className="object-contain"
+          />
+        </a>
+      )}
+      {links.deliveroo && (
+        <a
+          href={links.deliveroo}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${getIconClass('text-gray-700')} overflow-hidden`}
+          style={{ ...containerStyle, padding: `${Math.round(8 * sizeMultiplier)}px` }}
+          aria-label="Order on Deliveroo"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img 
+            src="/deliveroo-logo.png" 
+            alt="Deliveroo" 
+            style={{ 
+              width: `${Math.round(32 * sizeMultiplier)}px`, 
+              height: `${Math.round(32 * sizeMultiplier)}px`,
+              ...(isFullwidthOverlay ? { filter: 'brightness(0) invert(1)' } : {})
+            }}
+            className="object-contain"
+          />
         </a>
       )}
       {/* Custom external links with custom icons */}

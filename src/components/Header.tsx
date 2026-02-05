@@ -402,9 +402,13 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             sectionId: section.sectionId
           }));
         
+        // For backwards compatibility: if home page has no name, default to 'Home'
+        const isHomePage = page.slug === '' || page.id === 'home';
+        const pageLabel = page.name || (isHomePage ? t('nav.home', 'Home') : page.id);
+        
         return {
           id: page.id,
-          label: page.name,
+          label: pageLabel,
           slug: page.slug,
           enabled: true,
           isSection: false,

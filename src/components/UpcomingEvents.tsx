@@ -317,14 +317,15 @@ Thank you!`;
                     <SwiperSlide key={eventInstance.id}>
                       <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group h-full">
                         {/* Event Image with Prominent Date */}
-                        <div className="relative aspect-[4/3] overflow-hidden">
+                        {/* bg-gray-100 prevents black sub-pixel gaps; scale-[1.002] ensures full container coverage */}
+                        <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
                           {event.imageUrl ? (
                             <IdbImage 
                               src={event.thumbnailUrl || event.imageUrl}
                               alt={event.alt || event.title}
                               fill
                               loading="lazy"
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
+                              className="object-cover scale-[1.002] group-hover:scale-105 transition-transform duration-300"
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">

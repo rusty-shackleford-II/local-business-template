@@ -261,7 +261,11 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
             touchReleaseOnEdges={true}
             touchStartPreventDefault={false}
             touchStartForcePreventDefault={false}
-            threshold={10}
+            threshold={20}
+            touchAngle={30}
+            passiveListeners={true}
+            touchEventsTarget="wrapper"
+            preventInteractionOnTransition={true}
             navigation={{
               prevEl: '.testimonials-swiper-button-prev',
               nextEl: '.testimonials-swiper-button-next',
@@ -280,6 +284,7 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
               swiperRef.current = swiper;
             }}
             className="mx-2 sm:mx-4 lg:mx-12"
+            style={{ touchAction: 'pan-y' }}
           >
             {reviewsWithText.map((review, index) => (
               <SwiperSlide key={index}>
@@ -408,6 +413,16 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
               }
               .testimonials-swiper-pagination .swiper-pagination-bullet:hover {
                 background-color: #9CA3AF;
+              }
+              /* Allow vertical scrolling on mobile */
+              .testimonials-swiper-container .swiper {
+                touch-action: pan-y !important;
+              }
+              .testimonials-swiper-container .swiper-slide {
+                touch-action: pan-y !important;
+              }
+              .testimonials-swiper-container .swiper-wrapper {
+                touch-action: pan-y !important;
               }
             `
           }} />

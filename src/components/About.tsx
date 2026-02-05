@@ -413,7 +413,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                         <SwiperSlide key={index}>
                           <button
                             onClick={() => openModal(index)}
-                            className="relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl group w-full"
+                            className="relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl group w-full bg-gray-100"
                             style={{
                               aspectRatio: '4/3'
                             }}
@@ -423,7 +423,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                               alt={image.alt}
                               fill
                               loading="lazy"
-                              className="object-cover transition-all duration-300 group-hover:scale-110"
+                              className="object-cover scale-[1.002] transition-all duration-300 group-hover:scale-110"
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl">
@@ -509,7 +509,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                           <SwiperSlide key={index}>
                             <button
                               onClick={() => openModal(index)}
-                              className="relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl group w-full"
+                              className="relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl group w-full bg-gray-100"
                               style={{
                                 aspectRatio: '4/3'
                               }}
@@ -519,7 +519,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                                 alt={image.alt}
                                 fill
                                 loading="lazy"
-                                className="object-cover transition-all duration-300 group-hover:scale-110"
+                                className="object-cover scale-[1.002] transition-all duration-300 group-hover:scale-110"
                                 sizes="100vw"
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl">
@@ -570,7 +570,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                       <button
                         key={index}
                         onClick={() => openModal(index)}
-                        className="relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl group"
+                        className="relative rounded-xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-xl group bg-gray-100"
                         style={{
                           aspectRatio: '4/3'
                         }}
@@ -580,7 +580,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                           alt={image.alt}
                           fill
                           loading="lazy"
-                          className="object-cover transition-all duration-300 group-hover:scale-110"
+                          className="object-cover scale-[1.002] transition-all duration-300 group-hover:scale-110"
                           sizes="(max-width: 1024px) 50vw, 33vw"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl">

@@ -250,13 +250,13 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
       >
         {item.imageUrl && (
           <div 
-            className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in"
+            className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in bg-gray-100"
             onClick={(e) => {
               e.stopPropagation();
               zoomContext?.openZoom(item.imageUrl!, item.alt || item.title);
             }}
           >
-            <IdbImage src={item.imageUrl} alt={item.alt || item.title} fill loading="lazy" className="object-cover" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+            <IdbImage src={item.imageUrl} alt={item.alt || item.title} fill loading="lazy" className="object-cover scale-[1.002]" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
           </div>
         )}
         <div className="p-4 sm:p-5">
@@ -785,7 +785,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                         >
                           {item.imageUrl && (
                             <div 
-                              className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in"
+                              className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in bg-gray-100"
                               onClick={() => openZoom(item.imageUrl!, item.alt || item.title)}
                             >
                               <IdbImage
@@ -793,7 +793,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                                 alt={item.alt || item.title}
                                 fill
                                 loading="lazy"
-                                className="object-cover"
+                                className="object-cover scale-[1.002]"
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                               />
                             </div>
@@ -850,7 +850,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
               >
                 {item.imageUrl && (
                   <div 
-                    className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in"
+                    className="relative aspect-[4/3] w-full overflow-hidden cursor-zoom-in bg-gray-100"
                     onClick={() => openZoom(item.imageUrl!, item.alt || item.title)}
                   >
                     <IdbImage
@@ -858,7 +858,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                       alt={item.alt || item.title}
                       fill
                       loading="lazy"
-                      className="object-cover"
+                      className="object-cover scale-[1.002]"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>
