@@ -22,7 +22,7 @@ Disallow: /*.gif$
 Disallow: /*.webp$
 
 # Sitemap location
-Sitemap: /api/sitemap.xml
+Sitemap: /sitemap.xml
 
 # Allow indexing of partners page specifically
 Allow: /partners

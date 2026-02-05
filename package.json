@@ -43,7 +43,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/extract-html.js",
+    "prebuild": "node scripts/extract-html.js && node scripts/generate-sitemap.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
