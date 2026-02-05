@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import type { Videos as VideosType, VideoItem } from '../types';
+import type { Videos as VideosType, VideoItem, ColorPalette } from '../types';
 import EditableText from './EditableText';
 
 type Props = {
@@ -9,6 +9,7 @@ type Props = {
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
   sectionId?: string;
+  colorPalette?: ColorPalette;
 };
 
 type VideoPlayerProps = {
@@ -191,7 +192,7 @@ function VideoPlayer({ video, index, editable }: VideoPlayerProps) {
   );
 }
 
-export default function Videos({ videos, isPreview, backgroundClass = 'bg-white', editable, onEdit, sectionId = 'videos' }: Props) {
+export default function Videos({ videos, isPreview, backgroundClass = 'bg-white', editable, onEdit, sectionId = 'videos', colorPalette }: Props) {
   if (!videos || !videos.items || videos.items.length === 0) return null;
 
   // Filter out videos without URLs (unless in editable mode, where we show placeholders)

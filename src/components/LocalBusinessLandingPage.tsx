@@ -419,6 +419,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           backgroundClass={backgroundClass}
           isPreview={site.isPreview}
           sectionId={customSectionId}
+          colorPalette={site.colorPalette}
         />;
       case 'testimonials':
         const testimonialsData = sectionData as TestimonialsType || site.testimonials;
@@ -439,6 +440,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           editable={site.editable}
           onEdit={site.onEdit ? (path, value) => site.onEdit!(`${editBasePath}.${path.replace('videos.', '')}`, value) : undefined}
           sectionId={customSectionId}
+          colorPalette={site.colorPalette}
         />;
       case 'payment':
         const paymentData = sectionData as PaymentType || site.payment;

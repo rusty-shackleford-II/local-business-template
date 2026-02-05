@@ -18,8 +18,14 @@ interface Review {
   review_date: string;
   review_text: string | null;
   reviewTextTextSize?: number;
+  reviewTextTextColor?: string;
+  reviewTextTextFont?: string;
   authorNameTextSize?: number;
+  authorNameTextColor?: string;
+  authorNameTextFont?: string;
   reviewDateTextSize?: number;
+  reviewDateTextColor?: string;
+  reviewDateTextFont?: string;
   originalIndex?: number;
 }
 

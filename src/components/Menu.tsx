@@ -2,7 +2,7 @@ import React, { useState, useRef, memo, startTransition, useEffect, createContex
 import Image from 'next/image';
 import IdbImage from './IdbImage';
 import { ChevronLeftIcon, ChevronRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import type { Menu as MenuType, MenuItem, MenuCategory, MenuImage } from '../types';
+import type { Menu as MenuType, MenuItem, MenuCategory, MenuImage, ColorPalette } from '../types';
 import EditableText from './EditableText';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
@@ -112,6 +112,7 @@ type Props = {
   backgroundClass?: string;
   isPreview?: boolean;
   sectionId?: string;
+  colorPalette?: ColorPalette;
 };
 
 // Hoisted components to avoid remounts on parent re-renders
@@ -206,8 +207,8 @@ const MenuImageCarousel: React.FC<{ images: MenuImage[] }> = memo(({ images }) =
 
 MenuImageCarousel.displayName = 'MenuImageCarousel';
 
-type CategoryCarouselProps = { category: MenuCategory; categoryIndex: number; activeTab: number; editable?: boolean; onEdit?: (path: string, value: string) => void };
-const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, categoryIndex, activeTab, editable, onEdit }) => {
+type CategoryCarouselProps = { category: MenuCategory; categoryIndex: number; activeTab: number; editable?: boolean; onEdit?: (path: string, value: string) => void; colorPalette?: ColorPalette };
+const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, categoryIndex, activeTab, editable, onEdit, colorPalette }) => {
   const swiperRef = useRef<SwiperType | null>(null);
   const zoomContext = useContext(ZoomContext);
   
@@ -524,7 +525,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
 
 CategoryCarousel.displayName = 'CategoryCarousel';
 
-const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit, backgroundClass = 'bg-gray-50', isPreview = false, sectionId = 'menu' }) => {
+const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit, backgroundClass = 'bg-gray-50', isPreview = false, sectionId = 'menu', colorPalette }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [zoomedImage, setZoomedImage] = useState<{ url: string; alt: string } | null>(null);
   
@@ -832,7 +833,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                 <>
                   {/* Categories */}
                   {menu.tabs![activeTab].categories && menu.tabs![activeTab].categories!.map((category, categoryIndex) => (
-                    <CategoryCarousel key={category.id || `category-${categoryIndex}`} category={category} categoryIndex={categoryIndex} activeTab={activeTab} editable={editable} onEdit={onEdit} />
+                    <CategoryCarousel key={category.id || `category-${categoryIndex}`} category={category} categoryIndex={categoryIndex} activeTab={activeTab} editable={editable} onEdit={onEdit} colorPalette={colorPalette} />
                   ))}
 
                   {/* Legacy Items (if any exist) */}
