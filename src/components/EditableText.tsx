@@ -123,6 +123,8 @@ export default function EditableText({
   );
   const [showPopup, setShowPopup] = useState(false);
   const ref = useRef<HTMLElement | null>(null);
+  // Stable unique ID for this instance (used to coordinate popup exclusivity)
+  const instanceIdRef = useRef<string>(`editable-text-${Math.random().toString(36).slice(2)}`);
   // Popup manages its own outside-click; we avoid double-handling here
   const isEditingRef = useRef(false);
   const suppressBlurCommitRef = useRef(false);
@@ -135,6 +137,18 @@ export default function EditableText({
       setInternal(next);
     }
   }, [value]);
+
+  // Listen for other EditableText instances opening their popups and close ours
+  useEffect(() => {
+    const handleOtherPopupOpen = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.instanceId !== instanceIdRef.current) {
+        setShowPopup(false);
+      }
+    };
+    window.addEventListener('editable-text-popup-open', handleOtherPopupOpen);
+    return () => window.removeEventListener('editable-text-popup-open', handleOtherPopupOpen);
+  }, []);
 
   // Intentionally no outside-click handler here; TextSizePopup handles its own
 
@@ -312,6 +326,10 @@ export default function EditableText({
         e.stopPropagation();
         // Only show popup if we have a text size change handler
         if (onTextSizeChange) {
+          // Notify all other EditableText instances to close their popups
+          window.dispatchEvent(new CustomEvent('editable-text-popup-open', {
+            detail: { instanceId: instanceIdRef.current },
+          }));
           setShowPopup(true);
         }
       }

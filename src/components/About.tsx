@@ -463,7 +463,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                               alt={image.alt}
                               fill
                               loading="lazy"
-                              className="object-cover scale-[1.002] transition-all duration-300 group-hover:scale-110"
+                              className="object-cover scale-[1.005] transition-all duration-300 group-hover:scale-110"
                               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                             />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl">
@@ -559,7 +559,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                                 alt={image.alt}
                                 fill
                                 loading="lazy"
-                                className="object-cover scale-[1.002] transition-all duration-300 group-hover:scale-110"
+                                className="object-cover scale-[1.005] transition-all duration-300 group-hover:scale-110"
                                 sizes="100vw"
                               />
                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl">
@@ -620,7 +620,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                           alt={image.alt}
                           fill
                           loading="lazy"
-                          className="object-cover scale-[1.002] transition-all duration-300 group-hover:scale-110"
+                          className="object-cover scale-[1.005] transition-all duration-300 group-hover:scale-110"
                           sizes="(max-width: 1024px) 50vw, 33vw"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-xl">

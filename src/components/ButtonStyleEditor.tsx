@@ -6,7 +6,7 @@
  * Uses a portal to render at document body level (prevents clipping).
  */
 
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { ButtonStyles, ColorPalette } from '../types';
@@ -199,16 +199,13 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
   const [smartPosition, setSmartPosition] = useState<{ top: number; left: number } | null>(null);
   
   // Calculate position when modal opens or target changes
-  useEffect(() => {
+  // useLayoutEffect runs before browser paint, preventing flash in wrong position
+  useLayoutEffect(() => {
     if (targetElement) {
-      // Small delay to ensure modal is rendered
-      const timer = setTimeout(() => {
-        const targetRect = targetElement.getBoundingClientRect();
-        const modalHeight = popoverRef.current?.offsetHeight || 600;
-        const pos = calculateSmartPosition(targetRect, modalHeight);
-        setSmartPosition(pos);
-      }, 0);
-      return () => clearTimeout(timer);
+      const targetRect = targetElement.getBoundingClientRect();
+      const modalHeight = popoverRef.current?.offsetHeight || 600;
+      const pos = calculateSmartPosition(targetRect, modalHeight);
+      setSmartPosition(pos);
     } else {
       setSmartPosition(null);
     }
@@ -383,6 +380,8 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
           width: `${MODAL_WIDTH}px`,
           maxWidth: '95vw',
           maxHeight: '90vh',
+          // Hide until position is calculated when targeting an element (prevents flash)
+          ...(targetElement && !smartPosition ? { opacity: 0, pointerEvents: 'none' as const } : {}),
         }}
         onClick={stopClick}
         onMouseDown={stopClick}

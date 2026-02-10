@@ -244,6 +244,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   // i18n for translating button labels
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
+  const isSecondaryLanguage = Boolean(i18n?.enabled && i18n.currentLanguage !== i18n.defaultLanguage);
   
   // Helper to get translated button label
   const getButtonLabel = useCallback((button: HeroCtaButton, index: number): string => {
@@ -629,27 +630,60 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
     }
     
     // New mode: explicit dimensions (for sites that have used the button style editor)
-    // This matches the sample button in the style editor exactly
+    // Primary language: use original minWidth + padding:0 sizing (unchanged)
+    // Secondary language: switch to real padding so button grows with longer text
     if (useFluidSizing) {
-      // Fluid sizing with custom styles: scale the custom values with viewport
       const basePaddingX = paddingX;
       const basePaddingY = paddingY;
       const baseFontSize = buttonStyles.fontSize || 16;
       const baseRadius = buttonStyles.borderRadius ?? 8;
       
-      return {
-        // Min-width scales with viewport, based on custom padding settings
-        minWidth: `clamp(${basePaddingX * 2 + 80}px, ${(basePaddingX * 2 + 100) * 0.12}vw, ${basePaddingX * 2 + 140}px)`,
-        height: `clamp(${basePaddingY * 2 + 16}px, ${(basePaddingY * 2 + 20) * 0.055}vw, ${basePaddingY * 2 + 28}px)`,
-        padding: 0,
+      const base = {
         borderRadius: `clamp(${Math.max(4, baseRadius * 0.7)}px, ${baseRadius * 0.08}vw, ${baseRadius * 1.3}px)`,
         fontFamily: buttonStyles.fontFamily || 'inherit',
         fontSize: `clamp(${Math.max(12, baseFontSize * 0.85)}px, ${baseFontSize * 0.1}vw, ${baseFontSize * 1.2}px)`,
+        fontWeight: buttonStyles.fontWeight ?? 600,
+        display: 'inline-flex' as const,
+        alignItems: 'center' as const,
+        justifyContent: 'center' as const,
+        boxSizing: 'border-box' as const,
+      };
+      
+      if (isSecondaryLanguage) {
+        return {
+          ...base,
+          // Same minWidth/height as primary; small real padding just prevents text touching edges
+          minWidth: `clamp(${basePaddingX * 2 + 80}px, ${(basePaddingX * 2 + 100) * 0.12}vw, ${basePaddingX * 2 + 140}px)`,
+          height: `clamp(${basePaddingY * 2 + 16}px, ${(basePaddingY * 2 + 20) * 0.055}vw, ${basePaddingY * 2 + 28}px)`,
+          padding: '0 10px',
+          width: 'fit-content',
+          whiteSpace: 'nowrap' as const,
+        };
+      }
+      
+      return {
+        ...base,
+        minWidth: `clamp(${basePaddingX * 2 + 80}px, ${(basePaddingX * 2 + 100) * 0.12}vw, ${basePaddingX * 2 + 140}px)`,
+        height: `clamp(${basePaddingY * 2 + 16}px, ${(basePaddingY * 2 + 20) * 0.055}vw, ${basePaddingY * 2 + 28}px)`,
+        padding: 0,
+      };
+    }
+    
+    if (isSecondaryLanguage) {
+      return {
+        minWidth: `${paddingX * 2 + 100}px`,
+        height: `${paddingY * 2 + 20}px`,
+        padding: '0 10px',
+        borderRadius: `${buttonStyles.borderRadius ?? 8}px`,
+        fontFamily: buttonStyles.fontFamily || 'inherit',
+        fontSize: buttonStyles.fontSize ? `${buttonStyles.fontSize}px` : undefined,
         fontWeight: buttonStyles.fontWeight ?? 600,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         boxSizing: 'border-box',
+        width: 'fit-content',
+        whiteSpace: 'nowrap' as const,
       };
     }
     
@@ -668,7 +702,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
       justifyContent: 'center',
       boxSizing: 'border-box',
     };
-  }, [buttonStyles, hasCustomStyles, paddingX, paddingY, isFullwidthOverlay, isMobile]);
+  }, [buttonStyles, hasCustomStyles, paddingX, paddingY, isFullwidthOverlay, isMobile, isSecondaryLanguage]);
   
   // Single button gets a soft pulse animation for emphasis
   const isSingleButton = buttons.length === 1;
@@ -833,7 +867,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             <span style={{ 
               // Don't override font-size when using fluid sizing - let customButtonStyle handle it
               ...(!useFluidSizing && buttonStyles.fontSize ? { fontSize: `${buttonStyles.fontSize}px` } : {}),
-              pointerEvents: 'none' 
+              pointerEvents: 'none',
             }}>
               {getButtonLabel(button, buttonIndex)}
             </span>

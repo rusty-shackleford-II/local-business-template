@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -174,18 +174,16 @@ export default function EditorModal({
   const modalWidth = WIDTH_VALUES[width] || WIDTH_VALUES.sm;
   
   // Calculate smart position when modal opens
-  useEffect(() => {
+  // useLayoutEffect runs synchronously after DOM mutations but before browser paint,
+  // preventing the flash of the modal in the wrong position
+  useLayoutEffect(() => {
     if (isOpen && targetElement) {
-      // Use a small delay to ensure we get the correct target rect
-      const timer = setTimeout(() => {
-        const targetRect = targetElement.getBoundingClientRect();
-        // Use actual modal height if available, otherwise estimate
-        const modalHeight = modalRef.current?.offsetHeight || ESTIMATED_MODAL_HEIGHT;
-        const pos = calculateSmartPosition(targetRect, modalWidth, modalHeight);
-        setInitialPosition({ top: pos.top, left: pos.left });
-        positionRef.current = { x: 0, y: 0 };
-      }, 0);
-      return () => clearTimeout(timer);
+      const targetRect = targetElement.getBoundingClientRect();
+      // Use actual modal height if available, otherwise estimate
+      const modalHeight = modalRef.current?.offsetHeight || ESTIMATED_MODAL_HEIGHT;
+      const pos = calculateSmartPosition(targetRect, modalWidth, modalHeight);
+      setInitialPosition({ top: pos.top, left: pos.left });
+      positionRef.current = { x: 0, y: 0 };
     } else if (isOpen && !targetElement) {
       // No target element - use centered positioning
       setInitialPosition(null);
@@ -345,6 +343,8 @@ export default function EditorModal({
           display: 'flex',
           flexDirection: 'column',
           pointerEvents: 'auto', // Re-enable pointer events for the modal itself
+          // Hide until position is calculated when targeting an element (prevents flash)
+          ...(targetElement && !initialPosition ? { opacity: 0, pointerEvents: 'none' as const } : {}),
         }}
         onClick={stopPropagation}
         onMouseDown={stopPropagation}
