@@ -68,16 +68,23 @@ const formatBusinessHours = (businessHours?: ContactCfg['businessHours'] | Busin
       if (typeof hours === 'string') {
         formattedHours.push({ day: abbreviations[day], hours: hours === 'closed' ? (t?.('contact.closed', 'Closed') || 'Closed') : hours });
       } else {
-        // Check if it's a 24-hour business (multiple formats for backwards compatibility)
-        const is24Hours = 
-          (hours.open === 'Open 24 hours' && hours.close === 'Open 24 hours') ||
-          (hours.open === '12:00 AM' && hours.close === '11:59 PM') ||
-          (hours.open === '00:00' && hours.close === '23:59');
+        // Check if it's closed (backwards compatibility with old format)
+        const isClosed = hours.open === 'Closed' || hours.close === 'Closed';
         
-        if (is24Hours) {
-          formattedHours.push({ day: abbreviations[day], hours: t?.('contact.open24Hours', 'Open 24 hours') || 'Open 24 hours' });
+        if (isClosed) {
+          formattedHours.push({ day: abbreviations[day], hours: t?.('contact.closed', 'Closed') || 'Closed' });
         } else {
-          formattedHours.push({ day: abbreviations[day], hours: `${hours.open} - ${hours.close}` });
+          // Check if it's a 24-hour business (multiple formats for backwards compatibility)
+          const is24Hours = 
+            (hours.open === 'Open 24 hours' && hours.close === 'Open 24 hours') ||
+            (hours.open === '12:00 AM' && hours.close === '11:59 PM') ||
+            (hours.open === '00:00' && hours.close === '23:59');
+          
+          if (is24Hours) {
+            formattedHours.push({ day: abbreviations[day], hours: t?.('contact.open24Hours', 'Open 24 hours') || 'Open 24 hours' });
+          } else {
+            formattedHours.push({ day: abbreviations[day], hours: `${hours.open} - ${hours.close}` });
+          }
         }
       }
     }

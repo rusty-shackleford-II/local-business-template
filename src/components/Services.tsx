@@ -112,7 +112,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
             
             return (
               <CardWrapper
-                key={service.id}
+                key={service.id || `service-${index}`}
                 {...cardProps}
                 className={`w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.334rem)] bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group ${hasLink ? 'cursor-pointer' : ''}`}
               >

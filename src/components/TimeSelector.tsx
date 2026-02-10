@@ -127,6 +127,7 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
           value={value || "12:00"}
           onChange={handleTimeChange}
           onKeyDown={handleKeyDown}
+          step="900"
           className={`${className} px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer`}
         />
       </div>

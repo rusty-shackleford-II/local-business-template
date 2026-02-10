@@ -33,7 +33,13 @@ function generateJsonLd(siteData: any) {
   const getOpeningHours = () => {
     const hours = businessInfo?.businessHours || siteData?.contact?.businessHours || {};
     return Object.entries(hours)
-      .filter(([_, cfg]: any) => cfg !== 'closed' && typeof cfg === 'object' && cfg?.open && cfg?.close)
+      .filter(([_, cfg]: any) => {
+        if (cfg === 'closed') return false;
+        if (typeof cfg !== 'object' || !cfg?.open || !cfg?.close) return false;
+        // Filter out backwards-compatible closed format
+        if (cfg.open === 'Closed' || cfg.close === 'Closed') return false;
+        return true;
+      })
       .map(([day, cfg]: any) => ({
         '@type': 'OpeningHoursSpecification',
         dayOfWeek: [day],
