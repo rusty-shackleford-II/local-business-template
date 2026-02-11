@@ -6,6 +6,7 @@ import { stripPhoneNumber } from '../lib/phoneUtils';
 import EditableText from './EditableText';
 import IdbImage from './IdbImage';
 import ButtonGridEditor, { getEffectiveGridLayout, legacyToGridLayout } from './ButtonGridEditor';
+import type { SectionTargetOption } from './SingleButtonEditor';
 import HeroImageEditor from './HeroImageEditor';
 import TextSizePopup from './TextSizePopup';
 import { createPortal } from 'react-dom';
@@ -146,6 +147,7 @@ type Props = {
   colorPalette?: ColorPalette;
   sectionId?: string;
   socialLinks?: SocialLinksConfig;
+  availableSections?: SectionTargetOption[];
 };
 
 // Helper function to check if there are any social links (handles both string values and customLinks array)
@@ -471,7 +473,7 @@ const HeroSocialLinks: React.FC<{
   );
 };
 
-const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, onHeroImageAddClick, imageStorage, colorPalette, sectionId = 'home', socialLinks }) => {
+const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg-gradient-to-br from-gray-50 to-white', editable, onEdit, onHeroImageClick, onHeroImageAddClick, imageStorage, colorPalette, sectionId = 'home', socialLinks, availableSections }) => {
   const i18n = useI18nContext();
   const t = i18n?.t || ((key: string, defaultValue?: string) => defaultValue || key);
   
@@ -914,6 +916,23 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           // Clean the phone number and create tel: link
           const cleanedNumber = stripPhoneNumber(button.phoneNumber);
           window.location.href = `tel:${cleanedNumber}`;
+        }
+        return;
+        
+      case 'section':
+        // Handle scroll-to-section action
+        if (button.sectionTarget) {
+          const sectionElement = document.getElementById(button.sectionTarget);
+          if (sectionElement) {
+            const isMobileScreen = window.innerWidth < 768;
+            const headerOffset = isMobileScreen ? 80 : 96; // Match CSS values
+            const elementPosition = sectionElement.offsetTop - headerOffset;
+            
+            window.scrollTo({
+              top: elementPosition,
+              behavior: 'smooth'
+            });
+          }
         }
         return;
         
@@ -2370,6 +2389,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     isMobile={true}
                     buttonStyles={hero?.buttonStyles}
                     onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                   />
                 </div>
               );
@@ -2444,6 +2464,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       isMobile={isMobile}
                       buttonStyles={hero?.buttonStyles}
                       onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                       alignToStart={true}
                     />
                   </div>
@@ -2506,6 +2527,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     isMobile={isMobile}
                     buttonStyles={hero?.buttonStyles}
                     onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                   />
                 </div>
               );
@@ -2577,6 +2599,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                     isMobile={isMobile}
                     buttonStyles={hero?.buttonStyles}
                     onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                     alignToStart={true}
                   />
                 </div>
@@ -3136,6 +3159,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                         isMobile={true}
                         buttonStyles={hero?.buttonStyles}
                         onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                       />
                       {/* Mobile social links inside blur box */}
                       {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
@@ -3268,6 +3292,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                         isMobile={isMobile}
                         buttonStyles={hero?.buttonStyles}
                         onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                       />
                       {/* Social links for legacy layout (desktop only - mobile goes to floating container) */}
                       {socialLinks?.showInHero && socialLinks?.links && hasSocialLinks(socialLinks.links) && (
@@ -3382,6 +3407,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       isMobile={isMobile}
                       buttonStyles={hero?.buttonStyles}
                       onButtonStylesChange={handleButtonStylesChange}
+                    availableSections={availableSections}
                   />
                   
                   {/* Mobile social links - rendered after buttons in the flow */}

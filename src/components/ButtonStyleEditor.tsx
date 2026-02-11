@@ -524,57 +524,76 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
               </div>
             </div>
             
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="color"
-                value={rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
-                onChange={(e) => {
-                  const { r, g, b } = parseColor(e.target.value);
-                  if (bgColorMode === 'rgba') {
-                    onBackgroundColorChange?.(toRgbaString(r, g, b, bgParsed.a));
-                  } else {
-                    onBackgroundColorChange?.(e.target.value);
-                  }
-                }}
-                onFocus={() => setFocusedColorField('background')}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
-                style={{ backgroundColor }}
-              />
-              {bgColorMode === 'hex' ? (
+            <div className="space-y-2 mb-2">
+              <div className="flex items-center gap-2">
                 <input
-                  type="text"
-                  value={backgroundColor.startsWith('#') ? backgroundColor : rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
-                  onChange={(e) => onBackgroundColorChange?.(e.target.value)}
+                  type="color"
+                  value={rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
+                  onChange={(e) => {
+                    const { r, g, b } = parseColor(e.target.value);
+                    if (bgColorMode === 'rgba') {
+                      onBackgroundColorChange?.(toRgbaString(r, g, b, bgParsed.a));
+                    } else {
+                      onBackgroundColorChange?.(e.target.value);
+                    }
+                  }}
                   onFocus={() => setFocusedColorField('background')}
-                  className="flex-1 bg-gray-800/50 text-white text-sm px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono text-xs"
-                  placeholder="#000000"
+                  className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
+                  style={{ backgroundColor }}
                 />
-              ) : (
-                <div className="flex-1 grid grid-cols-4 gap-1">
-                  <input type="number" min="0" max="255" value={bgParsed.r}
-                    onChange={(e) => onBackgroundColorChange?.(toRgbaString(parseInt(e.target.value) || 0, bgParsed.g, bgParsed.b, bgParsed.a))}
+                {bgColorMode === 'hex' ? (
+                  <input
+                    type="text"
+                    value={backgroundColor.startsWith('#') ? backgroundColor : rgbaToHex(bgParsed.r, bgParsed.g, bgParsed.b)}
+                    onChange={(e) => onBackgroundColorChange?.(e.target.value)}
                     onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Red (0-255)"
+                    className="flex-1 min-w-0 bg-gray-800/50 text-white text-xs px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono"
+                    placeholder="#000000"
                   />
-                  <input type="number" min="0" max="255" value={bgParsed.g}
-                    onChange={(e) => onBackgroundColorChange?.(toRgbaString(bgParsed.r, parseInt(e.target.value) || 0, bgParsed.b, bgParsed.a))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Green (0-255)"
-                  />
-                  <input type="number" min="0" max="255" value={bgParsed.b}
-                    onChange={(e) => onBackgroundColorChange?.(toRgbaString(bgParsed.r, bgParsed.g, parseInt(e.target.value) || 0, bgParsed.a))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Blue (0-255)"
-                  />
-                  <input type="number" min="0" max="1" step="0.01" value={bgParsed.a.toFixed(2)}
-                    onChange={(e) => onBackgroundColorChange?.(toRgbaString(bgParsed.r, bgParsed.g, bgParsed.b, parseFloat(e.target.value) || 0))}
-                    onFocus={() => setFocusedColorField('background')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Alpha (0-1)"
-                  />
+                ) : (
+                  <span className="flex-1 min-w-0 text-[10px] text-gray-400 font-mono truncate">
+                    rgba({bgParsed.r}, {bgParsed.g}, {bgParsed.b}, {bgParsed.a.toFixed(2)})
+                  </span>
+                )}
+              </div>
+              {bgColorMode === 'rgba' && (
+                <div className="grid grid-cols-4 gap-1.5">
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">R</label>
+                    <input type="text" inputMode="numeric" value={bgParsed.r}
+                      onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') onBackgroundColorChange?.(toRgbaString(v || 0, bgParsed.g, bgParsed.b, bgParsed.a)); }}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Red (0-255)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">G</label>
+                    <input type="text" inputMode="numeric" value={bgParsed.g}
+                      onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') onBackgroundColorChange?.(toRgbaString(bgParsed.r, v || 0, bgParsed.b, bgParsed.a)); }}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Green (0-255)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">B</label>
+                    <input type="text" inputMode="numeric" value={bgParsed.b}
+                      onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') onBackgroundColorChange?.(toRgbaString(bgParsed.r, bgParsed.g, v || 0, bgParsed.a)); }}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Blue (0-255)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">A</label>
+                    <input type="text" inputMode="decimal" value={bgParsed.a.toFixed(2)}
+                      onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v) || e.target.value === '' || e.target.value === '0.') onBackgroundColorChange?.(toRgbaString(bgParsed.r, bgParsed.g, bgParsed.b, v || 0)); }}
+                      onFocus={() => setFocusedColorField('background')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Alpha (0-1)"
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -625,57 +644,76 @@ const ButtonStyleEditor: React.FC<ButtonStyleEditorProps> = ({
               </div>
             </div>
             
-            <div className="flex items-center gap-2 mb-2">
-              <input
-                type="color"
-                value={rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
-                onChange={(e) => {
-                  const { r, g, b } = parseColor(e.target.value);
-                  if (textColorMode === 'rgba') {
-                    onTextColorChange?.(toRgbaString(r, g, b, textParsed.a));
-                  } else {
-                    onTextColorChange?.(e.target.value);
-                  }
-                }}
-                onFocus={() => setFocusedColorField('text')}
-                className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
-                style={{ backgroundColor: textColor }}
-              />
-              {textColorMode === 'hex' ? (
+            <div className="space-y-2 mb-2">
+              <div className="flex items-center gap-2">
                 <input
-                  type="text"
-                  value={textColor.startsWith('#') ? textColor : rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
-                  onChange={(e) => onTextColorChange?.(e.target.value)}
+                  type="color"
+                  value={rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
+                  onChange={(e) => {
+                    const { r, g, b } = parseColor(e.target.value);
+                    if (textColorMode === 'rgba') {
+                      onTextColorChange?.(toRgbaString(r, g, b, textParsed.a));
+                    } else {
+                      onTextColorChange?.(e.target.value);
+                    }
+                  }}
                   onFocus={() => setFocusedColorField('text')}
-                  className="flex-1 bg-gray-800/50 text-white text-sm px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono text-xs"
-                  placeholder="#ffffff"
+                  className="w-10 h-10 rounded-lg cursor-pointer border-2 border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
+                  style={{ backgroundColor: textColor }}
                 />
-              ) : (
-                <div className="flex-1 grid grid-cols-4 gap-1">
-                  <input type="number" min="0" max="255" value={textParsed.r}
-                    onChange={(e) => onTextColorChange?.(toRgbaString(parseInt(e.target.value) || 0, textParsed.g, textParsed.b, textParsed.a))}
+                {textColorMode === 'hex' ? (
+                  <input
+                    type="text"
+                    value={textColor.startsWith('#') ? textColor : rgbaToHex(textParsed.r, textParsed.g, textParsed.b)}
+                    onChange={(e) => onTextColorChange?.(e.target.value)}
                     onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Red (0-255)"
+                    className="flex-1 min-w-0 bg-gray-800/50 text-white text-xs px-2 py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono"
+                    placeholder="#ffffff"
                   />
-                  <input type="number" min="0" max="255" value={textParsed.g}
-                    onChange={(e) => onTextColorChange?.(toRgbaString(textParsed.r, parseInt(e.target.value) || 0, textParsed.b, textParsed.a))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Green (0-255)"
-                  />
-                  <input type="number" min="0" max="255" value={textParsed.b}
-                    onChange={(e) => onTextColorChange?.(toRgbaString(textParsed.r, textParsed.g, parseInt(e.target.value) || 0, textParsed.a))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Blue (0-255)"
-                  />
-                  <input type="number" min="0" max="1" step="0.01" value={textParsed.a.toFixed(2)}
-                    onChange={(e) => onTextColorChange?.(toRgbaString(textParsed.r, textParsed.g, textParsed.b, parseFloat(e.target.value) || 0))}
-                    onFocus={() => setFocusedColorField('text')}
-                    className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
-                    title="Alpha (0-1)"
-                  />
+                ) : (
+                  <span className="flex-1 min-w-0 text-[10px] text-gray-400 font-mono truncate">
+                    rgba({textParsed.r}, {textParsed.g}, {textParsed.b}, {textParsed.a.toFixed(2)})
+                  </span>
+                )}
+              </div>
+              {textColorMode === 'rgba' && (
+                <div className="grid grid-cols-4 gap-1.5">
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">R</label>
+                    <input type="text" inputMode="numeric" value={textParsed.r}
+                      onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') onTextColorChange?.(toRgbaString(v || 0, textParsed.g, textParsed.b, textParsed.a)); }}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Red (0-255)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">G</label>
+                    <input type="text" inputMode="numeric" value={textParsed.g}
+                      onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') onTextColorChange?.(toRgbaString(textParsed.r, v || 0, textParsed.b, textParsed.a)); }}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Green (0-255)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">B</label>
+                    <input type="text" inputMode="numeric" value={textParsed.b}
+                      onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') onTextColorChange?.(toRgbaString(textParsed.r, textParsed.g, v || 0, textParsed.a)); }}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Blue (0-255)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-500 block mb-0.5 text-center">A</label>
+                    <input type="text" inputMode="decimal" value={textParsed.a.toFixed(2)}
+                      onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v) || e.target.value === '' || e.target.value === '0.') onTextColorChange?.(toRgbaString(textParsed.r, textParsed.g, textParsed.b, v || 0)); }}
+                      onFocus={() => setFocusedColorField('text')}
+                      className="w-full bg-gray-800/50 text-white text-center text-xs py-2 rounded-lg border border-white/10 focus:ring-2 focus:ring-indigo-500/50 focus:outline-none"
+                      title="Alpha (0-1)"
+                    />
+                  </div>
                 </div>
               )}
             </div>

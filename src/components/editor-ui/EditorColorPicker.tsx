@@ -215,62 +215,76 @@ export default function EditorColorPicker({
       )}
       
       {/* Color Input Row */}
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={hexValue}
-          onChange={(e) => handleColorInputChange(e.target.value)}
-          className="w-8 h-8 rounded cursor-pointer border border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
-          style={{ backgroundColor: value }}
-        />
-        
-        {colorMode === 'hex' ? (
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
           <input
-            type="text"
-            value={value.startsWith('#') ? value : hexValue}
-            onChange={(e) => handleTextInputChange(e.target.value)}
-            className="flex-1 bg-gray-800/50 text-white text-xs px-2 py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono"
-            placeholder="#000000"
+            type="color"
+            value={hexValue}
+            onChange={(e) => handleColorInputChange(e.target.value)}
+            className="w-8 h-8 rounded cursor-pointer border border-white/20 hover:border-white/40 transition-colors flex-shrink-0"
+            style={{ backgroundColor: value }}
           />
-        ) : (
-          <div className="flex-1 grid grid-cols-4 gap-1">
+          
+          {colorMode === 'hex' ? (
             <input
-              type="number"
-              min="0"
-              max="255"
-              value={parsed.r}
-              onChange={(e) => handleRgbaChange('r', parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800/50 text-white text-center text-[10px] py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
-              title="Red (0-255)"
+              type="text"
+              value={value.startsWith('#') ? value : hexValue}
+              onChange={(e) => handleTextInputChange(e.target.value)}
+              className="flex-1 min-w-0 bg-gray-800/50 text-white text-xs px-2 py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 focus:outline-none font-mono"
+              placeholder="#000000"
             />
-            <input
-              type="number"
-              min="0"
-              max="255"
-              value={parsed.g}
-              onChange={(e) => handleRgbaChange('g', parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800/50 text-white text-center text-[10px] py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
-              title="Green (0-255)"
-            />
-            <input
-              type="number"
-              min="0"
-              max="255"
-              value={parsed.b}
-              onChange={(e) => handleRgbaChange('b', parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800/50 text-white text-center text-[10px] py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
-              title="Blue (0-255)"
-            />
-            <input
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              value={parsed.a.toFixed(2)}
-              onChange={(e) => handleRgbaChange('a', parseFloat(e.target.value) || 0)}
-              className="w-full bg-gray-800/50 text-white text-center text-[10px] py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
-              title="Alpha (0-1)"
-            />
+          ) : (
+            <span className="flex-1 min-w-0 text-[10px] text-gray-400 font-mono truncate">
+              rgba({parsed.r}, {parsed.g}, {parsed.b}, {parsed.a.toFixed(2)})
+            </span>
+          )}
+        </div>
+        {colorMode === 'rgba' && (
+          <div className="grid grid-cols-4 gap-1.5">
+            <div>
+              <label className="text-[9px] text-gray-500 block mb-0.5 text-center">R</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={parsed.r}
+                onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') handleRgbaChange('r', v || 0); }}
+                className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
+                title="Red (0-255)"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] text-gray-500 block mb-0.5 text-center">G</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={parsed.g}
+                onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') handleRgbaChange('g', v || 0); }}
+                className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
+                title="Green (0-255)"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] text-gray-500 block mb-0.5 text-center">B</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={parsed.b}
+                onChange={(e) => { const v = parseInt(e.target.value); if (!isNaN(v) || e.target.value === '') handleRgbaChange('b', v || 0); }}
+                className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
+                title="Blue (0-255)"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] text-gray-500 block mb-0.5 text-center">A</label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={parsed.a.toFixed(2)}
+                onChange={(e) => { const v = parseFloat(e.target.value); if (!isNaN(v) || e.target.value === '' || e.target.value === '0.') handleRgbaChange('a', v || 0); }}
+                className="w-full bg-gray-800/50 text-white text-center text-xs py-1.5 rounded border border-white/10 focus:ring-1 focus:ring-indigo-500/50 focus:outline-none"
+                title="Alpha (0-1)"
+              />
+            </div>
           </div>
         )}
       </div>

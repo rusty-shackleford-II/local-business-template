@@ -64,6 +64,7 @@ import type { HeroCtaButton, ButtonGridLayout, ButtonGridPosition, ColorPalette,
 // EditableText no longer needed - button text editing happens in SingleButtonEditor modal
 import ButtonStyleEditor from './ButtonStyleEditor';
 import SingleButtonEditor from './SingleButtonEditor';
+import type { SectionTargetOption } from './SingleButtonEditor';
 import { useI18nContext } from './I18nProvider';
 
 // ============================================================================
@@ -216,6 +217,8 @@ type ButtonGridEditorProps = {
   onButtonStylesChange?: (styles: ButtonStyles) => void;
   // When true, aligns grid to start (no centering, no minWidth) for precise positioning
   alignToStart?: boolean;
+  // Available sections for "Scroll to Section" button action
+  availableSections?: SectionTargetOption[];
 };
 
 // ============================================================================
@@ -240,6 +243,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
   buttonStyles = {},
   onButtonStylesChange,
   alignToStart = false,
+  availableSections,
 }) => {
   // i18n for translating button labels
   const i18n = useI18nContext();
@@ -1139,6 +1143,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
               isLegacyButton={isLegacyButton}
               allButtons={buttons}
               targetElement={null} // Mobile doesn't need smart positioning - use centered
+              availableSections={availableSections}
             />
           );
         })()}
@@ -1269,6 +1274,7 @@ const ButtonGridEditor: React.FC<ButtonGridEditorProps> = ({
             isLegacyButton={isLegacyButton}
             allButtons={buttons}
             targetElement={buttonElement}
+            availableSections={availableSections}
           />
         );
       })()}

@@ -23,8 +23,9 @@ export type HeroCtaButton = {
   label: string;
   labelTextSize?: number;
   href?: string;
-  actionType?: 'contact' | 'external' | 'phone';
+  actionType?: 'contact' | 'external' | 'phone' | 'section';
   phoneNumber?: string;
+  sectionTarget?: string; // DOM element ID to scroll to (for actionType 'section', e.g., 'about', 'services', 'contact')
   variant?: 'primary' | 'secondary' | 'outline'; // Button style variant
   backgroundColor?: string; // Override button background color
   textColor?: string; // Override button text color

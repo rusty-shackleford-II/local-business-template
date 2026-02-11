@@ -279,6 +279,18 @@
   }
 }
 
+/* ===== HIDE NUMBER INPUT SPINNERS IN COLOR EDITORS ===== */
+/* Chrome, Safari, Edge, Opera */
+input[type="number"].no-spinner::-webkit-outer-spin-button,
+input[type="number"].no-spinner::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Firefox */
+input[type="number"].no-spinner {
+  -moz-appearance: textfield;
+}
+
 /* ===== GLOBAL STYLES ===== */
 
 /* Typography */

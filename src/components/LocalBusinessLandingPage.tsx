@@ -330,6 +330,23 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     return { style: undefined, className: isEven ? 'bg-white' : 'bg-gray-50', hasWrapper: false };
   };
 
+  // Default display labels for sections (used in hero button "Scroll to Section" picker)
+  const defaultSectionNavLabels: Record<string, string> = {
+    hero: 'Home', about: 'About', services: 'Services', benefits: 'Benefits',
+    menu: 'Menu', testimonials: 'Testimonials', payment: 'Shop',
+    videos: 'Videos', upcomingEvents: 'Events', contact: 'Contact', partners: 'Partners',
+  };
+
+  // Build available sections for the hero button "Scroll to Section" action
+  // Uses actual page sections with their nav labels, excluding hero itself
+  const availableSections = currentSections
+    .filter(s => s.enabled !== false && getSectionType(s.sectionId) !== 'hero')
+    .map(s => {
+      const sType = getSectionType(s.sectionId);
+      const label = s.navLabel || defaultSectionNavLabels[sType] || sType;
+      return { value: s.sectionId, label };
+    });
+
   // Render a section using its sectionId to look up data
   const renderSection = (sectionId: string, sectionType: SectionKey, index: number, backgroundColor?: string) => {
     // Get background class - use transparent if custom color (parent wrapper handles it), otherwise alternate
@@ -369,6 +386,7 @@ export default function LocalBusinessLandingPage(site: SiteData) {
           colorPalette={site.colorPalette}
           sectionId={customSectionId}
           socialLinks={site.socialLinks}
+          availableSections={availableSections}
         />;
       case 'about':
         const aboutData = sectionData as AboutType || site.about;

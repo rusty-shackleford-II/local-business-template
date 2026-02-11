@@ -215,8 +215,9 @@
               ]
             },
             "href": { "type": "string" },
-            "actionType": { "type": "string", "enum": ["contact", "external", "phone"] },
-            "phoneNumber": { "type": "string" }
+            "actionType": { "type": "string", "enum": ["contact", "external", "phone", "section"] },
+            "phoneNumber": { "type": "string" },
+            "sectionTarget": { "type": "string" }
           },
           "required": ["label"]
         },
