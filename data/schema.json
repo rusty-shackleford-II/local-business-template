@@ -100,14 +100,14 @@
         "enabled": { "type": "boolean", "default": false },
         "defaultLanguage": {
           "type": "string",
-          "enum": ["en", "es", "ar"],
+          "enum": ["en", "es", "ar", "ko", "ja", "zh"],
           "default": "en"
         },
         "availableLanguages": {
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["en", "es", "ar"]
+            "enum": ["en", "es", "ar", "ko", "ja", "zh"]
           },
           "minItems": 1,
           "default": ["en"]

@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "首页",
+    "about": "关于",
+    "services": "服务",
+    "benefits": "优势",
+    "menu": "菜单",
+    "testimonials": "客户评价",
+    "events": "活动",
+    "contact": "联系我们",
+    "videos": "视频",
+    "shop": "商店",
+    "gallery": "相册"
+  },
+  "hero": {
+    "buttons": {
+      "buyNow": "立即购买",
+      "getStarted": "立即开始",
+      "externalLink": "外部链接",
+      "customIcon": "自定义图标"
+    },
+    "ctaButtons": []
+  },
+  "contact": {
+    "form": {
+      "fullName": "姓名",
+      "emailAddress": "电子邮箱",
+      "phoneNumber": "电话号码",
+      "message": "留言",
+      "messagePlaceholder": "请告诉我们如何帮助您...",
+      "sendMessage": "发送消息",
+      "sending": "发送中...",
+      "thankYou": "谢谢您！",
+      "successMessage": "您的消息已发送，我们将尽快回复。"
+    },
+    "days": {
+      "mon": "周一",
+      "tue": "周二",
+      "wed": "周三",
+      "thu": "周四",
+      "fri": "周五",
+      "sat": "周六",
+      "sun": "周日"
+    },
+    "businessHours": "营业时间",
+    "closed": "休息",
+    "open24Hours": "24小时营业",
+    "to": "至",
+    "followUs": "关注我们",
+    "addLicense": "添加许可证"
+  },
+  "events": {
+    "from": "开始",
+    "recurringEvent": "定期活动",
+    "aboutThisEvent": "关于此活动",
+    "eventInformation": "活动信息",
+    "dressCode": "着装要求",
+    "relatedLinks": "相关链接",
+    "location": "地点",
+    "inquireAboutThisEvent": "咨询此活动",
+    "close": "关闭",
+    "noEventsAvailable": "暂无即将举行的活动。"
+  },
+  "footer": {
+    "privacyPolicy": "隐私政策",
+    "termsAndConditions": "条款与条件",
+    "allRightsReserved": "版权所有"
+  }
+}
