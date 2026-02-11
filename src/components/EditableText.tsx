@@ -581,13 +581,15 @@ export default function EditableText({
     if (!isEditingRef.current) {
       if (multiline) {
         // Use innerHTML for multiline to support <br> tags
-        el.innerHTML = internal ? internal.replace(/\n/g, '<br>') : (placeholder || '');
+        // Leave empty when no content — CSS ::before placeholder handles the visual hint
+        el.innerHTML = internal ? internal.replace(/\n/g, '<br>') : '';
       } else {
         // Use textContent for single-line (cleaner)
-        el.textContent = internal || placeholder || '';
+        // Leave empty when no content — CSS ::before placeholder handles the visual hint
+        el.textContent = internal || '';
       }
     }
-  }, [internal, multiline, placeholder]);
+  }, [internal, multiline]);
 
   // Ensure content is synced when switching to editable mode or when internal value changes
   // This handles the case where the callback ref doesn't fire on language switch
@@ -595,12 +597,14 @@ export default function EditableText({
     if (!ref.current || !effectiveEditable) return;
     if (!isEditingRef.current) {
       if (multiline) {
-        ref.current.innerHTML = internal ? internal.replace(/\n/g, '<br>') : (placeholder || '');
+        // Leave empty when no content — CSS ::before placeholder handles the visual hint
+        ref.current.innerHTML = internal ? internal.replace(/\n/g, '<br>') : '';
       } else {
-        ref.current.textContent = internal || placeholder || '';
+        // Leave empty when no content — CSS ::before placeholder handles the visual hint
+        ref.current.textContent = internal || '';
       }
     }
-  }, [effectiveEditable, internal, multiline, placeholder]);
+  }, [effectiveEditable, internal, multiline]);
 
   if (!effectiveEditable) {
     // For multiline text, convert newlines to <br /> tags
@@ -617,7 +621,7 @@ export default function EditableText({
         </Tag>
       );
     }
-    return <Tag key={elementKey} {...domProps}>{displayValue || placeholder || null}</Tag>;
+    return <Tag key={elementKey} {...domProps}>{displayValue || null}</Tag>;
   }
 
   // For editable elements, don't use React children - control via ref
@@ -648,7 +652,7 @@ export default function EditableText({
           </React.Fragment>
         ))
       ) : (
-        displayValue || placeholder || null
+        displayValue || null
       )}
     </Tag>
   );

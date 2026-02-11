@@ -339,9 +339,37 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
         {/* Airbnb-style Contact Card */}
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
+            {/* Determine if the right-side business info panel has any visible content */}
+            {(() => {
+              const showMap = contact?.showMap !== false;
+              const showAddress = contact?.showAddress !== false;
+              const showPhone = contact?.showPhone !== false;
+              const showEmail = contact?.showEmail !== false;
+              const showBusinessHours = contact?.showBusinessHours !== false;
+              const showLicenses = contact?.showLicenses !== false;
+              
+              // Check if social links exist and are shown
+              const showInContact = socialLinks?.showInContact ?? true;
+              const social = socialLinks?.links || contact?.social;
+              const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
+                key !== 'customLinks' && typeof value === 'string' && (value as string).trim()
+              );
+              const hasCustomLinks = (social as any)?.customLinks?.some((link: any) => link.url?.trim());
+              const hasSocialLinks = (hasStandardLinks || hasCustomLinks) && showInContact;
+              
+              // Right panel is visible if any of: map, address, phone, email, hours, licenses, or social links are shown
+              const hasRightPanel = showMap || showAddress || 
+                (showPhone && businessInfo?.phone) || 
+                (showEmail && businessInfo?.email) || 
+                (showBusinessHours && (businessInfo?.businessHours || contact?.businessHours)) ||
+                (showLicenses && (contact?.licenses?.length || contact?.licenseNumber)) ||
+                hasSocialLinks ||
+                editable; // Always show right panel in editor for toggle access
+
+              return (
+            <div className={`grid grid-cols-1 ${hasRightPanel ? 'lg:grid-cols-2' : ''}`}>
               {/* Contact Form - Left Side */}
-              <div className="p-8 lg:p-12 flex flex-col justify-center">
+              <div className={`p-8 lg:p-12 flex flex-col justify-center ${!hasRightPanel ? 'max-w-2xl mx-auto w-full' : ''}`}>
                 {isSubmitted ? (
                   <div className="text-center mobile-left">
                     <svg
@@ -534,8 +562,10 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
               </div>
 
               {/* Map and Contact Info - Right Side */}
+              {hasRightPanel && (
               <div className="bg-gray-50 p-0 sm:p-4 lg:p-12 flex flex-col pb-8 sm:pb-4 lg:pb-12 min-h-full">
                 {/* Map */}
+                {showMap && (
                 <div className="mb-4 sm:mb-8 sm:mx-4 lg:mx-0">
                   <div className="w-full h-64 sm:h-48 lg:h-64 bg-gray-200 rounded-none sm:rounded-lg overflow-hidden">
                     <iframe
@@ -551,9 +581,11 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                     />
                   </div>
                 </div>
+                )}
 
                 {/* Contact Information */}
                 <div className="space-y-4 mb-6 px-4 sm:px-0 flex-grow">
+                  {showAddress && (
                   <div className="flex items-center space-x-3">
                     <MapPinIcon 
                       className="h-5 w-5 flex-shrink-0" 
@@ -588,7 +620,8 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       <span className="text-gray-700">Address</span>
                     )}
                   </div>
-                  {businessInfo?.phone && (
+                  )}
+                  {showPhone && businessInfo?.phone && (
                     <div className="flex items-center space-x-3">
                       <PhoneIcon 
                         className="h-5 w-5 flex-shrink-0" 
@@ -619,7 +652,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       </div>
                     </div>
                   )}
-                  {businessInfo?.email && (
+                  {showEmail && businessInfo?.email && (
                     <div className="flex items-center space-x-3">
                       <EnvelopeIcon 
                         className="h-5 w-5 flex-shrink-0" 
@@ -650,7 +683,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   )}
                   
                   {/* Business Hours */}
-                  {(businessInfo?.businessHours || contact?.businessHours || editable) && (() => {
+                  {showBusinessHours && (businessInfo?.businessHours || contact?.businessHours || editable) && (() => {
                     const businessHours = businessInfo?.businessHours || contact?.businessHours;
                     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] as const;
                     const abbreviations: Record<typeof days[number], string> = {
@@ -696,7 +729,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   })()}
                   
                   {/* Licenses - Multiple licenses support */}
-                  {(validLicenses.length > 0 || editable) && (
+                  {showLicenses && (validLicenses.length > 0 || editable) && (
                     <div className="space-y-3">
                       {licenses.map((license, index) => (
                         <div key={index} className="flex items-center space-x-3">
@@ -1035,7 +1068,10 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                   );
                 })()}
               </div>
+              )}
             </div>
+              );
+            })()}
 
           </div>
         </div>

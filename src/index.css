@@ -291,6 +291,17 @@ input[type="number"].no-spinner {
   -moz-appearance: textfield;
 }
 
+/* ===== EDITABLE TEXT PLACEHOLDER ===== */
+/* Show placeholder via CSS ::before when contenteditable is empty.
+   This prevents placeholder text from being injected into the DOM
+   (which would get saved as real content on blur). */
+[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #9ca3af; /* gray-400 */
+  pointer-events: none;
+  opacity: 0.7;
+}
+
 /* ===== GLOBAL STYLES ===== */
 
 /* Typography */

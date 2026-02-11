@@ -848,7 +848,13 @@
             { "type": "number", "minimum": 0.5, "maximum": 2.0 },
             { "type": "string", "pattern": "^[0-9]+(\\.[0-9]+)?$" }
           ]
-        }
+        },
+        "showMap": { "type": "boolean", "description": "Toggle map embed visibility (default true)" },
+        "showAddress": { "type": "boolean", "description": "Toggle address visibility (default true)" },
+        "showPhone": { "type": "boolean", "description": "Toggle phone number visibility (default true)" },
+        "showEmail": { "type": "boolean", "description": "Toggle email visibility (default true)" },
+        "showBusinessHours": { "type": "boolean", "description": "Toggle business hours visibility (default true)" },
+        "showLicenses": { "type": "boolean", "description": "Toggle licenses visibility (default true)" }
       },
       "required": ["title", "subtitle"]
     },

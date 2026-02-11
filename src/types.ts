@@ -550,6 +550,13 @@ export type Contact = {
   consentTextSize?: number; // Text size for consent field
   consentTextColor?: string;
   consentTextFont?: string;
+  // Contact section display toggles (all default to true/shown when undefined for backward compat)
+  showMap?: boolean; // Toggle map embed visibility
+  showAddress?: boolean; // Toggle address visibility
+  showPhone?: boolean; // Toggle phone number visibility
+  showEmail?: boolean; // Toggle email visibility
+  showBusinessHours?: boolean; // Toggle business hours visibility
+  showLicenses?: boolean; // Toggle licenses visibility
 };
 
 export type Footer = {
