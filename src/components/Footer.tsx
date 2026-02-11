@@ -271,10 +271,31 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
     }
 
     // Single-page mode: show sections as nav items
-    // Default sections if no layout is provided
-    const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
+    // Prefer pages data (which has full sectionIds like "services_abc123") over legacy layout.sections
+    const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+
+    if (pageSections) {
+      // Use pages data with full sectionIds so multiple instances of the same type each get a nav link
+      return pageSections
+        .filter(section => {
+          const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+          return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners';
+        })
+        .map(section => {
+          const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+          return {
+            key: section.navLabel || sectionLabels[baseSectionType] || section.sectionId,
+            id: section.sectionId,
+            slug: undefined as string | undefined,
+            isPage: false,
+            isActive: false
+          };
+        });
+    }
     
     if (!Array.isArray(layout?.sections)) {
+      // Default sections if no layout is provided
+      const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
       return defaultSections.map(section => ({
         key: sectionLabels[section],
         id: section,
@@ -284,7 +305,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       }));
     }
 
-    // Filter enabled sections and map to footer items
+    // Legacy layout.sections format
     return layout.sections
       .map(section => {
         const sectionData = typeof section === 'string' 
@@ -301,7 +322,7 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
           isActive: false
         };
       })
-      .filter(item => item.enabled && item.key && item.id !== 'partners' && item.id !== 'hero'); // Only show sections with labels, exclude partners and home
+      .filter(item => item.enabled && item.key && item.id !== 'partners' && item.id !== 'hero');
   };
 
   const footerLinks = getFooterLinks();

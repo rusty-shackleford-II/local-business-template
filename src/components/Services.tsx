@@ -109,12 +109,15 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
               target: '_blank',
               rel: 'noopener noreferrer',
             } : {};
+            const itemCount = (Array.isArray(services.items) ? services.items : []).length;
+            // 4 items: 2x2 square grid on desktop; otherwise 3-column
+            const lgWidth = itemCount === 4 ? 'lg:w-[calc(50%-1rem)]' : 'lg:w-[calc(33.333%-1.334rem)]';
             
             return (
               <CardWrapper
                 key={service.id || `service-${index}`}
                 {...cardProps}
-                className={`w-full md:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.334rem)] bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group ${hasLink ? 'cursor-pointer' : ''}`}
+                className={`w-full md:w-[calc(50%-1rem)] ${lgWidth} bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group ${hasLink ? 'cursor-pointer' : ''}`}
               >
                 {/* Service Image */}
                 {/* bg-gray-100 prevents black sub-pixel gaps; scale-[1.005] ensures full container coverage */}

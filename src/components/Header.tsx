@@ -420,11 +420,32 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
     }
 
     // Single-page mode: show sections as nav items
-    // Default sections if no layout is provided
-    const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
-    
+    // Prefer pages data (which has full sectionIds like "services_abc123") over legacy layout.sections
+    const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+
     let navigationItems;
-    if (!Array.isArray(layout?.sections)) {
+    if (pageSections) {
+      // Use pages data with full sectionIds so multiple instances of the same type each get a nav link
+      navigationItems = pageSections
+        .filter(section => {
+          const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+          return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners';
+        })
+        .map(section => {
+          const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+          return {
+            id: section.sectionId,
+            label: section.navLabel || sectionLabels[baseSectionType] || section.sectionId,
+            slug: undefined as string | undefined,
+            enabled: true,
+            isSection: true,
+            isPage: false,
+            isActive: false
+          };
+        });
+    } else if (!Array.isArray(layout?.sections)) {
+      // Default sections if no layout is provided
+      const defaultSections: SectionKey[] = ['hero', 'about', 'services', 'contact'];
       navigationItems = defaultSections.map(section => ({
         id: section,
         label: sectionLabels[section],
@@ -435,7 +456,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
         isActive: false
       }));
     } else {
-      // Filter enabled sections and map to navigation items
+      // Legacy layout.sections format
       navigationItems = layout.sections
         .map(section => {
           const sectionData = typeof section === 'string' 
@@ -453,7 +474,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             isActive: false
           };
         })
-        .filter(item => item.enabled && item.label && item.id !== 'partners' && item.id !== 'hero'); // Only show sections with labels, exclude partners and home
+        .filter(item => item.enabled && item.label && item.id !== 'partners' && item.id !== 'hero');
     }
 
     return navigationItems;

@@ -418,6 +418,7 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                     }}
                   >
                     <Swiper
+                      key={`about-standard-${thumbnailSize}`}
                       modules={[Navigation, Pagination]}
                       spaceBetween={12}
                       slidesPerView={1}
@@ -432,15 +433,15 @@ const About: React.FC<Props> = ({ about, backgroundClass = 'bg-white', editable,
                       }}
                       breakpoints={{
                         640: {
-                          slidesPerView: Math.min(2, images.length),
+                          slidesPerView: Math.min(Math.max(1, Math.round(2 / thumbnailSize)), images.length),
                           spaceBetween: 16,
                         },
                         768: {
-                          slidesPerView: Math.min(3, images.length),
+                          slidesPerView: Math.min(Math.max(1, Math.round(3 / thumbnailSize)), images.length),
                           spaceBetween: 16,
                         },
                         1024: {
-                          slidesPerView: Math.min(3, images.length),
+                          slidesPerView: Math.min(Math.max(1, Math.round(3 / thumbnailSize)), images.length),
                           spaceBetween: 24,
                         },
                       }}
