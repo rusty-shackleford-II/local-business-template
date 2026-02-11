@@ -30,7 +30,7 @@ export type SiteData = SiteDataType & {
   // Image upload handlers
   onLogoClick?: () => void;
   onHeroImageClick?: () => void;
-  onServiceImageClick?: (service: import('../types').ServiceItem, index: number) => void;
+  onServiceImageClick?: (service: import('../types').ServiceItem, index: number, sectionId?: string) => void;
   // Multipage props
   currentPageSlug?: string; // For preview mode - parent controls current page
   onPageChange?: (slug: string) => void; // Callback when page changes

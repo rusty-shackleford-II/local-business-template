@@ -8,7 +8,7 @@ type Props = {
   backgroundClass?: string;
   editable?: boolean;
   onEdit?: (path: string, value: string) => void;
-  onServiceImageClick?: (service: ServiceItem, index: number) => void;
+  onServiceImageClick?: (service: ServiceItem, index: number, sectionId?: string) => void;
   colorPalette?: ColorPalette;
   sectionId?: string;
 };
@@ -126,7 +126,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
                   onClick={editable && onServiceImageClick ? (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    onServiceImageClick(service, index);
+                    onServiceImageClick(service, index, sectionId);
                   } : undefined}
                 >
                   {service.imageUrl ? (
