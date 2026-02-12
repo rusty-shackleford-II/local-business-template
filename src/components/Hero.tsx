@@ -2160,7 +2160,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                 as="h1"
                 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-none mb-6"
                 style={{ color: hero?.colors?.headline }}
-                value={hero?.headline || 'Your Trusted Local Business'}
+                value={hero?.headline ?? 'Your Trusted Local Business'}
                 path="hero.headline"
                 editable={editable}
                 onEdit={onEdit}
@@ -3081,7 +3081,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       color: hero?.colors?.headline,
                       textAlign: hero?.headlineAlign || 'center'
                     }}
-                    value={hero?.headline || 'Your Trusted Local Business'}
+                    value={hero?.headline ?? 'Your Trusted Local Business'}
                     path="hero.headline"
                     editable={editable}
                     onEdit={onEdit}
@@ -3213,7 +3213,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
                       textShadow: '0 2px 20px rgba(0,0,0,0.7), 0 4px 40px rgba(0,0,0,0.5)',
                       textAlign: hero?.headlineAlign || 'center'
                     }}
-                    value={hero?.headline || 'Your Trusted Local Business'}
+                    value={hero?.headline ?? 'Your Trusted Local Business'}
                     path="hero.headline"
                     editable={editable}
                     onEdit={onEdit}

@@ -177,7 +177,7 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
             style={{ color: testimonials?.titleTextColor }}
-            value={testimonials?.title || "What Our Clients Say"}
+            value={testimonials?.title ?? "What Our Clients Say"}
             path="testimonials.title"
             editable={editable}
             onEdit={onEdit}
@@ -201,7 +201,7 @@ const Testimonials: React.FC<Props> = ({ testimonials, backgroundClass = 'bg-whi
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto mb-8"
             style={{ color: testimonials?.subtitleTextColor }}
-            value={testimonials?.subtitle || "Don't just take our word for it. Here's what our satisfied clients have to say about our professional services."}
+            value={testimonials?.subtitle ?? "Don't just take our word for it. Here's what our satisfied clients have to say about our professional services."}
             path="testimonials.subtitle"
             editable={editable}
             onEdit={onEdit}

@@ -289,7 +289,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
             as="h2"
             className="text-3xl md:text-4xl font-bold text-gray-900 mb-4"
             style={{ color: contact?.titleTextColor }}
-            value={contact?.title || "Contact Us"}
+            value={contact?.title ?? "Contact Us"}
             path="contact.title"
             editable={editable}
             onEdit={onEdit}
@@ -313,7 +313,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
             as="p"
             className="text-lg text-gray-600 max-w-3xl mx-auto"
             style={{ color: contact?.subtitleTextColor }}
-            value={contact?.subtitle || "Ready to get started? Reach out to us today."}
+            value={contact?.subtitle ?? "Ready to get started? Reach out to us today."}
             path="contact.subtitle"
             editable={editable}
             onEdit={onEdit}
@@ -489,7 +489,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             as="span"
                             className="text-sm text-gray-600"
                             style={{ color: contact?.consentTextColor }}
-                            value={contact?.consentText || "By checking this box, you agree to receive communications from us."}
+                            value={contact?.consentText ?? "By checking this box, you agree to receive communications from us."}
                             path="contact.consentText"
                             editable={editable}
                             onEdit={onEdit}
@@ -756,7 +756,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                             <EditableText
                               as="span"
                               className="text-xs text-gray-500 mb-0.5"
-                              value={license.title || 'License #'}
+                              value={license.title ?? 'License #'}
                               path={`contact.licenses.${index}.title`}
                               editable={editable}
                               onEdit={onEdit}

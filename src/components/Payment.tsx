@@ -128,7 +128,7 @@ const Payment: React.FC<Props> = ({ payment, backgroundClass = 'bg-white', edita
         <EditableText
           as="h3"
           className="text-xl font-semibold text-gray-900 mb-6 text-center mobile-left"
-          value={payment?.galleryTitle || "Product Gallery"}
+          value={payment?.galleryTitle ?? "Product Gallery"}
           path="payment.galleryTitle"
           editable={editable}
           onEdit={onEdit}
