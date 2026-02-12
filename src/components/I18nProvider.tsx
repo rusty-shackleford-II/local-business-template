@@ -172,11 +172,11 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        return defaultValue || key;
+        return defaultValue ?? key;
       }
     }
 
-    return typeof value === 'string' ? value : defaultValue || key;
+    return typeof value === 'string' ? value : defaultValue ?? key;
   };
 
   // Set initial HTML dir attribute based on default language
