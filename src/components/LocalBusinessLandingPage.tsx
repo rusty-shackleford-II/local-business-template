@@ -11,6 +11,7 @@ import Contact from "./Contact";
 import Footer from "./Footer";
 import Videos from "./Videos";
 import Payment from "./Payment";
+import ScrollReveal from "./ScrollReveal";
 import { TextStyleProvider } from "./TextStyleContext";
 
 // Import proper types
@@ -520,17 +521,39 @@ export default function LocalBusinessLandingPage(site: SiteData) {
     );
     const content = renderSection(sectionConfig.sectionId, sectionConfig.sectionType, index, sectionConfig.backgroundColor);
     
+    // Hero doesn't need scroll animation (it's already visible on load)
+    const isHero = sectionConfig.sectionType === 'hero';
+    // Disable animations in edit mode to keep editor snappy
+    const disableAnimation = site.editable || isHero;
+    
+    // Stagger delay based on position among non-hero sections
+    const staggerDelay = isHero ? 0 : Math.min(index * 60, 200);
+    
     if (hasWrapper && style) {
       // Custom styles - wrap in a div with the styles
       return (
-        <div key={sectionConfig.sectionId} style={style}>
-          {content}
-        </div>
+        <ScrollReveal
+          key={sectionConfig.sectionId}
+          disabled={disableAnimation}
+          delay={staggerDelay}
+        >
+          <div style={style}>
+            {content}
+          </div>
+        </ScrollReveal>
       );
     }
     
-    // No custom styles, render as normal
-    return <React.Fragment key={sectionConfig.sectionId}>{content}</React.Fragment>;
+    // No custom styles, wrap with scroll reveal
+    return (
+      <ScrollReveal
+        key={sectionConfig.sectionId}
+        disabled={disableAnimation}
+        delay={staggerDelay}
+      >
+        {content}
+      </ScrollReveal>
+    );
   };
 
   const content = (

@@ -302,6 +302,54 @@ input[type="number"].no-spinner {
   opacity: 0.7;
 }
 
+/* ===== SCROLL REVEAL ANIMATIONS ===== */
+
+/* Base state: hidden, waiting to scroll into view */
+.scroll-reveal {
+  will-change: opacity, transform;
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Variant: fade-up (default) */
+.scroll-reveal--fade-up {
+  opacity: 0;
+  transform: translateY(32px);
+}
+
+/* Variant: fade-in (just opacity) */
+.scroll-reveal--fade-in {
+  opacity: 0;
+  transform: none;
+}
+
+/* Variant: fade-left */
+.scroll-reveal--fade-left {
+  opacity: 0;
+  transform: translateX(-32px);
+}
+
+/* Variant: fade-right */
+.scroll-reveal--fade-right {
+  opacity: 0;
+  transform: translateX(32px);
+}
+
+/* Visible state: animate into place */
+.scroll-reveal--visible {
+  opacity: 1 !important;
+  transform: translateY(0) translateX(0) !important;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-reveal {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* ===== GLOBAL STYLES ===== */
 
 /* Typography */
