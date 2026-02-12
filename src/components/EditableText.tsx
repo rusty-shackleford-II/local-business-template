@@ -115,8 +115,9 @@ export default function EditableText({
   const Tag: any = as;
   const i18nContext = useI18nContext();
   const isDefaultLanguage = !i18nContext?.enabled || i18nContext.currentLanguage === i18nContext.defaultLanguage;
-  // Only allow editing in the default language to prevent editing translations
-  const effectiveEditable = editable && isDefaultLanguage;
+  const isSecondaryLanguage = !isDefaultLanguage && !!i18nContext?.enabled;
+  // Allow editing in primary language always, and in secondary language when we have a path for translation tracking
+  const effectiveEditable = editable && (isDefaultLanguage || (isSecondaryLanguage && !!path));
   
   const [internal, setInternal] = useState<string>(
     value === undefined || value === null ? "" : decodeHtmlEntities(String(value))
@@ -129,6 +130,32 @@ export default function EditableText({
   const isEditingRef = useRef(false);
   const suppressBlurCommitRef = useRef(false);
   const isMenuPath = useMemo(() => typeof path === 'string' && path.startsWith('menu.'), [path]);
+
+  // Translated text for display (used in non-editable render path)
+  const displayValue = useMemo(() => {
+    if (!path || !i18nContext?.enabled) {
+      return internal;
+    }
+    if (i18nContext.currentLanguage === i18nContext.defaultLanguage) {
+      return internal;
+    }
+    // Use value prop directly for translation fallback to avoid flash when switching languages
+    const fallbackText = value !== undefined && value !== null ? String(value) : internal;
+    const translatedText = i18nContext.t(path, fallbackText);
+    
+    return translatedText;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [internal, path, i18nContext, value]);
+
+  // Content to show in the editable DOM element (translated text for secondary language, primary text for default)
+  const editableContent = useMemo(() => {
+    if (!isSecondaryLanguage || !path || !i18nContext?.enabled) {
+      return internal;
+    }
+    const fallbackText = value !== undefined && value !== null ? String(value) : internal;
+    return i18nContext.t(path, fallbackText);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [internal, path, i18nContext, value, isSecondaryLanguage]);
 
   useEffect(() => {
     const next = value === undefined || value === null ? "" : decodeHtmlEntities(String(value));
@@ -293,8 +320,11 @@ export default function EditableText({
       text = (ref.current?.textContent ?? "").trim();
     }
     
-    // Update internal state with the clean text
-    setInternal(text);
+    // Only update internal state (primary text) when editing in the default language
+    // For secondary language edits, internal should stay synced with the primary text
+    if (!isSecondaryLanguage) {
+      setInternal(text);
+    }
     
     // Commit the changes to parent
     if (path && onEdit) {
@@ -317,15 +347,16 @@ export default function EditableText({
       onBlur();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [path, onEdit, onChange, onBlur, multiline, effectiveEditable]);
+  }, [path, onEdit, onChange, onBlur, multiline, effectiveEditable, isSecondaryLanguage]);
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       // Always stop propagation when editable to prevent parent click handlers from firing
       if (effectiveEditable) {
         e.stopPropagation();
-        // Only show popup if we have a text size change handler
-        if (onTextSizeChange) {
+        // Only show popup if we have a text size change handler AND we're in primary language
+        // (text formatting controls should not appear when editing translations)
+        if (onTextSizeChange && !isSecondaryLanguage) {
           // Notify all other EditableText instances to close their popups
           window.dispatchEvent(new CustomEvent('editable-text-popup-open', {
             detail: { instanceId: instanceIdRef.current },
@@ -334,7 +365,7 @@ export default function EditableText({
         }
       }
     },
-    [effectiveEditable, onTextSizeChange]
+    [effectiveEditable, onTextSizeChange, isSecondaryLanguage]
   );
 
   const handleKeyDown = useCallback(
@@ -354,16 +385,17 @@ export default function EditableText({
       
       if (e.key === "Escape") {
         e.preventDefault();
-        // Revert on escape
+        // Revert on escape - use editableContent to revert to correct language text
+        const revertContent = editableContent;
         if (ref.current) {
-          ref.current.innerHTML = internal.replace(/\n/g, '<br>');
+          ref.current.innerHTML = revertContent.replace(/\n/g, '<br>');
         }
         (e.currentTarget as any).blur();
         // Close popup if open
         if (showPopup) setShowPopup(false);
       }
     },
-    [effectiveEditable, multiline, internal, showPopup]
+    [effectiveEditable, multiline, editableContent, showPopup]
   );
 
   const handlePaste = useCallback(
@@ -462,14 +494,24 @@ export default function EditableText({
   const baseClass = useMemo(() => {
     const classes = [className || ""];
     if (effectiveEditable) {
-      classes.push(
-        "editable-text", // Marker class for drag handler detection
-        "relative outline-none ring-0 focus:ring-2 focus:ring-blue-400/50 cursor-text",
-        "hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60"
-      );
+      if (isSecondaryLanguage) {
+        // Purple ring for secondary language (translation) editing
+        classes.push(
+          "editable-text",
+          "relative outline-none ring-0 focus:ring-2 focus:ring-purple-400/50 cursor-text",
+          "hover:outline hover:outline-1 hover:outline-dashed hover:outline-purple-400/60"
+        );
+      } else {
+        // Blue ring for primary language editing
+        classes.push(
+          "editable-text",
+          "relative outline-none ring-0 focus:ring-2 focus:ring-blue-400/50 cursor-text",
+          "hover:outline hover:outline-1 hover:outline-dashed hover:outline-blue-400/60"
+        );
+      }
     }
     return classes.filter(Boolean).join(" ");
-  }, [className, effectiveEditable]);
+  }, [className, effectiveEditable, isSecondaryLanguage]);
 
   // Extract font-weight from className to preserve it in contentEditable
   const preserveFontWeight = useMemo(() => {
@@ -554,21 +596,6 @@ export default function EditableText({
     if (rel) domProps.rel = rel;
   }
 
-  const displayValue = useMemo(() => {
-    if (!path || !i18nContext?.enabled) {
-      return internal;
-    }
-    if (i18nContext.currentLanguage === i18nContext.defaultLanguage) {
-      return internal;
-    }
-    // Use value prop directly for translation fallback to avoid flash when switching languages
-    const fallbackText = value !== undefined && value !== null ? String(value) : internal;
-    const translatedText = i18nContext.t(path, fallbackText);
-    
-    return translatedText;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [internal, path, i18nContext, value]);
-
   // For contentEditable elements, we use ref to control the DOM directly
   // This prevents React reconciliation errors when the browser modifies the DOM structure
   // NOTE: This hook MUST be defined before any conditional returns to comply with Rules of Hooks
@@ -579,32 +606,36 @@ export default function EditableText({
     
     // Only set content when not actively editing
     if (!isEditingRef.current) {
+      // Use editableContent which returns translated text for secondary language
+      const content = editableContent;
       if (multiline) {
         // Use innerHTML for multiline to support <br> tags
         // Leave empty when no content — CSS ::before placeholder handles the visual hint
-        el.innerHTML = internal ? internal.replace(/\n/g, '<br>') : '';
+        el.innerHTML = content ? content.replace(/\n/g, '<br>') : '';
       } else {
         // Use textContent for single-line (cleaner)
         // Leave empty when no content — CSS ::before placeholder handles the visual hint
-        el.textContent = internal || '';
+        el.textContent = content || '';
       }
     }
-  }, [internal, multiline]);
+  }, [editableContent, multiline]);
 
-  // Ensure content is synced when switching to editable mode or when internal value changes
+  // Ensure content is synced when switching to editable mode or when content value changes
   // This handles the case where the callback ref doesn't fire on language switch
   useEffect(() => {
     if (!ref.current || !effectiveEditable) return;
     if (!isEditingRef.current) {
+      // Use editableContent which returns translated text for secondary language
+      const content = editableContent;
       if (multiline) {
         // Leave empty when no content — CSS ::before placeholder handles the visual hint
-        ref.current.innerHTML = internal ? internal.replace(/\n/g, '<br>') : '';
+        ref.current.innerHTML = content ? content.replace(/\n/g, '<br>') : '';
       } else {
         // Leave empty when no content — CSS ::before placeholder handles the visual hint
-        ref.current.textContent = internal || '';
+        ref.current.textContent = content || '';
       }
     }
-  }, [effectiveEditable, internal, multiline]);
+  }, [effectiveEditable, editableContent, multiline]);
 
   if (!effectiveEditable) {
     // For multiline text, convert newlines to <br /> tags

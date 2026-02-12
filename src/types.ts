@@ -640,6 +640,9 @@ export type I18nConfig = {
   defaultLanguage?: string;
   availableLanguages?: string[];
   translations?: Record<string, any>;
+  // Tracks which translation paths have been manually edited per language
+  // Manual edits persist until the primary language text for that path is modified
+  manualEdits?: Record<string, string[]>;
 };
 
 export type PaymentGalleryImage = {

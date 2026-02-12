@@ -40,6 +40,7 @@ interface I18nProviderProps {
   siteData?: any;
   enabled?: boolean;
   persistLanguage?: boolean;
+  onLanguageChange?: (lang: string) => void;
 }
 
 export const I18nProvider: React.FC<I18nProviderProps> = ({
@@ -48,7 +49,8 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   availableLanguages,
   siteData,
   enabled = true,
-  persistLanguage = true
+  persistLanguage = true,
+  onLanguageChange,
 }) => {
   const normalizedLanguages = useMemo(() => 
     Array.isArray(availableLanguages) && availableLanguages.length > 0
@@ -73,6 +75,10 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   // Keep state in sync when default language changes
   useEffect(() => {
     setCurrentLanguage(safeDefaultLanguage);
+    if (onLanguageChange) {
+      onLanguageChange(safeDefaultLanguage);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeDefaultLanguage]);
 
   // Load translations for current language when enabled
@@ -117,6 +123,11 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
   const changeLanguage = (lang: string) => {
     if (!normalizedLanguages.includes(lang)) return;
     setCurrentLanguage(lang);
+    
+    // Notify parent of language change
+    if (onLanguageChange) {
+      onLanguageChange(lang);
+    }
     
     // Update HTML dir attribute for RTL support
     if (typeof document !== 'undefined') {
@@ -184,12 +195,16 @@ export const I18nProvider: React.FC<I18nProviderProps> = ({
       const saved = localStorage.getItem('preferredLanguage');
       if (saved && normalizedLanguages.includes(saved)) {
         setCurrentLanguage(saved);
+        if (onLanguageChange) {
+          onLanguageChange(saved);
+        }
         // Update dir attribute for saved language
         const isRTL = RTL_LANGUAGES.includes(saved);
         document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
         document.documentElement.setAttribute('lang', saved);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [normalizedLanguages, isI18nActive, persistLanguage]);
 
   const value: I18nContextType = {
