@@ -339,7 +339,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
         {/* Airbnb-style Contact Card */}
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-3xl shadow-2xl overflow-hidden">
-            {/* Determine if the right-side business info panel has any visible content */}
+            {/* Layout logic: side-by-side when map or hours visible, stacked when not */}
             {(() => {
               const showMap = contact?.showMap !== false;
               const showAddress = contact?.showAddress !== false;
@@ -349,27 +349,33 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
               const showLicenses = contact?.showLicenses !== false;
               
               // Check if social links exist and are shown
-              const showInContact = socialLinks?.showInContact ?? true;
-              const social = socialLinks?.links || contact?.social;
-              const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
+              const socialShowInContact = socialLinks?.showInContact ?? true;
+              const socialData = socialLinks?.links || contact?.social;
+              const hasStdLinks = socialData && Object.entries(socialData).some(([key, value]) => 
                 key !== 'customLinks' && typeof value === 'string' && (value as string).trim()
               );
-              const hasCustomLinks = (social as any)?.customLinks?.some((link: any) => link.url?.trim());
-              const hasSocialLinks = (hasStandardLinks || hasCustomLinks) && showInContact;
+              const hasCustLinks = (socialData as any)?.customLinks?.some((link: any) => link.url?.trim());
+              const hasSocialLinks = (hasStdLinks || hasCustLinks) && socialShowInContact;
               
-              // Right panel is visible if any of: map, address, phone, email, hours, licenses, or social links are shown
-              const hasRightPanel = showMap || showAddress || 
-                (showPhone && businessInfo?.phone) || 
-                (showEmail && businessInfo?.email) || 
-                (showBusinessHours && (businessInfo?.businessHours || contact?.businessHours)) ||
-                (showLicenses && (contact?.licenses?.length || contact?.licenseNumber)) ||
+              // Side-by-side (2-col) when map OR hours are visible; stacked when both are off
+              const useSideBySideLayout = showMap || showBusinessHours;
+              
+              // Whether the form should use full-width responsive grid
+              const fullWidthForm = !useSideBySideLayout;
+              
+              // In stacked mode, check if there's any info to show below the form
+              const hasInfoBelow = showAddress || 
+                (showPhone && (businessInfo?.phone || editable)) || 
+                (showEmail && (businessInfo?.email || editable)) || 
+                (showLicenses && (validLicenses.length > 0 || editable)) ||
                 hasSocialLinks ||
-                editable; // Always show right panel in editor for toggle access
+                editable; // Editor always shows the info bar so toggles are accessible
 
               return (
-            <div className={`grid grid-cols-1 ${hasRightPanel ? 'lg:grid-cols-2' : ''}`}>
-              {/* Contact Form - Left Side */}
-              <div className={`p-8 lg:p-12 flex flex-col justify-center ${!hasRightPanel ? 'max-w-2xl mx-auto w-full' : ''}`}>
+            <>
+            <div className={`grid grid-cols-1 ${useSideBySideLayout ? 'lg:grid-cols-2' : ''}`}>
+              {/* Contact Form */}
+              <div className="p-8 lg:p-12 flex flex-col justify-center">
                 {isSubmitted ? (
                   <div className="text-center mobile-left">
                     <svg
@@ -394,7 +400,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                     </p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form onSubmit={handleSubmit} className={fullWidthForm ? 'grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6' : 'space-y-6'}>
                     {/* Hidden destination field */}
                     <input
                       type="hidden"
@@ -402,8 +408,9 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       value={businessInfo?.email || (contact?.contactRecipients?.length ? contact.contactRecipients[0] : '')}
                     />
                     {/* Dynamically render form fields */}
+                    {/* When full-width: short fields go side-by-side, textarea spans full width */}
                     {formFields.map((field) => (
-                      <div key={field.id}>
+                      <div key={field.id} className={fullWidthForm && field.type === 'textarea' ? 'md:col-span-2' : ''}>
                         <label htmlFor={field.id} className="block text-sm font-semibold text-gray-700 mb-2">
                           {field.label}
                         </label>
@@ -458,9 +465,9 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       </div>
                     ))}
 
-                    {/* Optional Consent Field */}
+                    {/* Optional Consent Field - always full width */}
                     {contact?.showConsent && (
-                      <div className={`flex items-start space-x-3 ${contact?.consentRequiresCheckbox ? '' : 'justify-center'}`}>
+                      <div className={`flex items-start space-x-3 ${fullWidthForm ? 'md:col-span-2' : ''} ${contact?.consentRequiresCheckbox ? '' : 'justify-center'}`}>
                         {contact?.consentRequiresCheckbox && (
                           <input
                             type="checkbox"
@@ -507,20 +514,24 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                       </div>
                     )}
 
-                    {/* hCaptcha Widget - only render on client side to avoid SSR hydration mismatch */}
+                    {/* hCaptcha Widget */}
                     {isHcaptchaMounted && (
-                      <HCaptcha
-                        ref={hcaptchaRef}
-                        sitekey={HCAPTCHA_SITEKEY}
-                        onVerify={(token) => setHcaptchaToken(token)}
-                        onExpire={() => setHcaptchaToken(null)}
-                      />
+                      <div className={fullWidthForm ? 'md:col-span-2' : ''}>
+                        <HCaptcha
+                          ref={hcaptchaRef}
+                          sitekey={HCAPTCHA_SITEKEY}
+                          onVerify={(token) => setHcaptchaToken(token)}
+                          onExpire={() => setHcaptchaToken(null)}
+                        />
+                      </div>
                     )}
 
                     <button
                       type="submit"
                       disabled={isSubmitting}
                       className={`w-full text-white font-semibold py-4 px-6 rounded-lg transform transition-all duration-200 shadow-lg button-press ${
+                        fullWidthForm ? 'md:col-span-2' : ''
+                      } ${
                         isSubmitting ? 'opacity-75 cursor-not-allowed' : 'hover:scale-105 hover:shadow-xl'
                       }`}
                       style={{
@@ -530,7 +541,6 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                         if (isSubmitting) return;
                         const target = e.target as HTMLButtonElement;
                         const color = colorPalette?.primary || '#10B981';
-                        // Darken the color on hover by reducing brightness
                         const darkerColor = color.replace('#', '');
                         const r = parseInt(darkerColor.substr(0, 2), 16);
                         const g = parseInt(darkerColor.substr(2, 2), 16);
@@ -561,8 +571,8 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                 )}
               </div>
 
-              {/* Map and Contact Info - Right Side */}
-              {hasRightPanel && (
+              {/* Side-by-side: Map + all info in right column */}
+              {useSideBySideLayout && (
               <div className="bg-gray-50 p-0 sm:p-4 lg:p-12 flex flex-col pb-8 sm:pb-4 lg:pb-12 min-h-full">
                 {/* Map */}
                 {showMap && (
@@ -605,7 +615,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                         onEdit={onEdit}
                         onBlur={updateMapFromAddress}
                         placeholder="Street address"
-                        textSize={contact?.addressTextSize || 0.875} // text-sm = 0.875rem - smaller for contact details
+                        textSize={contact?.addressTextSize || 0.875}
                         onTextSizeChange={onEdit ? (size: number) => onEdit('contact.addressTextSize', size.toString()) : undefined}
                         textSizeLabel="Address Text Style"
                         textColor={contact?.addressTextColor}
@@ -638,7 +648,7 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
                           editable={editable}
                           onEdit={onEdit}
                           placeholder="Phone number"
-                          textSize={contact?.phoneTextSize || 0.875} // text-sm = 0.875rem - smaller for contact details
+                          textSize={contact?.phoneTextSize || 0.875}
                           onTextSizeChange={onEdit ? (size: number) => onEdit('contact.phoneTextSize', size.toString()) : undefined}
                           textSizeLabel="Phone Text Style"
                           textColor={contact?.phoneTextColor}
@@ -790,21 +800,16 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
 
                 {/* Dynamic Social Media Links */}
                 {(() => {
-                  // Use centralized socialLinks if available and showInContact is true (default)
-                  // Fall back to contact.social for backward compatibility
                   const showInContact = socialLinks?.showInContact ?? true;
                   const social = socialLinks?.links || contact?.social;
-                  // Icon size multiplier - defaults to 1.0 for backward compatibility
                   const iconSize = socialLinks?.contactSocialIconSize ?? 1.0;
-                  // Base sizes in pixels
-                  const containerBaseSize = 48; // w-12 h-12
-                  const iconBaseSize = 20; // h-5 w-5
+                  const containerBaseSize = 48;
+                  const iconBaseSize = 20;
                   const containerPx = Math.round(containerBaseSize * iconSize);
                   const iconPx = Math.round(iconBaseSize * iconSize);
-                  const grubhubIconPx = Math.round(32 * iconSize); // h-8 w-8 for grubhub
+                  const grubhubIconPx = Math.round(32 * iconSize);
                   const toastImagePx = Math.round(32 * iconSize);
                   const deliverooImagePx = Math.round(32 * iconSize);
-                  // Check for social links - handle both string values and customLinks array
                   const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
                     key !== 'customLinks' && typeof value === 'string' && value.trim()
                   );
@@ -1070,6 +1075,196 @@ const Contact: React.FC<Props> = ({ contact, businessInfo, backgroundClass = 'bg
               </div>
               )}
             </div>
+
+            {/* Stacked mode: remaining info below the form, full-width, centered */}
+            {!useSideBySideLayout && hasInfoBelow && (
+              <div className="border-t border-gray-200 bg-gray-50 px-8 lg:px-12 py-8">
+                {/* Contact details: centered group on desktop, stacked on mobile */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-x-8 gap-y-3 items-center justify-center mb-6">
+                  {showAddress && (
+                    <div className="flex items-center space-x-2">
+                      <MapPinIcon 
+                        className="h-5 w-5 flex-shrink-0" 
+                        style={{ color: colorPalette?.secondary || '#6B7280' }}
+                      />
+                      {(contact?.address || businessInfo?.address) ? (
+                        <EditableText
+                          as="a"
+                          href={generateGoogleMapsUrl(businessInfo?.address) || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gray-700 hover:text-primary-600 transition-colors duration-200 hover:underline"
+                          style={{ color: contact?.addressTextColor }}
+                          value={contact?.address || (businessInfo?.address ? `${businessInfo.address.streetAddress}, ${businessInfo.address.addressLocality}, ${businessInfo.address.addressRegion} ${businessInfo.address.postalCode}` : '')}
+                          path="contact.address"
+                          editable={editable}
+                          onEdit={onEdit}
+                          onBlur={updateMapFromAddress}
+                          placeholder="Street address"
+                          textSize={contact?.addressTextSize || 0.875}
+                          onTextSizeChange={onEdit ? (size: number) => onEdit('contact.addressTextSize', size.toString()) : undefined}
+                          textSizeLabel="Address Text Style"
+                          textColor={contact?.addressTextColor}
+                          onTextColorChange={onEdit ? (color: string) => onEdit('contact.addressTextColor', color) : undefined}
+                          showColorPicker={true}
+                          presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                          fontFamily={contact?.addressTextFont}
+                          onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.addressTextFont', font) : undefined}
+                          showFontPicker={true}
+                        />
+                      ) : (
+                        <span className="text-gray-700">Address</span>
+                      )}
+                    </div>
+                  )}
+                  {showPhone && businessInfo?.phone && (
+                    <div className="flex items-center space-x-2">
+                      <PhoneIcon 
+                        className="h-5 w-5 flex-shrink-0" 
+                        style={{ color: colorPalette?.secondary || '#6B7280' }}
+                      />
+                      <EditableText
+                        as="a"
+                        href={`tel:${stripPhoneNumber(businessInfo?.phone || '')}`}
+                        className="text-gray-700 hover:text-primary-600 transition-colors duration-200"
+                        style={{ color: contact?.phoneTextColor }}
+                        value={businessInfo?.phone || ''}
+                        path="businessInfo.phone"
+                        editable={editable}
+                        onEdit={onEdit}
+                        placeholder="Phone number"
+                        textSize={contact?.phoneTextSize || 0.875}
+                        onTextSizeChange={onEdit ? (size: number) => onEdit('contact.phoneTextSize', size.toString()) : undefined}
+                        textSizeLabel="Phone Text Style"
+                        textColor={contact?.phoneTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('contact.phoneTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={contact?.phoneTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.phoneTextFont', font) : undefined}
+                        showFontPicker={true}
+                      />
+                    </div>
+                  )}
+                  {showEmail && businessInfo?.email && (
+                    <div className="flex items-center space-x-2">
+                      <EnvelopeIcon 
+                        className="h-5 w-5 flex-shrink-0" 
+                        style={{ color: colorPalette?.secondary || '#6B7280' }}
+                      />
+                      <EditableText
+                        as="a"
+                        href={`mailto:${businessInfo?.email || ''}`}
+                        className="text-gray-700 hover:text-primary-600 transition-colors duration-200"
+                        style={{ color: contact?.emailTextColor }}
+                        value={businessInfo?.email || ''}
+                        path="businessInfo.email"
+                        editable={editable}
+                        onEdit={onEdit}
+                        placeholder="Email address"
+                        textSize={contact?.phoneTextSize || 0.875}
+                        onTextSizeChange={onEdit ? (size: number) => onEdit('contact.phoneTextSize', size.toString()) : undefined}
+                        textSizeLabel="Email Text Style"
+                        textColor={contact?.emailTextColor}
+                        onTextColorChange={onEdit ? (color: string) => onEdit('contact.emailTextColor', color) : undefined}
+                        showColorPicker={true}
+                        presetColors={['#000000', '#ffffff', '#374151', ...(colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : [])]}
+                        fontFamily={contact?.emailTextFont}
+                        onFontFamilyChange={onEdit ? (font: string) => onEdit('contact.emailTextFont', font) : undefined}
+                        showFontPicker={true}
+                      />
+                    </div>
+                  )}
+                  {/* Licenses inline */}
+                  {showLicenses && validLicenses.length > 0 && validLicenses.map((license, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <svg 
+                        className="h-5 w-5 flex-shrink-0" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                        style={{ color: colorPalette?.secondary || '#6B7280' }}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="text-sm text-gray-700">
+                        <span className="text-gray-500">{license.title || 'License #'}</span>{' '}
+                        {license.number}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Social links row */}
+                {(() => {
+                  const showInContact = socialLinks?.showInContact ?? true;
+                  const social = socialLinks?.links || contact?.social;
+                  const iconSize = socialLinks?.contactSocialIconSize ?? 1.0;
+                  const containerBaseSize = 48;
+                  const iconBaseSize = 20;
+                  const containerPx = Math.round(containerBaseSize * iconSize);
+                  const iconPx = Math.round(iconBaseSize * iconSize);
+                  const grubhubIconPx = Math.round(32 * iconSize);
+                  const toastImagePx = Math.round(32 * iconSize);
+                  const deliverooImagePx = Math.round(32 * iconSize);
+                  const hasStandardLinks = social && Object.entries(social).some(([key, value]) => 
+                    key !== 'customLinks' && typeof value === 'string' && value.trim()
+                  );
+                  const hasCustomLinks = social?.customLinks?.some(link => link.url?.trim());
+                  const hasSocial = hasStandardLinks || hasCustomLinks;
+                  
+                  if (!showInContact || !hasSocial || !social) return null;
+                  
+                  return (
+                    <div 
+                      ref={socialLinksTargetRef}
+                      className={`border-t border-gray-300 pt-6 ${editable ? 'p-2 -m-2 rounded cursor-pointer hover:ring-2 hover:ring-blue-400 hover:ring-dashed' : ''}`}
+                      onClick={(e) => {
+                        if (!editable) return;
+                        if ((e.target as HTMLElement).tagName === 'A' || (e.target as HTMLElement).closest('a')) return;
+                        e.stopPropagation();
+                        setShowSocialLinksPopup(true);
+                      }}
+                    >
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+                        {t('contact.followUs', 'Follow Us')}
+                      </h4>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {social.facebook && <a href={social.facebook} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Follow us on Facebook"><FaFacebookF style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.twitter && <a href={social.twitter} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Follow us on X (Twitter)"><FaXTwitter style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.instagram && <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-pink-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Follow us on Instagram"><FaInstagram style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.linkedin && <a href={social.linkedin} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-700 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Connect with us on LinkedIn"><FaLinkedinIn style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.youtube && <a href={social.youtube} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Follow us on YouTube"><svg style={{ width: iconPx, height: iconPx }} fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>}
+                        {social.tiktok && <a href={social.tiktok} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Follow us on TikTok"><FaTiktok style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.yelp && <a href={social.yelp} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Review us on Yelp"><FaYelp style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.googleBusinessProfile && <a href={social.googleBusinessProfile} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-blue-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="View our Google Business Profile"><FaGoogle style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.other && <a href={social.other} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Visit our other social link"><FaStar style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.doordash && <a href={social.doordash} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-red-500 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Order from us on DoorDash"><SiDoordash style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.ubereats && <a href={social.ubereats} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Order from us on Uber Eats"><SiUbereats style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.grubhub && <a href={social.grubhub} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-orange-600 flex items-center justify-center" style={{ width: containerPx, height: containerPx, padding: Math.round(4 * iconSize) }} aria-label="Order from us on Grubhub"><SiGrubhub style={{ width: grubhubIconPx, height: grubhubIconPx }} /></a>}
+                        {social.postmates && <a href={social.postmates} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-black flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Order from us on Postmates"><SiPostmates style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.instacart && <a href={social.instacart} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-green-500 flex items-center justify-center" style={{ width: containerPx, height: containerPx }} aria-label="Order from us on Instacart"><SiInstacart style={{ width: iconPx, height: iconPx }} /></a>}
+                        {social.toast && <a href={social.toast} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center" style={{ width: containerPx, height: containerPx, padding: Math.round(8 * iconSize) }} aria-label="Order from us on Toast"><Image src="/toast-logo.png" alt="Toast" width={toastImagePx} height={toastImagePx} loading="lazy" className="object-contain" /></a>}
+                        {social.deliveroo && <a href={social.deliveroo} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 flex items-center justify-center" style={{ width: containerPx, height: containerPx, padding: Math.round(8 * iconSize) }} aria-label="Order from us on Deliveroo"><Image src="/deliveroo-logo.png" alt="Deliveroo" width={deliverooImagePx} height={deliverooImagePx} loading="lazy" className="object-contain" /></a>}
+                        {social.customLinks?.map((customLink) => (
+                          customLink.url && (
+                            <a key={customLink.id} href={customLink.url} target="_blank" rel="noopener noreferrer" className="bg-white rounded-full shadow-md hover:shadow-lg transition-all duration-200 hover:scale-110 text-gray-600 flex items-center justify-center overflow-hidden" style={{ width: containerPx, height: containerPx }} aria-label={customLink.label || 'External Link'}>
+                              {customLink.iconUrl ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={customLink.iconUrl} alt={customLink.label || 'Custom icon'} style={{ width: iconPx, height: iconPx }} className="object-contain" />
+                              ) : (
+                                <FaExternalLinkAlt style={{ width: iconPx, height: iconPx }} />
+                              )}
+                            </a>
+                          )
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            </>
               );
             })()}
 
