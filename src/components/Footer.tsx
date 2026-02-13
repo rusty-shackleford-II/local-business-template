@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import EditableText from './EditableText';
@@ -7,6 +7,7 @@ import LegalTextModal from './LegalTextModal';
 import TextSizePopup from './TextSizePopup';
 import BrandingPopup from './BrandingPopup';
 import FooterStylePopup from './FooterStylePopup';
+import type { NavLinkItem } from './HeaderStylePopup';
 import { useI18nContext } from './I18nProvider';
 import type { Footer as FooterCfg, Layout, SectionKey, Page, ColorPalette } from '../types';
 
@@ -219,8 +220,10 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
         }
       } else {
         // Production mode: use window scrolling with proper offset calculation
+        // Use getBoundingClientRect instead of offsetTop to avoid issues with
+        // CSS transforms (e.g. ScrollReveal) creating new offsetParent contexts
         const headerOffset = getHeaderOffset();
-        const elementPosition = element.offsetTop - headerOffset;
+        const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
         
         window.scrollTo({
           top: elementPosition,
@@ -237,22 +240,29 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
     }
   };
 
+  // Section labels lookup
+  const sectionLabels: Record<SectionKey, string> = useMemo(() => ({
+    hero: t('nav.home', 'Home'),
+    about: t('nav.about', 'About'),
+    services: t('nav.services', 'Services'),
+    benefits: t('nav.benefits', 'Benefits'),
+    menu: t('nav.menu', 'Menu'),
+    testimonials: t('nav.testimonials', 'Testimonials'),
+    upcomingEvents: t('nav.events', 'Events'),
+    contact: t('nav.contact', 'Contact'),
+    videos: t('nav.videos', 'Videos'),
+    payment: t('nav.shop', 'Shop'),
+    partners: 'Partners'
+  }), [t]);
+
+  // Helper to get default label for a sectionId (without navLabel override)
+  const getDefaultSectionLabel = (sectionId: string): string => {
+    const baseSectionType = sectionId.split('_')[0] as SectionKey;
+    return sectionLabels[baseSectionType] || sectionId;
+  };
+
   // Generate footer links based on pages (multipage) or sections (single-page)
   const getFooterLinks = () => {
-    const sectionLabels: Record<SectionKey, string> = {
-      hero: t('nav.home', 'Home'),
-      about: t('nav.about', 'About'),
-      services: t('nav.services', 'Services'),
-      benefits: t('nav.benefits', 'Benefits'),
-      menu: t('nav.menu', 'Menu'),
-      testimonials: t('nav.testimonials', 'Testimonials'),
-      upcomingEvents: t('nav.events', 'Events'),
-      contact: t('nav.contact', 'Contact'),
-      videos: t('nav.videos', 'Videos'),
-      payment: t('nav.shop', 'Shop'),
-      partners: 'Partners' // Hidden section - only accessible via HiDev logo
-    };
-
     // Multipage mode: show pages as nav items
     if (isMultipage && pages && pages.length > 1) {
       return pages.map(page => {
@@ -279,7 +289,8 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
       return pageSections
         .filter(section => {
           const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
-          return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners';
+          const isHiddenInFooter = section.hiddenInFooter === true || section.hiddenInFooter === 'true';
+          return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners' && !isHiddenInFooter;
         })
         .map(section => {
           const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
@@ -326,6 +337,24 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
   };
 
   const footerLinks = getFooterLinks();
+
+  // Build nav link items for the footer style popup (includes ALL enabled sections, even hidden ones)
+  const footerNavLinkItems: NavLinkItem[] = useMemo(() => {
+    const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+    if (!pageSections) return [];
+
+    return pageSections
+      .filter(section => {
+        const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+        return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners';
+      })
+      .map(section => ({
+        sectionId: section.sectionId,
+        label: section.navLabel || '',
+        defaultLabel: getDefaultSectionLabel(section.sectionId),
+        visible: section.hiddenInFooter !== true && section.hiddenInFooter !== 'true',
+      }));
+  }, [pages, sectionLabels]);
 
   return (
     <>
@@ -839,6 +868,22 @@ const Footer: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, foo
               onEdit('footer.colors.navText', color);
             }
           }}
+          navLinks={footerNavLinkItems}
+          onNavLinkLabelChange={onEdit ? (sectionId: string, label: string) => {
+            // Find the section index in pages[0].sections
+            const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+            if (!pageSections) return;
+            const sectionIndex = pageSections.findIndex(s => s.sectionId === sectionId);
+            if (sectionIndex === -1) return;
+            onEdit(`layout.pages.0.sections.${sectionIndex}.navLabel`, label);
+          } : undefined}
+          onNavLinkVisibilityChange={onEdit ? (sectionId: string, visible: boolean) => {
+            const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+            if (!pageSections) return;
+            const sectionIndex = pageSections.findIndex(s => s.sectionId === sectionId);
+            if (sectionIndex === -1) return;
+            onEdit(`layout.pages.0.sections.${sectionIndex}.hiddenInFooter`, (!visible).toString());
+          } : undefined}
           showPrivacyPolicy={showPrivacyPolicy}
           onShowPrivacyPolicyChange={(show) => {
             if (onEdit) {

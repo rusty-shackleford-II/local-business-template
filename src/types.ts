@@ -690,6 +690,8 @@ export type PageSection = {
   sectionId: string; // e.g., "hero", "about", "services_abc123"
   enabled?: boolean;
   navLabel?: string;
+  hiddenInHeader?: boolean | string; // Hide nav link in header (section still renders, default: false/shown, stored as string in editor)
+  hiddenInFooter?: boolean | string; // Hide nav link in footer (section still renders, default: false/shown, stored as string in editor)
   backgroundColor?: string;
   textColor?: string;
   fontFamily?: string;

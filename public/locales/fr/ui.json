@@ -1,0 +1,69 @@
+{
+  "nav": {
+    "home": "Accueil",
+    "about": "À propos",
+    "services": "Services",
+    "benefits": "Avantages",
+    "menu": "Menu",
+    "testimonials": "Témoignages",
+    "events": "Événements",
+    "contact": "Contact",
+    "videos": "Vidéos",
+    "shop": "Boutique",
+    "gallery": "Galerie"
+  },
+  "hero": {
+    "buttons": {
+      "buyNow": "Acheter maintenant",
+      "getStarted": "Commencer aujourd'hui",
+      "externalLink": "Lien externe",
+      "customIcon": "Icône personnalisée"
+    },
+    "ctaButtons": []
+  },
+  "contact": {
+    "form": {
+      "fullName": "Nom complet",
+      "emailAddress": "Adresse e-mail",
+      "phoneNumber": "Numéro de téléphone",
+      "message": "Message",
+      "messagePlaceholder": "Dites-nous comment nous pouvons vous aider...",
+      "sendMessage": "Envoyer le message",
+      "sending": "Envoi en cours...",
+      "thankYou": "Merci !",
+      "successMessage": "Votre message a été envoyé. Nous vous répondrons bientôt."
+    },
+    "days": {
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam",
+      "sun": "Dim"
+    },
+    "businessHours": "Heures d'ouverture",
+    "closed": "Fermé",
+    "open24Hours": "Ouvert 24h/24",
+    "to": "à",
+    "followUs": "Suivez-nous",
+    "addLicense": "Ajouter une licence"
+  },
+  "events": {
+    "from": "De",
+    "recurringEvent": "Événement récurrent",
+    "aboutThisEvent": "À propos de cet événement",
+    "eventInformation": "Informations sur l'événement",
+    "dressCode": "Code vestimentaire",
+    "relatedLinks": "Liens connexes",
+    "location": "Lieu",
+    "inquireAboutThisEvent": "Se renseigner sur cet événement",
+    "close": "Fermer",
+    "noEventsAvailable": "Aucun événement à venir disponible."
+  },
+  "footer": {
+    "privacyPolicy": "Politique de confidentialité",
+    "termsAndConditions": "Termes et conditions",
+    "allRightsReserved": "Tous droits réservés"
+  }
+}

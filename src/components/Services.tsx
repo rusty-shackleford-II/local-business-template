@@ -120,7 +120,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
                 className={`w-full md:w-[calc(50%-1rem)] ${lgWidth} bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group ${hasLink ? 'cursor-pointer' : ''}`}
               >
                 {/* Service Image */}
-                {/* bg-gray-100 prevents black sub-pixel gaps; scale-[1.005] ensures full container coverage */}
+                {/* bg-gray-100 prevents black sub-pixel gaps; scale-[1.05] ensures full container coverage */}
                 <div 
                   className={`relative aspect-[4/3] overflow-hidden bg-gray-100 ${editable && onServiceImageClick ? 'cursor-pointer' : ''}`}
                   onClick={editable && onServiceImageClick ? (e) => {
@@ -135,7 +135,7 @@ const Services: React.FC<Props> = ({ services: servicesProp, backgroundClass = '
                       alt={service.alt || service.title}
                       fill
                       loading="lazy"
-                      className={`object-cover scale-[1.005] group-hover:scale-105 transition-transform duration-300 ${editable && onServiceImageClick ? 'group-hover:opacity-75' : ''}`}
+                      className={`object-cover scale-[1.05] group-hover:scale-110 transition-transform duration-300 ${editable && onServiceImageClick ? 'group-hover:opacity-75' : ''}`}
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">

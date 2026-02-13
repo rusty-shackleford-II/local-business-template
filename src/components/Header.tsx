@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Bars3Icon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 import EditableText from './EditableText';
@@ -6,6 +6,7 @@ import IdbImage from './IdbImage';
 import LanguageToggle from './LanguageToggle';
 import BrandingPopup from './BrandingPopup';
 import HeaderStylePopup from './HeaderStylePopup';
+import type { NavLinkItem } from './HeaderStylePopup';
 import { useI18nContext } from './I18nProvider';
 import type { Header as HeaderCfg, Payment as PaymentCfg, Layout, SectionKey, ColorPalette, Page, PageSection } from '../types';
 
@@ -233,8 +234,10 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           }
         } else {
           // Production mode: use window scrolling with proper offset calculation
+          // Use getBoundingClientRect instead of offsetTop to avoid issues with
+          // CSS transforms (e.g. ScrollReveal) creating new offsetParent contexts
           const headerOffset = getHeaderOffset();
-          const elementPosition = element.offsetTop - headerOffset;
+          const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
           console.log('🔗 [Nav] Production scroll to:', elementPosition, 'headerOffset:', headerOffset);
           
           window.scrollTo({
@@ -311,8 +314,10 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
           }
         } else {
           // Production mode: use window scrolling
+          // Use getBoundingClientRect instead of offsetTop to avoid issues with
+          // CSS transforms (e.g. ScrollReveal) creating new offsetParent contexts
           const headerOffset = getHeaderOffset();
-          const elementPosition = element.offsetTop - headerOffset;
+          const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
           window.scrollTo({ top: elementPosition, behavior: 'smooth' });
         }
       }
@@ -333,7 +338,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           } else {
             const headerOffset = getHeaderOffset();
-            const elementPosition = element.offsetTop - headerOffset;
+            const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
             window.scrollTo({ top: elementPosition, behavior: 'smooth' });
           }
         } else if (attempts < 10) {
@@ -366,30 +371,36 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
     }, 150);
   };
 
+  // Section labels lookup
+  const sectionLabels: Record<SectionKey, string> = useMemo(() => ({
+    hero: t('nav.home', 'Home'),
+    about: t('nav.about', 'About'),
+    services: t('nav.services', 'Services'),
+    benefits: t('nav.benefits', 'Benefits'),
+    menu: t('nav.menu', 'Menu'),
+    testimonials: t('nav.testimonials', 'Testimonials'),
+    upcomingEvents: t('nav.events', 'Events'),
+    contact: t('nav.contact', 'Contact'),
+    videos: t('nav.videos', 'Videos'),
+    payment: t('nav.shop', 'Shop'),
+    partners: 'Partners'
+  }), [t]);
+
+  // Helper to get section label from sectionId
+  const getSectionLabel = (section: PageSection): string => {
+    if (section.navLabel) return section.navLabel;
+    const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+    return sectionLabels[baseSectionType] || section.sectionId;
+  };
+
+  // Helper to get default label for a sectionId (without navLabel override)
+  const getDefaultSectionLabel = (sectionId: string): string => {
+    const baseSectionType = sectionId.split('_')[0] as SectionKey;
+    return sectionLabels[baseSectionType] || sectionId;
+  };
+
   // Generate navigation links based on pages (multipage) or sections (single-page)
   const getNavigationLinks = (): NavLink[] => {
-    const sectionLabels: Record<SectionKey, string> = {
-      hero: t('nav.home', 'Home'),
-      about: t('nav.about', 'About'),
-      services: t('nav.services', 'Services'),
-      benefits: t('nav.benefits', 'Benefits'),
-      menu: t('nav.menu', 'Menu'),
-      testimonials: t('nav.testimonials', 'Testimonials'),
-      upcomingEvents: t('nav.events', 'Events'),
-      contact: t('nav.contact', 'Contact'),
-      videos: t('nav.videos', 'Videos'),
-      payment: t('nav.shop', 'Shop'),
-      partners: 'Partners' // Hidden section - only accessible via HiDev logo
-    };
-    
-    // Helper to get section label from sectionId
-    const getSectionLabel = (section: PageSection): string => {
-      if (section.navLabel) return section.navLabel;
-      // Extract base section type from sectionId (e.g., "services_abc123" -> "services")
-      const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
-      return sectionLabels[baseSectionType] || section.sectionId;
-    };
-
     // Multipage mode: show pages as nav items with sections in dropdown
     if (isMultipage && pages && pages.length > 1) {
       return pages.map(page => {
@@ -429,7 +440,8 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       navigationItems = pageSections
         .filter(section => {
           const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
-          return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners';
+          const isHiddenInHeader = section.hiddenInHeader === true || section.hiddenInHeader === 'true';
+          return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners' && !isHiddenInHeader;
         })
         .map(section => {
           const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
@@ -482,6 +494,25 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
 
   const navigationLinks = getNavigationLinks();
 
+  // Build nav link items for the header style popup (includes ALL enabled sections, even hidden ones)
+  const headerNavLinkItems: NavLinkItem[] = useMemo(() => {
+    // Only build for single-page mode with pages data
+    const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+    if (!pageSections) return [];
+
+    return pageSections
+      .filter(section => {
+        const baseSectionType = section.sectionId.split('_')[0] as SectionKey;
+        return section.enabled !== false && baseSectionType !== 'hero' && baseSectionType !== 'partners';
+      })
+      .map(section => ({
+        sectionId: section.sectionId,
+        label: section.navLabel || '',
+        defaultLabel: getDefaultSectionLabel(section.sectionId),
+        visible: section.hiddenInHeader !== true && section.hiddenInHeader !== 'true',
+      }));
+  }, [pages, sectionLabels]);
+
   return (
     <>
       <style dangerouslySetInnerHTML={{
@@ -508,7 +539,7 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
       }} />
       <header 
         ref={headerRef}
-        className={`${isPreview ? 'sticky top-0' : 'fixed left-0 right-0'} z-40 backdrop-blur-sm border-b transition-all duration-300 ease-in-out ${editable ? 'cursor-pointer hover:ring-2 hover:ring-inset hover:ring-blue-400/40' : ''}`}
+        className={`${isPreview ? 'sticky top-0' : 'fixed top-0 left-0 right-0'} z-40 backdrop-blur-sm border-b transition-all duration-300 ease-in-out ${editable ? 'cursor-pointer hover:ring-2 hover:ring-inset hover:ring-blue-400/40' : ''}`}
         style={{ 
           height: expandableHeader ? calculateHeaderHeight() : undefined,
           minHeight: expandableHeader ? calculateHeaderHeight() : '4rem',
@@ -891,6 +922,22 @@ const Header: React.FC<Props> = ({ businessName = 'Local Business', logoUrl, hea
               onEdit('header.colors.navText', color);
             }
           }}
+          navLinks={headerNavLinkItems}
+          onNavLinkLabelChange={onEdit ? (sectionId: string, label: string) => {
+            // Find the section index in pages[0].sections
+            const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+            if (!pageSections) return;
+            const sectionIndex = pageSections.findIndex(s => s.sectionId === sectionId);
+            if (sectionIndex === -1) return;
+            onEdit(`layout.pages.0.sections.${sectionIndex}.navLabel`, label);
+          } : undefined}
+          onNavLinkVisibilityChange={onEdit ? (sectionId: string, visible: boolean) => {
+            const pageSections = pages && pages.length > 0 ? pages[0].sections : null;
+            if (!pageSections) return;
+            const sectionIndex = pageSections.findIndex(s => s.sectionId === sectionId);
+            if (sectionIndex === -1) return;
+            onEdit(`layout.pages.0.sections.${sectionIndex}.hiddenInHeader`, (!visible).toString());
+          } : undefined}
           presetColors={colorPalette ? [colorPalette.primary, colorPalette.secondary].filter(Boolean) : []}
         />
       )}

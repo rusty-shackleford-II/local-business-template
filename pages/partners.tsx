@@ -58,6 +58,8 @@ export default function PartnersPage() {
           businessName={(site as any)?.businessInfo?.businessName}
           logoUrl={(site as any)?.logoUrl}
           header={(site as any)?.header}
+          layout={(site as any)?.layout}
+          pages={(site as any)?.layout?.pages}
         />
         
         <main className="pt-20">
@@ -110,6 +112,7 @@ export default function PartnersPage() {
           logoUrl={(site as any)?.logoUrl}
           footer={(site as any)?.footer}
           layout={(site as any)?.layout}
+          pages={(site as any)?.layout?.pages}
         />
       </div>
     </>

@@ -926,7 +926,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           if (sectionElement) {
             const isMobileScreen = window.innerWidth < 768;
             const headerOffset = isMobileScreen ? 80 : 96; // Match CSS values
-            const elementPosition = sectionElement.offsetTop - headerOffset;
+            const elementPosition = sectionElement.getBoundingClientRect().top + window.scrollY - headerOffset;
             
             window.scrollTo({
               top: elementPosition,
@@ -948,7 +948,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
               // Calculate header height offset
               const isMobileScreen = window.innerWidth < 768;
               const headerOffset = isMobileScreen ? 80 : 96; // Match CSS values
-              const elementPosition = element.offsetTop - headerOffset;
+              const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
               
               window.scrollTo({
                 top: elementPosition,
@@ -984,7 +984,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
           // Calculate header height offset
           const isMobileScreen = window.innerWidth < 768;
           const headerOffset = isMobileScreen ? 80 : 96; // Match CSS values
-          const elementPosition = element.offsetTop - headerOffset;
+          const elementPosition = element.getBoundingClientRect().top + window.scrollY - headerOffset;
           
           window.scrollTo({
             top: elementPosition,

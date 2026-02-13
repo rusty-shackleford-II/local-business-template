@@ -257,7 +257,7 @@ const CategoryCarousel: React.FC<CategoryCarouselProps> = memo(({ category, cate
               zoomContext?.openZoom(item.imageUrl!, item.alt || item.title);
             }}
           >
-            <IdbImage src={item.imageUrl} alt={item.alt || item.title} fill loading="lazy" className="object-cover scale-[1.005]" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+            <IdbImage src={item.imageUrl} alt={item.alt || item.title} fill loading="lazy" className="object-cover scale-[1.05]" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
           </div>
         )}
         <div className="p-4 sm:p-5">
@@ -856,7 +856,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                                 alt={item.alt || item.title}
                                 fill
                                 loading="lazy"
-                                className="object-cover scale-[1.005]"
+                                className="object-cover scale-[1.05]"
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                               />
                             </div>
@@ -921,7 +921,7 @@ const Menu: React.FC<Props> = ({ menu: menuProp, editable, onMenuUpdate, onEdit,
                       alt={item.alt || item.title}
                       fill
                       loading="lazy"
-                      className="object-cover scale-[1.005]"
+                      className="object-cover scale-[1.05]"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   </div>

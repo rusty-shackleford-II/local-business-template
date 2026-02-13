@@ -194,7 +194,7 @@ const UpcomingEventsSection: React.FC<Props> = ({ upcomingEvents: upcomingEvents
         headerOffset = isMobile ? 80 : 96;
       }
       
-      const elementPosition = contactSection.offsetTop - headerOffset;
+      const elementPosition = contactSection.getBoundingClientRect().top + window.scrollY - headerOffset;
       
       window.scrollTo({
         top: elementPosition,
@@ -333,7 +333,7 @@ Thank you!`;
                     <SwiperSlide key={eventInstance.id}>
                       <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden hover-lift group h-full">
                         {/* Event Image with Prominent Date */}
-                        {/* bg-gray-100 prevents black sub-pixel gaps; scale-[1.005] ensures full container coverage */}
+                        {/* bg-gray-100 prevents black sub-pixel gaps; scale-[1.05] ensures full container coverage */}
                         <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
                           {event.imageUrl ? (
                             <IdbImage 
@@ -341,7 +341,7 @@ Thank you!`;
                               alt={event.alt || event.title}
                               fill
                               loading="lazy"
-                              className="object-cover scale-[1.005] group-hover:scale-105 transition-transform duration-300"
+                              className="object-cover scale-[1.05] group-hover:scale-110 transition-transform duration-300"
                             />
                           ) : (
                             <div className="w-full h-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
@@ -597,7 +597,7 @@ Thank you!`;
                                         headerOffset = isMobile ? 80 : 96;
                                       }
                                       
-                                      const elementPosition = contactSection.offsetTop - headerOffset;
+                                      const elementPosition = contactSection.getBoundingClientRect().top + window.scrollY - headerOffset;
                                       
                                       window.scrollTo({
                                         top: elementPosition,
