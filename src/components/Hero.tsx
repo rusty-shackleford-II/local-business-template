@@ -597,8 +597,8 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   // Handle hero images change from the image editor
   const handleHeroImagesChange = useCallback((newImages: string[]) => {
     if (onEdit) {
-      // Filter out any invalid blob URLs before saving
-      const validImages = newImages.filter(url => url && !url.startsWith('blob:'));
+      // Filter out any invalid URLs before saving
+      const validImages = newImages.filter(url => url);
       onEdit('hero.heroImages', validImages as any);
       // Also update the primary image for backward compatibility
       if (validImages.length > 0) {
@@ -684,13 +684,11 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
     }
   }, [onEdit]);
   
-  // Helper to check if a URL is valid (not an expired blob URL)
+  // Helper to check if a URL is valid
   const isValidImageUrl = useCallback((url: string): boolean => {
     if (!url) return false;
-    // Blob URLs are temporary and expire - they should never be stored
-    if (url.startsWith('blob:')) return false;
-    // Valid URLs: idb:// (IndexedDB), https://, http://, or relative paths
-    return url.startsWith('idb://') || url.startsWith('https://') || url.startsWith('http://') || url.startsWith('/');
+    // Valid URLs: blob: (preview), idb:// (IndexedDB), https://, http://, or relative paths
+    return url.startsWith('blob:') || url.startsWith('idb://') || url.startsWith('https://') || url.startsWith('http://') || url.startsWith('/');
   }, []);
   
   // Determine layout style - handle both string and potential type mismatches
@@ -859,7 +857,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
   const heroImages = useMemo(() => {
     // Filter function to remove expired blob URLs
     const filterValidUrls = (urls: string[]) => urls.filter(url => 
-      url && !url.startsWith('blob:') // Blob URLs are temporary and expire between sessions
+      url // Allow all URLs including blob: during preview/editing
     );
     
     if (hero?.heroImages && hero.heroImages.length > 0) {
@@ -869,7 +867,7 @@ const Hero: React.FC<Props> = ({ hero, payment, isPreview, backgroundClass = 'bg
       }
     }
     // Backwards compatibility: use single image if no array exists (or all array images were invalid)
-    if (hero?.heroLargeImageUrl && !hero.heroLargeImageUrl.startsWith('blob:')) {
+    if (hero?.heroLargeImageUrl) {
       return [hero.heroLargeImageUrl];
     }
     return [];
